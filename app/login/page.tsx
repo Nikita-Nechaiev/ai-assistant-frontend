@@ -22,26 +22,31 @@ export default function LoginPage() {
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
+        data,
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const { user, accessToken } = response.data;
-
-      localStorage.setItem('accessToken', accessToken);
+      const { user } = response.data;
 
       setUser(user);
 
       setSnackbar('Login successful!', SnackbarStatusEnum.SUCCESS);
+
       router.push('/dashboard');
     } catch (error: any) {
       setSnackbar('Login error', SnackbarStatusEnum.ERROR);
+
       console.log('Login error:', error.response?.data || error.message);
     }
-  }
+  };
+
   const handleGoogleSignIn = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };

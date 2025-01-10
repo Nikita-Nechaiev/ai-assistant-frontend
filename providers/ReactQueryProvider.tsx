@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import axiosInstance from '@/services/axiosInstance';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
@@ -20,6 +20,8 @@ const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({
           });
           return response.data;
         },
+        retry: 1,
+        refetchOnWindowFocus: false,
       },
     },
   });

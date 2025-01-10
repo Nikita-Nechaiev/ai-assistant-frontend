@@ -44,24 +44,30 @@ const RegisterPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+        formData,
+        {
           withCredentials: true,
-        },
-      });
-      const { user, accessToken } = response.data;
-      localStorage.setItem('accessToken', accessToken);
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      const { user } = response.data;
+
       setUser(user);
+
       setSnackbar('Registration successful!', SnackbarStatusEnum.SUCCESS);
+
       router.push('/dashboard');
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        setSnackbar('Registration error', SnackbarStatusEnum.ERROR);
-        console.log('Registration error:', error.response?.data || error.message);
-      }
+    } catch (error: any) {
+      setSnackbar('Registration error', SnackbarStatusEnum.ERROR);
+
+      console.log('Registration error:', error.response?.data || error.message);
     }
-  }
+  };
 
   const handleGoogleSignIn = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
