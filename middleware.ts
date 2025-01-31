@@ -3,14 +3,33 @@ import axios, { AxiosError } from 'axios';
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
-  const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/get-tokens`;
+
+  if (
+    url.pathname === '/login' ||
+    url.pathname === '/registration' ||
+    url.pathname === '/forgot-password' ||
+    url.pathname.startsWith('/reset-password')
+  ) {
+    const accessToken = req.cookies.get('accessToken')?.value;
+    if (accessToken) {
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
 
   const refreshToken = req.cookies.get('refreshToken')?.value;
-
   if (!refreshToken) {
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    const loginUrl = req.nextUrl.clone();
+    loginUrl.pathname = '/login';
+
+    const res = NextResponse.redirect(loginUrl);
+    res.cookies.delete('accessToken');
+    res.cookies.delete('refreshToken');
+    return res;
   }
+
+  const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/get-tokens`;
 
   try {
     const refreshResponse = await axios.get(refreshUrl, {
@@ -22,20 +41,19 @@ export async function middleware(req: NextRequest) {
 
     if (refreshResponse.status === 200) {
       const { accessToken, newRefreshToken, user } = refreshResponse.data;
-      console.log(user);
 
       const res = NextResponse.next();
+
       res.cookies.set('accessToken', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 15 * 60 * 1000,
+        maxAge: 15 * 60, // 15 minutes in seconds
         sameSite: 'strict',
       });
-
       res.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
         sameSite: 'strict',
       });
 
@@ -44,25 +62,41 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    const failUrl = req.nextUrl.clone();
+    failUrl.pathname = '/login';
+
+    const failRes = NextResponse.redirect(failUrl);
+    failRes.cookies.delete('accessToken');
+    failRes.cookies.delete('refreshToken');
+    return failRes;
   } catch (error) {
     if (error instanceof AxiosError) {
-      console.error('Error refreshing token:', error.message);
+      console.log('Error refreshing token:', error.message);
     }
 
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    const errUrl = req.nextUrl.clone();
+    errUrl.pathname = '/login';
+
+    const errRes = NextResponse.redirect(errUrl);
+    errRes.cookies.delete('accessToken');
+    errRes.cookies.delete('refreshToken');
+    return errRes;
   }
 }
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
+    // protected routes (where we do the refresh logic)
+    '/dashboard',
     '/session/:path*',
     '/document/:path*',
     '/ai-assistance',
     '/settings',
     '/faq',
+    // public routes we also want to check
+    '/login',
+    '/registration',
+    '/forgot-password',
+    '/reset-password/:path*',
   ],
 };

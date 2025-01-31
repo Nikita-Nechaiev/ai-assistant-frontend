@@ -1,7 +1,11 @@
-'use client'
+'use client';
 import React, { useEffect } from 'react';
 import useSnackbarStore from '@/store/useSnackbarStore';
-import { SnackbarStatusEnum } from '@/models/enums/SnackbarStatusEnum';
+import { RxCross1 } from 'react-icons/rx';
+import { FiCheckCircle } from 'react-icons/fi';
+import { IoWarningOutline } from 'react-icons/io5';
+import { PiWarningOctagon } from 'react-icons/pi';
+import { SnackbarStatusEnum } from '@/models/enums';
 
 const Snackbar: React.FC = () => {
   const { message, status, closeSnackbar } = useSnackbarStore();
@@ -11,7 +15,7 @@ const Snackbar: React.FC = () => {
       const timer = setTimeout(() => {
         closeSnackbar();
       }, 4000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [message, closeSnackbar]);
@@ -20,38 +24,45 @@ const Snackbar: React.FC = () => {
 
   const backgroundColorMap: Record<SnackbarStatusEnum, string> = {
     [SnackbarStatusEnum.SUCCESS]: 'bg-green-500',
-    [SnackbarStatusEnum.WARNING]: 'bg-yellow-500',
+    [SnackbarStatusEnum.WARNING]: 'bg-amber-500',
     [SnackbarStatusEnum.ERROR]: 'bg-red-500',
   };
 
-  const textColorMap: Record<SnackbarStatusEnum, string> = {
-    [SnackbarStatusEnum.SUCCESS]: 'text-white',
-    [SnackbarStatusEnum.WARNING]: 'text-black',
-    [SnackbarStatusEnum.ERROR]: 'text-white',
+  const iconMap: Record<SnackbarStatusEnum, React.ReactNode> = {
+    [SnackbarStatusEnum.SUCCESS]: <FiCheckCircle size={24} />,
+    [SnackbarStatusEnum.WARNING]: <IoWarningOutline size={24} />,
+    [SnackbarStatusEnum.ERROR]: <PiWarningOctagon size={24} />,
   };
 
-  const containerStyles = `
-    fixed bottom-4 left-4
-    z-50
-    w-auto max-w-sm
-    px-4 py-2
-    rounded shadow-md
-    ${backgroundColorMap[status]}
-    ${textColorMap[status]}
-    transition-opacity duration-300
-  `;
-
   return (
-    <div className={containerStyles}>
-      <div className="flex items-center justify-between">
-        <span>{message}</span>
-        <button
-          onClick={closeSnackbar}
-          className="ml-4 text-xl leading-none focus:outline-none"
-        >
-          &times;
-        </button>
+    <div
+      className={`
+        absolute bottom-[40px] left-[20px]
+        min-w-[300px] max-w-[500px] h-[60px]
+        flex justify-between items-center
+        font-semibold z-50 px-4 py-3
+        rounded shadow-md
+        ${backgroundColorMap[status]}
+        text-white
+      `}
+    >
+      <div className='flex justify-between items-center gap-[10px]'>
+        <div>{iconMap[status]}</div>
+        <div>{message}</div>
       </div>
+
+      <button
+        onClick={closeSnackbar}
+        className='
+          ml-4 text-xl leading-none focus:outline-none
+          flex justify-center items-center
+          w-[30px] h-[30px] rounded-full
+          bg-inherit hover:bg-[#0000003b]
+          transition-colors duration-300
+        '
+      >
+        <RxCross1 />
+      </button>
     </div>
   );
 };

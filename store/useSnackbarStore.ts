@@ -1,4 +1,4 @@
-import { SnackbarStatusEnum } from '@/models/enums/SnackbarStatusEnum';
+import { SnackbarStatusEnum } from '@/models/enums';
 import { create } from 'zustand';
 
 interface SnackbarState {
