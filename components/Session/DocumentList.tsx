@@ -6,6 +6,7 @@ import InputField from '@/ui/InputField';
 import { IDocument } from '@/models/models';
 import RequirePermission from '@/helpers/RequirePermission';
 import { PermissionEnum } from '@/models/enums';
+import Link from 'next/link';
 
 interface DocumentListProps {
   documents?: IDocument[];
@@ -40,6 +41,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             <PiPlusCircleDuotone className='w-10 h-10 text-gray-400' />
           </button>
         </RequirePermission>
+        <Link href={`/session/${sessionId}/document/1`} className='block p-5 bg-mainDark text-mainLight rounded'>MOCK DOCUMENT LINK</Link>
         {hasDocuments ? (
           documents.map((document) => (
             <DocumentItem
@@ -65,6 +67,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             submitText='Create'
           >
             <InputField
+              marginBottom={20}
               placeholder='Enter Document Title'
               id='documentTitle'
               label='Document Title'

@@ -79,7 +79,6 @@ export default function Chat({
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleSendMessage();
           }}
-          className='border border-gray-300 rounded-lg p-2 flex-1'
         />
         <button
           className='bg-mainDark text-mainLight px-4 py-2 rounded-lg hover:bg-mainDarkHover'

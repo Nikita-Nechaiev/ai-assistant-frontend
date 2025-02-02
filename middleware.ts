@@ -56,9 +56,7 @@ export async function middleware(req: NextRequest) {
         maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
         sameSite: 'strict',
       });
-
       res.headers.set('x-user', JSON.stringify(user));
-
       return res;
     }
 
@@ -90,7 +88,7 @@ export const config = {
     '/dashboard',
     '/session/:path*',
     '/document/:path*',
-    '/ai-assistance',
+    '/ai-assistance/:path*',
     '/settings',
     '/faq',
     // public routes we also want to check

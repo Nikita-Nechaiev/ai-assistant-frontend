@@ -60,6 +60,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
+          marginBottom={20}
             id='email'
             label='Email'
             type='email'
@@ -69,6 +70,7 @@ export default function LoginPage() {
           />
 
           <InputField
+          marginBottom={20}
             id='password'
             label='Password'
             type='password'

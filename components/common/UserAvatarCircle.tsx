@@ -6,11 +6,11 @@ import RequirePermission from '@/helpers/RequirePermission';
 import { useUserStore } from '@/store/useUserStore';
 
 interface UserAvatarCircleProps {
-  userId: number;
-  avatar?: string;
+  avatar: string | undefined;
+  userId?: number;
   name?: string;
   email?: string;
-  currentPermission: PermissionEnum;
+  currentPermission?: PermissionEnum;
   isBelowTooltip?: boolean;
   isYellow?: boolean;
   changeUserPermissions?: (userId: number, permission: PermissionEnum) => void;
@@ -31,7 +31,7 @@ export default function UserAvatarCircle({
   const { user: currentUser } = useUserStore();
 
   const handleTogglePermission = () => {
-    if (!changeUserPermissions) return;
+    if (!changeUserPermissions || !userId) return;
 
     const newPermission =
       currentPermission === PermissionEnum.EDIT
@@ -41,7 +41,6 @@ export default function UserAvatarCircle({
     changeUserPermissions(userId, newPermission);
   };
 
-  // Close tooltip when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -65,18 +64,19 @@ export default function UserAvatarCircle({
     <div className='relative'>
       {/* Avatar */}
       <img
-        src={avatar}
+        src={
+          avatar ||
+          process.env.NEXT_PUBLIC_API_URL + '/uploads/avatars/default-ava.webp'
+        }
         alt={name}
         referrerPolicy='no-referrer'
         className={`w-10 h-10 rounded-full border-2 ${
           isYellow ? 'border-yellow-400' : 'border-mainDark'
-        } shadow-sm object-cover cursor-pointer`}
-        // Toggle tooltip on click
+        } shadow-sm object-cover ${email && name && 'cursor-pointer'}`}
         onClick={() => setIsTooltipOpen((prev) => !prev)}
       />
 
-      {/* Tooltip: Shows name, email, role, and (if admin) role toggle */}
-      {isTooltipOpen && (
+      {email && name && userId && isTooltipOpen && (
         <div
           ref={tooltipRef}
           className={`absolute ${

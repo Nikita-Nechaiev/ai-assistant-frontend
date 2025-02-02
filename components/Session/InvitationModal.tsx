@@ -97,6 +97,7 @@ const InvitationForm: React.FC<{ control: any; errors: any }> = ({
           placeholder='name@example.com'
           error={errors.email?.message}
           required
+          marginBottom={20}
         />
       )}
     />
@@ -176,22 +177,23 @@ const InvitationItem: React.FC<{
       </div>
 
       <div className='relative'>
-        <button
-          type='button'
-          onClick={() => setOpenMenu((prev) => !prev)}
-          className='p-2 hover:bg-gray-200 rounded-full'
-        >
-          <BsThreeDots size={18} />
-        </button>
-
-        {openMenu && (
-          <RoleDropdown
-            invitation={invitation}
-            changeInvitationRole={changeInvitationRole}
-            deleteInvitation={deleteInvitation}
-            closeMenu={() => setOpenMenu(false)}
-          />
-        )}
+        <RequirePermission permission={PermissionEnum.ADMIN}>
+          <button
+            type='button'
+            onClick={() => setOpenMenu((prev) => !prev)}
+            className='p-2 hover:bg-gray-200 rounded-full'
+          >
+            <BsThreeDots size={18} />
+          </button>
+          {openMenu && (
+            <RoleDropdown
+              invitation={invitation}
+              changeInvitationRole={changeInvitationRole}
+              deleteInvitation={deleteInvitation}
+              closeMenu={() => setOpenMenu(false)}
+            />
+          )}
+        </RequirePermission>
       </div>
     </div>
   );
@@ -228,18 +230,16 @@ const RoleDropdown: React.FC<{
         Change to EDIT
       </button>
     )}
-    <RequirePermission permission={PermissionEnum.ADMIN}>
-      <button
-        type='button'
-        className='block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100'
-        onClick={() => {
-          deleteInvitation(invitation.id);
-          closeMenu();
-        }}
-      >
-        Delete Invitation
-      </button>
-    </RequirePermission>
+    <button
+      type='button'
+      className='block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100'
+      onClick={() => {
+        deleteInvitation(invitation.id);
+        closeMenu();
+      }}
+    >
+      Delete Invitation
+    </button>
   </div>
 );
 

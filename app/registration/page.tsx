@@ -95,6 +95,7 @@ const RegisterPage: React.FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
+          marginBottom={20}
             id='name'
             label='Name'
             placeholder='Enter your name'
@@ -103,6 +104,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <InputField
+          marginBottom={20}
             id='email'
             type='email'
             label='Email'
@@ -118,6 +120,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <InputField
+          marginBottom={20}
             id='password'
             type='password'
             label='Password'
@@ -134,6 +137,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <InputField
+          marginBottom={20}
             id='confirmPassword'
             type='password'
             label='Confirm Password'

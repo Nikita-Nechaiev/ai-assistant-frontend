@@ -5,16 +5,18 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
   error?: FieldError | string;
+  marginBottom?: string | number; // Accepts either `px` values or numbers
 }
 
 const InputField: React.FC<InputFieldProps> = ({
   id,
   label,
   error,
+  marginBottom = 0, // Default to no margin-bottom if not provided
   ...props
 }) => {
   return (
-    <div className='mb-4 grow'>
+    <div className='grow' style={{ marginBottom }}>
       <label htmlFor={id} className='block text-sm font-medium text-gray-700'>
         {label}
       </label>

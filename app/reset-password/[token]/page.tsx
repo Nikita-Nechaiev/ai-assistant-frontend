@@ -79,6 +79,7 @@ export default function ResetPasswordPage({
         </h1>
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
+            marginBottom={20}
             id='password'
             label='New Password'
             type='password'
@@ -95,6 +96,7 @@ export default function ResetPasswordPage({
           />
 
           <InputField
+            marginBottom={20}
             id='confirmPassword'
             label='Confirm Password'
             type='password'

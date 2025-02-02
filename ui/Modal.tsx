@@ -65,7 +65,7 @@ const Modal: FC<ModalProps> = ({
           )}
           {onSubmit && (
             <button
-              className='py-2 px-4 bg-blue-500 text-white hover:bg-blue-600 rounded'
+              className='py-2 px-4 bg-mainDark text-mainLight hover:bg-mainDarkHover rounded'
               onClick={onSubmit}
             >
               {submitText}

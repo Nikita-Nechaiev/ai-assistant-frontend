@@ -1,0 +1,80 @@
+import { AITool } from '@/models/models';
+import {
+  FaSpellCheck,
+  FaBullhorn,
+  FaCompressAlt,
+  FaPenFancy,
+  FaKeyboard,
+  FaLanguage,
+  FaKey,
+  FaScroll,
+  FaBook,
+  FaHeading,
+} from 'react-icons/fa';
+
+export const aiToolList: AITool[] = [
+  {
+    id: 'grammar-check',
+    name: 'Grammar and Spelling Check',
+    endpoint: 'grammar-check',
+    bodyField: 'text',
+    Icon: FaSpellCheck,
+  },
+  {
+    id: 'tone-analysis',
+    name: 'Tone Analysis',
+    endpoint: 'tone-analysis',
+    bodyField: 'text',
+    Icon: FaBullhorn,
+  },
+  {
+    id: 'text-summarization',
+    name: 'Text Summarization',
+    endpoint: 'summarization',
+    bodyField: 'text',
+    Icon: FaCompressAlt,
+  },
+  {
+    id: 'rephrase',
+    name: 'Text Rephrasing',
+    endpoint: 'rephrase',
+    bodyField: 'text',
+    Icon: FaPenFancy,
+  },
+  {
+    id: 'translation',
+    name: 'Text Translation',
+    endpoint: 'translation',
+    bodyField: 'text',
+    requiresTargetLanguage: true,
+    Icon: FaLanguage,
+  },
+  {
+    id: 'keyword-extraction',
+    name: 'Keyword Extraction',
+    endpoint: 'keyword-extraction',
+    bodyField: 'text',
+    Icon: FaKey,
+  },
+  {
+    id: 'text-generation',
+    name: 'Text Generation',
+    endpoint: 'text-generation',
+    bodyField: 'prompt',
+    Icon: FaScroll,
+  },
+  {
+    id: 'readability-analysis',
+    name: 'Readability Analysis',
+    endpoint: 'readability-analysis',
+    bodyField: 'text',
+    Icon: FaBook,
+  },
+  {
+    id: 'title-generation',
+    name: 'Title Generation',
+    endpoint: 'title-generation',
+    bodyField: 'text',
+    Icon: FaHeading,
+  },
+];

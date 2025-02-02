@@ -2,8 +2,8 @@ import './globals.css';
 import Snackbar from '@/ui/Snackbar';
 import ReactQueryProvider from '@/providers/ReactQueryProvider';
 import { headers } from 'next/headers';
-import { IUser } from '@/models/app-models/models';
 import ZustandHydration from '@/hydration/ZustandHydration';
+import { IUser } from '@/models/models';
 
 export const metadata = {
   title: 'Ai Editor',

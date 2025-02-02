@@ -1,4 +1,4 @@
-import { INavItem } from "@/models/models";
+import { INavItem } from '@/models/models';
 
 export const navigation: INavItem[] = [
   {
@@ -8,10 +8,6 @@ export const navigation: INavItem[] = [
   {
     href: '/ai-assistance',
     label: 'AI Assistance',
-  },
-  {
-    href: '/settings',
-    label: 'Settings',
   },
   {
     href: '/faq',

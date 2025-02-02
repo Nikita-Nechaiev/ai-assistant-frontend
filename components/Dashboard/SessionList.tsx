@@ -120,6 +120,7 @@ const SessionList: React.FC = () => {
           submitText='Create'
         >
           <InputField
+            marginBottom={20}
             placeholder='Enter Session Name'
             id='sessionName'
             label='Session Name'

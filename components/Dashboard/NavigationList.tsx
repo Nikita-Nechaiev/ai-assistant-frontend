@@ -1,6 +1,6 @@
 'use client';
 
-import { navigation } from '@/utils/navigation';
+import { navigation } from '@/helpers/navigation';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
