@@ -40,11 +40,12 @@ const Snackbar: React.FC = () => {
         absolute bottom-[40px] left-[20px]
         min-w-[300px] max-w-[500px] h-[60px]
         flex justify-between items-center
-        font-semibold z-50 px-4 py-3
+        font-semibold px-4 py-3
         rounded shadow-md
         ${backgroundColorMap[status]}
         text-white
       `}
+      style={{zIndex: 1010}}
     >
       <div className='flex justify-between items-center gap-[10px]'>
         <div>{iconMap[status]}</div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { FC, ReactNode, MouseEvent, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { AiOutlineClose } from 'react-icons/ai';
 
 interface ModalProps {
@@ -10,12 +10,13 @@ interface ModalProps {
   onSubmit?: () => void;
   cancelText?: string;
   submitText?: string;
-  width?: string; // e.g. 'w-96', 'w-[500px]', etc.
+  width?: string;
   title?: string;
-  children?: ReactNode;
+  children?: React.ReactNode;
+  height?: string;
 }
 
-const Modal: FC<ModalProps> = ({
+const Modal = ({
   isOpen,
   onClose,
   onCancel,
@@ -23,13 +24,39 @@ const Modal: FC<ModalProps> = ({
   cancelText = 'Cancel',
   submitText = 'Submit',
   width = 'w-96',
+  height = 'h-auto',
   title,
   children,
-}) => {
-  if (!isOpen) return null;
+}: ModalProps) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   const handleBackgroundClick = useCallback(
-    (e: MouseEvent<HTMLDivElement>) => {
+    (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target === e.currentTarget) {
         onClose();
       }
@@ -37,12 +64,28 @@ const Modal: FC<ModalProps> = ({
     [onClose],
   );
 
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter' && onSubmit) {
+        event.preventDefault();
+        onSubmit();
+      }
+    },
+    [onSubmit],
+  );
+
+  if (!isOpen) return null;
+
   return (
     <div
       className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'
       onClick={handleBackgroundClick}
     >
-      <div className={`relative bg-white rounded-md shadow-md p-6 ${width}`}>
+      <div
+        className={`relative bg-white rounded-md shadow-md p-6 transition-all duration-300 ${width} ${height} overflow-y-auto`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
         <button
           onClick={onClose}
           className='absolute top-3 right-3 text-gray-500 hover:text-gray-700'
@@ -52,12 +95,12 @@ const Modal: FC<ModalProps> = ({
 
         {title && <h2 className='text-lg font-bold mb-4'>{title}</h2>}
 
-        <div className='mb-6'>{children}</div>
+        <div className={`${height && 'h-full'} mb-6`}>{children}</div>
 
         <div className='flex justify-end space-x-4'>
           {onCancel && (
             <button
-              className='py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded'
+              className='py-2 px-4 border border-mainDark bg-mainLight text-mainDark hover:bg-gray-100 rounded'
               onClick={onCancel}
             >
               {cancelText}

@@ -1,16 +1,23 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaEllipsisV } from 'react-icons/fa';
 import Link from 'next/link';
 import { IDocument } from '@/models/models';
-import RequirePermission from '@/helpers/RequirePermission';
-import { PermissionEnum } from '@/models/enums';
+import PopupMenu from './PopupMenu';
+import DocumentPreview from './DocumentPreview';
+import { sliceRichContent } from '@/helpers/sliceRichContent';
+import TruncatedText from '@/ui/TruncateText';
 
 interface DocumentItemProps {
   document: IDocument;
   sessionId: number;
+  onEditTitle: () => void;
 }
 
-const DocumentItem: React.FC<DocumentItemProps> = ({ document, sessionId }) => {
+const DocumentItem: React.FC<DocumentItemProps> = ({
+  document,
+  sessionId,
+  onEditTitle,
+}) => {
   const [isShowPopup, setShowPopup] = React.useState<number | null>(null);
 
   const handleEllipsisClick = (event: React.MouseEvent) => {
@@ -23,25 +30,21 @@ const DocumentItem: React.FC<DocumentItemProps> = ({ document, sessionId }) => {
   };
 
   return (
-    <div className='relative h-[268.8px] w-[201.6px] bg-gray-100 rounded-md shadow-md cursor-pointer flex flex-col justify-between'>
-      {/* Image Preview */}
+    <div className='relative h-[268.8px] w-[201.6px] bg-gray-100 rounded-sm shadow-md cursor-pointer flex flex-col justify-between'>
       <Link
         href={`/session/${sessionId}/document/${document.id}`}
-        className='block object-cover grow shrink'
+        className='block object-cover grow shrink border-b border-gray-200'
       >
-        <img
-          src='/document-placeholder.png'
-          alt={`${document.title} Preview`}
-          className='object-cover w-full h-full rounded-t-md'
-        />
+        <DocumentPreview richContent={sliceRichContent(document.richContent)} />
       </Link>
 
-      {/* Title, Date, and Ellipsis */}
-      <div className='flex justify-between items-center px-3 py-2 rounded-b-md'>
+      <div className='flex justify-between items-center px-3 py-2 rounded-b-md bg-white'>
         <div className='flex flex-col'>
-          <span className='text-gray-700 font-medium truncate'>
-            {document.title}
-          </span>
+          <TruncatedText
+            text={document.title}
+            maxLength={17}
+            className='text-gray-700 font-medium'
+          />
           <span className='text-gray-500 text-sm'>
             {new Date(document.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',
@@ -58,60 +61,17 @@ const DocumentItem: React.FC<DocumentItemProps> = ({ document, sessionId }) => {
         </button>
       </div>
 
-      {/* Popup Menu */}
       {isShowPopup === document.id && (
-        <PopupMenu documentId={document.id} onClose={closePopup} />
+        <PopupMenu
+          documentTitle={document.title}
+          richContent={document.richContent}
+          onEditTitle={onEditTitle}
+          documentId={document.id}
+          onClose={closePopup}
+        />
       )}
     </div>
   );
 };
 
 export default DocumentItem;
-
-interface PopupMenuProps {
-  documentId: number;
-  onClose: () => void;
-}
-
-const PopupMenu: React.FC<PopupMenuProps> = ({ documentId, onClose }) => {
-  const handleOutsideClick = (event: MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.popup-menu')) {
-      onClose();
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener('mousedown', handleOutsideClick);
-    return () => {
-      window.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, []);
-
-  return (
-    <div className='popup-menu absolute bottom-[60px] right-0 bg-white shadow-md rounded-md p-2 w-40 z-10'>
-      <ul className='space-y-2'>
-        <RequirePermission permission={PermissionEnum.EDIT}>
-          <li className='cursor-pointer duration-300 hover:text-blue-500'>
-            Rename
-          </li>
-          <li className='cursor-pointer duration-300 hover:text-blue-500'>
-            Edit
-          </li>
-          <li className='cursor-pointer duration-300 hover:text-blue-500'>
-            Duplicate
-          </li>
-          <li className='cursor-pointer duration-300 hover:text-blue-500'>
-            Delete
-          </li>
-          <li className='cursor-pointer duration-300 hover:text-blue-500'>
-            View Statistics
-          </li>
-        </RequirePermission>
-        <li className='cursor-pointer duration-300 hover:text-blue-500'>
-          Export as PDF
-        </li>
-      </ul>
-    </div>
-  );
-};

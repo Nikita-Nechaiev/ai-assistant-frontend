@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import Link from 'next/link';
 
 import useSnackbarStore from '@/store/useSnackbarStore';
@@ -11,6 +11,8 @@ import InputField from '@/ui/InputField';
 import SubmitButton from '@/ui/SubmitButton';
 import GoogleSigninButton from '@/ui/GoogleSigninButton';
 import { SnackbarStatusEnum } from '@/models/enums';
+import { useUserStore } from '@/store/useUserStore';
+import { IUser } from '@/models/models';
 
 interface LoginFormInputs {
   email: string;
@@ -26,32 +28,47 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { setSnackbar } = useSnackbarStore();
+  const { setUser } = useUserStore();
   const router = useRouter();
 
-  const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
-    try {
+  const formOptions = useMemo(
+    () => ({
+      email: { required: 'Email is required' },
+      password: { required: 'Password is required' },
+    }),
+    [],
+  );
+
+  const onSubmit: SubmitHandler<LoginFormInputs> = useCallback(
+    async (data) => {
       setIsLoading(true);
+      try {
+        const { data: responseData } = await axios.post<{
+          accessToken: string;
+          user: IUser;
+        }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data, {
+          withCredentials: true,
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      setSnackbar('Successfully logged in!', SnackbarStatusEnum.SUCCESS);
-      router.replace('/dashboard');
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        setSnackbar('Invalid email or password!', SnackbarStatusEnum.ERROR);
-        console.log('Login error:', error.response?.data || error.message);
+        setUser(responseData.user);
+        setSnackbar('Successfully logged in!', SnackbarStatusEnum.SUCCESS);
+        router.replace('/dashboard');
+      } catch (error) {
+        const errorMessage = axios.isAxiosError(error)
+          ? 'Invalid email or password!'
+          : 'An unexpected error occurred';
+        setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [setUser, setSnackbar, router],
+  );
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = useCallback(() => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-  };
+  }, []);
 
   return (
     <div className='flex justify-center items-center min-h-screen bg-gray-50'>
@@ -60,29 +77,29 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
-          marginBottom={20}
             id='email'
             label='Email'
             type='email'
             placeholder='Enter your email'
             error={errors.email}
-            {...register('email', { required: 'Email is required' })}
+            {...register('email', formOptions.email)}
+            marginBottom={20}
           />
 
           <InputField
-          marginBottom={20}
             id='password'
             label='Password'
             type='password'
             placeholder='Enter your password'
             error={errors.password}
-            {...register('password', { required: 'Password is required' })}
+            {...register('password', formOptions.password)}
+            marginBottom={20}
           />
 
           <div className='text-right mb-6'>
             <Link
               href='/forgot-password'
-              className='text-sm text-blue-500 hover:underline'
+              className='text-sm text-mainDark hover:underline'
             >
               Forgot Password?
             </Link>
@@ -96,7 +113,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link
               href='/registration'
-              className='text-blue-500 hover:underline'
+              className='text-mainDark hover:underline'
             >
               Register here
             </Link>

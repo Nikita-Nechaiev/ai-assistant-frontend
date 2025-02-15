@@ -5,26 +5,29 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
   label: string;
   error?: FieldError | string;
-  marginBottom?: string | number; // Accepts either `px` values or numbers
+  marginBottom?: string | number;
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
   id,
   label,
   error,
-  marginBottom = 0, // Default to no margin-bottom if not provided
+  ref,
+  marginBottom = 0,
   ...props
 }) => {
   return (
     <div className='grow' style={{ marginBottom }}>
-      <label htmlFor={id} className='block text-sm font-medium text-gray-700'>
+      <label htmlFor={id} className='block text-sm font-medium text-mainDark'>
         {label}
       </label>
       <input
+        ref={ref}
         id={id}
         {...props}
         className={`p-2 outline-none mt-[1px] block w-full rounded-md bg-gray-100
-          border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500
+          border-gray-300 shadow-sm focus:ring-mainDark focus:border-mainDark
           ${error ? 'border-red-500' : ''}`}
       />
       {error && typeof error === 'object' && 'message' in error ? (

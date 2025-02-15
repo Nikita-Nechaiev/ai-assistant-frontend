@@ -1,29 +1,24 @@
-'use client';
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
-
 import {
   ICollaborationSession,
   ICollaborator,
   IInvitation,
   IMessage,
-  IUser,
-  IUserCollaborationSession,
+  IDocument,
+  IAiToolUsage,
+  IVersion,
 } from '@/models/models';
-import {
-  NotificationStatusEnum,
-  PermissionEnum,
-  SnackbarStatusEnum,
-} from '@/models/enums';
-
+import { SnackbarStatusEnum } from '@/models/enums';
 import { useUserStore } from '@/store/useUserStore';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { isConvertableToNumber } from '@/helpers/isConvertableToNumber';
+import { useSocketEmitters } from './useSocketEmitters';
 
 interface UseCollaborationSocketParams {
-  sessionId?: number; // Если хук используется и в других местах, где sessionId может не передаваться
+  sessionId?: string | string[] | undefined;
 }
 
 export function useCollaborationSocket({
@@ -40,22 +35,30 @@ export function useCollaborationSocket({
   const [onlineUsers, setOnlineUsers] = useState<ICollaborator[]>([]);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [invitations, setInvitations] = useState<IInvitation[]>([]);
+  const [documents, setDocuments] = useState<IDocument[]>([]);
+  const [currentDocument, setCurrentDocument] = useState<IDocument | null>(
+    null,
+  );
+  const [documentAiUsage, setDocumentAiUsage] = useState<IAiToolUsage[]>([]);
+  const [isAiUsageFetching, setAiUsageFetching] = useState<boolean>(false);
+  const [newAiUsage, setNewAiUsage] = useState<IAiToolUsage | null>(null);
+  const [versions, setVersions] = useState<IVersion[]>([]);
 
-  // References для расчёта времени
-  const startTimeRef = useRef<number | null>(null); // Время старта локального таймера
-  const totalTimeRef = useRef<number>(0); // Накопленное время (с сервера), в миллисекундах
+  const startTimeRef = useRef<number | null>(null);
+  const totalTimeRef = useRef<number>(0);
   const socketRef = useRef<Socket | null>(null);
+  const currentDocumentRef = useRef<IDocument | null>(null);
 
-  // -----------------------------------------------------------
-  // 1. Инициализация WebSocket и подписки на события
-  // -----------------------------------------------------------
+  // Establish socket connection and listeners
   useEffect(() => {
-    const socket = io('http://localhost:5000', {
-      path: '/collaboration-session-socket',
-      transports: ['websocket'],
-      withCredentials: true,
-    });
-
+    const socket = io(
+      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000',
+      {
+        path: '/collaboration-session-socket',
+        transports: ['websocket'],
+        withCredentials: true,
+      },
+    );
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -63,12 +66,19 @@ export function useCollaborationSocket({
       startTimeRef.current = Date.now();
 
       if (sessionId) {
-        // Если мы заходим на страницу конкретной сессии
-        socket.emit('joinSession', { sessionId });
-        socket.emit('getMessages'); // Запрос существующих сообщений
-        socket.emit('getInvitations'); // Запрос приглашений
+        if (
+          typeof sessionId === 'string' &&
+          !isConvertableToNumber(sessionId)
+        ) {
+          setSnackbar('Invalid session page', SnackbarStatusEnum.ERROR);
+          router.replace('/dashboard');
+          return;
+        }
+        socket.emit('joinSession', { sessionId: Number(sessionId) });
+        socket.emit('getMessages');
+        socket.emit('getInvitations');
+        socket.emit('getSessionDocuments');
       } else {
-        // Например, если это "dashboard"
         socket.emit('joinDashboard');
         socket.emit('getNotifications');
       }
@@ -82,9 +92,6 @@ export function useCollaborationSocket({
       setIsConnected(false);
     });
 
-    // -----------------------------------------------------------
-    // 2. Сессия: получение актуальных данных (session + users)
-    // -----------------------------------------------------------
     socket.on(
       'sessionData',
       ({
@@ -99,63 +106,40 @@ export function useCollaborationSocket({
       },
     );
 
-
-    // -----------------------------------------------------------
-    // 3. Текущее время (timeSpent)
-    // -----------------------------------------------------------
     socket.on('currentTime', ({ totalTime }) => {
-      // totalTime приходит в секундах, переводим в миллисекунды
       totalTimeRef.current = totalTime * 1000;
       startTimeRef.current = Date.now();
       setTimeSpent(totalTimeRef.current);
     });
 
-    // -----------------------------------------------------------
-    // 4. Онлайн пользователи
-    // -----------------------------------------------------------
-
-    socket.on('userLeft', (payload: { userId: number }) => {
-      setOnlineUsers((prev) =>
-        prev.filter((user) => user.id !== payload.userId),
-      );
+    socket.on('userLeft', ({ userId }: { userId: number }) => {
+      setOnlineUsers((prev) => prev.filter((user) => user.id !== userId));
     });
 
-    // -----------------------------------------------------------
-    // 5. Чат-сообщения
-    // -----------------------------------------------------------
     socket.on('messages', (msgs) => {
       setMessages(msgs);
     });
-
     socket.on('newMessage', (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setMessages((prev) => [...prev, newMessage]);
     });
 
-    // -----------------------------------------------------------
-    // 6. Ошибки
-    // -----------------------------------------------------------
     socket.on('error', (errorMessage: string) => {
       setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
+      setAiUsageFetching(false);
     });
 
-    // -----------------------------------------------------------
-    // 7. Приглашения (invitations & notifications)
-    // -----------------------------------------------------------
     socket.on('invitations', (fetchedInvitations: IInvitation[]) => {
       setInvitations(fetchedInvitations);
     });
-
     socket.on('newInvitation', (newInvitation: IInvitation) => {
-      // Если мы находимся в конкретной сессии — покажем оповещение
-      if (sessionId) {
+      if (sessionId && newInvitation.inviterEmail === currentUser?.email) {
         setSnackbar(
           `Invitation is sent to ${newInvitation.receiver.email}`,
           SnackbarStatusEnum.SUCCESS,
         );
       }
-      setInvitations((prevInvitations) => [...prevInvitations, newInvitation]);
+      setInvitations((prev) => [...prev, newInvitation]);
     });
-
     socket.on('invitationRoleChanged', (updatedInvitation: IInvitation) => {
       setSnackbar(
         `Invitation role changed to ${updatedInvitation.role}`,
@@ -167,7 +151,6 @@ export function useCollaborationSocket({
         ),
       );
     });
-
     socket.on('invitationUpdated', (updatedInvitation: IInvitation) => {
       setInvitations((prev) =>
         prev.map((inv) =>
@@ -175,11 +158,9 @@ export function useCollaborationSocket({
         ),
       );
     });
-
     socket.on('notifications', (allInvitations: IInvitation[]) => {
       setInvitations(allInvitations);
     });
-
     socket.on('notificationUpdated', (updatedInvitation: IInvitation) => {
       setInvitations((prev) =>
         prev.map((inv) =>
@@ -187,14 +168,12 @@ export function useCollaborationSocket({
         ),
       );
     });
-
     socket.on(
       'notificationDeleted',
       ({ invitationId }: { invitationId: number }) => {
         setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
       },
     );
-
     socket.on('invitationAccepted', ({ sessionId }: { sessionId: number }) => {
       setSnackbar(
         'Invitation accepted. Redirecting...',
@@ -202,91 +181,127 @@ export function useCollaborationSocket({
       );
       router.push(`/session/${sessionId}`);
     });
-
     socket.on('permissionsChanged', ({ userId, permissions }) => {
-      setSession((prevSession) => {
-        if (!prevSession) return prevSession;
-
-        // Update userCollaborationSessions in session
-        const updatedCollabSessions = prevSession.userCollaborationSessions.map(
-          (ucs) => {
-            if (ucs.user.id === userId) {
-              return { ...ucs, permissions };
-            }
-            return ucs;
-          },
+      setSession((prev) => {
+        if (!prev) return prev;
+        const updated = prev.userCollaborationSessions.map((ucs) =>
+          ucs.user.id === userId ? { ...ucs, permissions } : ucs,
         );
-
-        return {
-          ...prevSession,
-          userCollaborationSessions: updatedCollabSessions,
-        };
+        return { ...prev, userCollaborationSessions: updated };
       });
-
-      // Update online users
-      setOnlineUsers((prevOnlineUsers) =>
-        prevOnlineUsers.map((user) =>
+      setOnlineUsers((prev) =>
+        prev.map((user) =>
           user.id === userId ? { ...user, permissions } : user,
         ),
       );
-
-      if (currentUser && currentUser.id === userId) {
-        // Find the current user's session
-        const existingUserSession = session?.userCollaborationSessions.find(
-          (ucs) => ucs.user.id === currentUser.id,
+      if (currentUser && session) {
+        const existing = session.userCollaborationSessions.find(
+          (el) => el.user.id === currentUser.id,
         );
-
-        if (!existingUserSession) return; // If user session is not found, exit
-
-        const updatedUserSession: IUserCollaborationSession = {
-          ...existingUserSession,
-          permissions,
-        };
-
-        setUserSessionInStore(updatedUserSession);
+        if (existing) {
+          setUserSessionInStore({ ...existing, permissions });
+        }
       }
     });
 
-    // Отключаемся от сокета при анмаунте
+    socket.on('documentCreated', (doc: IDocument) => {
+      setDocuments((prev) => [doc, ...prev]);
+    });
+    socket.on('documentDuplicated', (doc: IDocument) => {
+      setDocuments((prev) => [doc, ...prev]);
+    });
+    socket.on('documentDeleted', ({ documentId }: { documentId: number }) => {
+      if (
+        currentDocumentRef.current &&
+        currentDocumentRef.current.id === documentId
+      ) {
+        router.replace('/session/' + sessionId);
+        setSnackbar(
+          'The document has been deleted by the editor',
+          SnackbarStatusEnum.WARNING,
+        );
+      }
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+    });
+    socket.on('sessionDocuments', (docs: IDocument[]) => {
+      setDocuments(docs);
+    });
+    socket.on('documentData', (doc: IDocument) => {
+      setCurrentDocument(doc);
+    });
+    socket.on('documentUpdated', (doc: IDocument) => {
+      setDocuments((prev) => [doc, ...prev.filter((d) => d.id !== doc.id)]);
+      if (
+        currentDocumentRef.current &&
+        currentDocumentRef.current.id === doc.id
+      ) {
+        setCurrentDocument(doc);
+      }
+    });
+    socket.on('lastEditedDocument', (doc: IDocument) => {
+      setDocuments((prev) => [doc, ...prev.filter((d) => d.id !== doc.id)]);
+    });
+    socket.on('documentAiUsage', (usage: IAiToolUsage[]) => {
+      setDocumentAiUsage(usage);
+    });
+    socket.on('documentAiUsageCreated', (usage: IAiToolUsage) => {
+      setDocumentAiUsage((prev) => [...prev, usage]);
+      setNewAiUsage(usage);
+      setAiUsageFetching(false);
+    });
+    socket.on('versionsData', (data: IVersion[]) => {
+      setVersions(data);
+    });
+    socket.on('versionCreated', (version: IVersion) => {
+      setVersions((prev) => [version, ...prev]);
+    });
+    socket.on('sessionDeleted', ({ message, userId }) => {
+      if (currentUser?.id !== userId) {
+        setSnackbar(message, SnackbarStatusEnum.WARNING);
+      } else {
+        setSnackbar('Session has been deleted', SnackbarStatusEnum.SUCCESS);
+      }
+      router.replace('/dashboard');
+    });
+    socket.on('invalidSession', ({ message }) => {
+      setSnackbar(message, SnackbarStatusEnum.ERROR);
+      router.replace('/dashboard');
+    });
+    socket.on('invalidDocument', ({ message }) => {
+      setCurrentDocument(null);
+      setSnackbar(message, SnackbarStatusEnum.ERROR);
+    });
+
     return () => {
       if (socketRef.current) {
         if (sessionId) {
-          // Если уходим со страницы конкретной сессии
-          socketRef.current.emit('leaveSession', { sessionId });
+          socketRef.current.emit('leaveSession');
         }
         socketRef.current.disconnect();
       }
     };
-  }, [sessionId, setSnackbar, router]);
+  }, [sessionId, setSnackbar, router, currentUser, setUserSessionInStore]);
 
-  // -----------------------------------------------------------
-  // 8. Локальный таймер
-  // -----------------------------------------------------------
+  // Timer for timeSpent
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
-
     if (isConnected && startTimeRef.current) {
       intervalId = setInterval(() => {
-        const now = Date.now();
-        const diff = now - (startTimeRef.current as number);
+        const diff = Date.now() - (startTimeRef.current as number);
         setTimeSpent(totalTimeRef.current + diff);
       }, 1000);
     }
-
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   }, [isConnected]);
 
-  // -----------------------------------------------------------
-  // 9. Проверка прав пользователя на сессию и запись в store
-  // -----------------------------------------------------------
+  // Verify user permission for the session
   useEffect(() => {
     if (session && currentUser) {
       const userSession = session.userCollaborationSessions.find(
         (el) => el.user.id === currentUser.id,
       );
-
       if (!userSession) {
         setSnackbar(
           'You don’t have permissions to access this page',
@@ -299,90 +314,80 @@ export function useCollaborationSocket({
     }
   }, [session, currentUser, router, setSnackbar, setUserSessionInStore]);
 
-  // При анмаунте очищаем session из Zustand
+  // Clear session on unmount
   useEffect(() => {
     return () => {
       clearSession();
     };
   }, [clearSession]);
 
-  // -----------------------------------------------------------
-  // 10. Методы для чата, инвайтов и т.д.
-  // -----------------------------------------------------------
+  // Sync currentDocument ref
+  useEffect(() => {
+    currentDocumentRef.current = currentDocument;
+  }, [currentDocument]);
+
   const timeSpentInSeconds = Math.floor(timeSpent / 1000);
 
-  const sendMessage = (message: string) => {
+  const sendMessage = useCallback((message: string) => {
     socketRef.current?.emit('sendMessage', { message });
-  };
+  }, []);
 
-  const createInvitation = (invitationData: {
-    email: string;
-    role: PermissionEnum;
-  }) => {
-    socketRef.current?.emit('createInvitation', invitationData);
-  };
+  const socketEmitters = useSocketEmitters({
+    sessionId,
+    socket: socketRef.current,
+    setAiUsageFetching,
+  });
 
-  const fetchNotifications = () => {
-    socketRef.current?.emit('getNotifications');
-  };
-
-  const updateNotificationStatus = (
-    invitationId: number,
-    status: NotificationStatusEnum,
-  ) => {
-    socketRef.current?.emit('updateNotificationStatus', {
-      invitationId,
-      status,
-    });
-  };
-
-  const deleteNotification = (invitationId: number) => {
-    socketRef.current?.emit('deleteNotification', { invitationId });
-  };
-
-  const acceptInvitation = (invitationId: number) => {
-    socketRef.current?.emit('acceptInvitation', { invitationId });
-  };
-
-  const changeInvitationRole = (
-    invitationId: number,
-    newRole: PermissionEnum,
-  ) => {
-    socketRef.current?.emit('changeInvitationRole', { invitationId, newRole });
-  };
-
-  const changeUserPermissions = (
-    targetUserId: number,
-    newPermission: PermissionEnum, // or string
-  ) => {
-    socketRef.current?.emit('changeUserPermissions', {
-      userId: targetUserId,
-      permission: newPermission,
-    });
-  };
-
-  const changeSessionName = (newName: string) => {
-    if (!sessionId || !socketRef.current) return;
-    socketRef.current.emit('updateSessionName', { sessionId, newName });
-  };
-
-  return {
-    // Состояние
-    session, // данные о сессии (из socket)
-    timeSpent: timeSpentInSeconds,
-    onlineUsers,
-    messages,
-    invitations,
-
-    // Методы
-    sendMessage,
-    createInvitation,
-    fetchNotifications,
-    updateNotificationStatus,
-    deleteNotification,
-    acceptInvitation,
-    changeInvitationRole,
-    changeUserPermissions,
-    changeSessionName,
-  };
+  return useMemo(
+    () => ({
+      session,
+      changeSessionName: socketEmitters.changeSessionName,
+      deleteSession: socketEmitters.deleteSession,
+      timeSpent: timeSpentInSeconds,
+      onlineUsers,
+      sendMessage,
+      messages,
+      invitations,
+      createInvitation: socketEmitters.createInvitation,
+      fetchNotifications: socketEmitters.fetchNotifications,
+      updateNotificationStatus: socketEmitters.updateNotificationStatus,
+      deleteNotification: socketEmitters.deleteNotification,
+      acceptInvitation: socketEmitters.acceptInvitation,
+      changeInvitationRole: socketEmitters.changeInvitationRole,
+      changeUserPermissions: socketEmitters.changeUserPermissions,
+      setCurrentDocument,
+      changeDocumentTitle: socketEmitters.changeDocumentTitle,
+      createDocument: socketEmitters.createDocument,
+      deleteDocument: socketEmitters.deleteDocument,
+      duplicateDocument: socketEmitters.duplicateDocument,
+      changeContentAndSaveDocument: socketEmitters.changeContentAndSaveDocument,
+      getDocument: socketEmitters.getDocument,
+      getDocumentAiUsage: socketEmitters.getDocumentAiUsage,
+      createDocumentAiUsage: socketEmitters.createDocumentAiUsage,
+      applyVersion: socketEmitters.applyVersion,
+      getVersions: socketEmitters.getVersions,
+      versions,
+      documents,
+      currentDocument,
+      documentAiUsage,
+      newAiUsage,
+      setNewAiUsage,
+      isAiUsageFetching,
+    }),
+    [
+      session,
+      timeSpentInSeconds,
+      onlineUsers,
+      messages,
+      invitations,
+      versions,
+      documents,
+      currentDocument,
+      documentAiUsage,
+      newAiUsage,
+      isAiUsageFetching,
+      socketEmitters,
+      sendMessage,
+    ],
+  );
 }

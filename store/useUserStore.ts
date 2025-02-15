@@ -14,7 +14,7 @@ export const useUserStore = create<UserState>((set) => ({
       user: {
         ...state.user,
         ...user,
-        id: user.id ?? state.user?.id ?? 0, // Provide default values or retain existing ones
+        id: user.id ?? state.user?.id ?? 0,
         name: user.name ?? state.user?.name ?? '',
         email: user.email ?? state.user?.email ?? '',
         oauthProvider: user.oauthProvider ?? state.user?.oauthProvider ?? null,
@@ -22,15 +22,6 @@ export const useUserStore = create<UserState>((set) => ({
         roles: user.roles ?? state.user?.roles ?? [],
         createdAt: user.createdAt ?? state.user?.createdAt ?? new Date(),
         avatar: user.avatar ?? state.user?.avatar ?? '',
-        userCollaborationSessions:
-          user.userCollaborationSessions ??
-          state.user?.userCollaborationSessions ??
-          [],
-        aiToolUsages: user.aiToolUsages ?? state.user?.aiToolUsages ?? [],
-        invitations: user.invitations ?? state.user?.invitations ?? [],
-        settings: user.settings ?? state.user?.settings ?? undefined,
-        analyticsSummary:
-          user.analyticsSummary ?? state.user?.analyticsSummary ?? undefined,
       },
     }));
   },

@@ -16,7 +16,6 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user } = useUserStore();
 
-  // Calculate the number of unread notifications
   const unreadCount =
     invitations?.filter(
       (invitation) => invitation.notificationStatus === 'unread',

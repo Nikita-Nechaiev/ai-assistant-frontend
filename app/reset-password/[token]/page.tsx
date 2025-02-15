@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import InputField from '@/ui/InputField';
 import SubmitButton from '@/ui/SubmitButton';
@@ -21,6 +21,9 @@ export default function ResetPasswordPage({
 }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { setSnackbar } = useSnackbarStore();
+
   const {
     register,
     handleSubmit,
@@ -28,48 +31,58 @@ export default function ResetPasswordPage({
     watch,
     formState: { errors },
   } = useForm<ResetPasswordFormInputs>();
-  const { setSnackbar } = useSnackbarStore();
-  const router = useRouter();
   const password = watch('password');
 
   useEffect(() => {
-    async function unwrapParams() {
-      const resolvedParams = await params;
-      setToken(resolvedParams.token);
-    }
-    unwrapParams();
+    params.then((resolvedParams) => setToken(resolvedParams.token));
   }, [params]);
 
-  const onSubmit: SubmitHandler<ResetPasswordFormInputs> = async (data) => {
-    if (!token) {
-      setSnackbar('Invalid token.', SnackbarStatusEnum.ERROR);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password/${token}`,
-        {
-          password: data.password,
+  const formOptions = useMemo(
+    () => ({
+      password: {
+        required: 'Password is required',
+        pattern: {
+          value: /^(?=.*[A-Z])(?=.*\d).{8,}$/,
+          message:
+            'Password must be at least 8 characters, include one uppercase letter and one number',
         },
-      );
+      },
+      confirmPassword: {
+        required: 'Confirm password is required',
+        validate: (value: string) =>
+          value === password || 'Passwords do not match',
+      },
+    }),
+    [password],
+  );
 
-      setSnackbar('Password reset successfully!', SnackbarStatusEnum.SUCCESS);
-      router.replace('/login');
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.error(
-          'Error resetting password:',
-          error.response?.data || error.message,
-        );
-        setSnackbar('Failed to reset password', SnackbarStatusEnum.ERROR);
+  const onSubmit: SubmitHandler<ResetPasswordFormInputs> = useCallback(
+    async (data) => {
+      if (!token) {
+        setSnackbar('Invalid token.', SnackbarStatusEnum.ERROR);
+        return;
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+      setIsLoading(true);
+      try {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password/${token}`,
+          { password: data.password },
+        );
+
+        setSnackbar('Password reset successfully!', SnackbarStatusEnum.SUCCESS);
+        router.replace('/login');
+      } catch (error) {
+        const errorMessage = axios.isAxiosError(error)
+          ? 'Failed to reset password'
+          : 'An unexpected error occurred';
+        setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token, setSnackbar, router],
+  );
 
   return (
     <div className='flex justify-center items-center min-h-screen bg-gray-50'>
@@ -79,41 +92,23 @@ export default function ResetPasswordPage({
         </h1>
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
-            marginBottom={20}
             id='password'
             label='New Password'
             type='password'
             placeholder='Enter your new password'
             error={errors.password}
-            {...register('password', {
-              required: 'Password is required',
-              pattern: {
-                value: /^(?=.*[A-Z])(?=.*\d).{8,}$/,
-                message:
-                  'Password must have at least 8 characters, one uppercase letter, and one number',
-              },
-            })}
+            {...register('password', formOptions.password)}
+            marginBottom={20}
           />
 
           <InputField
-            marginBottom={20}
             id='confirmPassword'
             label='Confirm Password'
             type='password'
             placeholder='Re-enter your password'
             error={errors.confirmPassword}
-            {...register('confirmPassword', {
-              required: 'Confirm password is required',
-              validate: (value) => {
-                if (value !== password) {
-                  // Clear both fields on mismatch
-                  setValue('password', '');
-                  setValue('confirmPassword', '');
-                  return 'Passwords do not match';
-                }
-                return true;
-              },
-            })}
+            {...register('confirmPassword', formOptions.confirmPassword)}
+            marginBottom={20}
           />
 
           <SubmitButton isLoading={isLoading} label='Reset Password' />

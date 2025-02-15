@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import { AITool } from '@/models/models';
-import InputField from '@/ui/InputField';
 
 interface Step2InputProps {
   selectedTool: AITool;
@@ -12,6 +11,8 @@ interface Step2InputProps {
   onSubmit: () => void;
   onGoBack: () => void;
   isLoading: boolean;
+  isOnDocumentPage: boolean;
+  handleActivateTextSelection?: () => void;
 }
 
 const Step2Input: React.FC<Step2InputProps> = ({
@@ -23,13 +24,14 @@ const Step2Input: React.FC<Step2InputProps> = ({
   onSubmit,
   onGoBack,
   isLoading,
+  isOnDocumentPage,
+  handleActivateTextSelection,
 }) => {
   return (
-    <div className='max-w-[800px] mx-auto'>
-      {/* Title */}
+    <div className='max-w-[800px] mx-auto relative'>
+      {/* Заголовок */}
       <h2 className='text-2xl font-bold mb-4'>{selectedTool.name}</h2>
 
-      {/* Textarea */}
       <div className='mb-4'>
         <textarea
           value={inputValue}
@@ -51,7 +53,17 @@ const Step2Input: React.FC<Step2InputProps> = ({
         </div>
       )}
 
-      {/* Buttons */}
+      {isOnDocumentPage && (
+        <div className='mb-8'>
+          <button
+            onClick={handleActivateTextSelection}
+            className='bg-mainDark hover:bg-mainDarkHover text-mainLight px-4 py-2 rounded'
+          >
+            Select from the document
+          </button>
+        </div>
+      )}
+
       <div className='flex justify-between gap-4'>
         <button
           onClick={onGoBack}

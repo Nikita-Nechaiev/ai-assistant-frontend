@@ -15,7 +15,7 @@ export default function RequirePermission({
   const userPermissions = session?.permissions;
 
   if (!userPermissions || !userPermissions.includes(permission)) {
-    return null; // Не рендерим ничего
+    return null;
   }
   return <>{children}</>;
 }

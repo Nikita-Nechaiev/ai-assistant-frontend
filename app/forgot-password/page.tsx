@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import InputField from '@/ui/InputField';
 import SubmitButton from '@/ui/SubmitButton';
@@ -19,37 +19,39 @@ export default function ForgotPasswordPage() {
     formState: { errors },
   } = useForm<ForgotPasswordFormInputs>();
   const [isLoading, setIsLoading] = useState(false);
-
   const { setSnackbar } = useSnackbarStore();
 
-  const onSubmit: SubmitHandler<ForgotPasswordFormInputs> = async (data) => {
-    try {
+  const formOptions = useMemo(
+    () => ({
+      email: { required: 'Email is required' },
+    }),
+    [],
+  );
+
+  const onSubmit: SubmitHandler<ForgotPasswordFormInputs> = useCallback(
+    async (data) => {
       setIsLoading(true);
-
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
-        data,
-      );
-
-      setSnackbar(
-        'Password reset link sent to your email.',
-        SnackbarStatusEnum.SUCCESS,
-      );
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.log(
-          'Error sending reset link:',
-          error.response?.data || error.message,
+      try {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
+          data,
         );
         setSnackbar(
-          'Failed to send password reset link',
-          SnackbarStatusEnum.ERROR,
+          'Password reset link sent to your email.',
+          SnackbarStatusEnum.SUCCESS,
         );
+      } catch (error) {
+        const errorMessage = axios.isAxiosError(error)
+          ? error.response?.data?.message ||
+            'Failed to send password reset link'
+          : 'An unexpected error occurred';
+        setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [setSnackbar],
+  );
 
   return (
     <div className='flex justify-center items-center min-h-screen bg-gray-50'>
@@ -65,7 +67,7 @@ export default function ForgotPasswordPage() {
             type='email'
             placeholder='Enter your email'
             error={errors.email}
-            {...register('email', { required: 'Email is required' })}
+            {...register('email', formOptions.email)}
           />
           <SubmitButton isLoading={isLoading} label='Send Reset Link' />
         </form>

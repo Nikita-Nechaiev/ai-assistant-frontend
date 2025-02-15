@@ -25,9 +25,9 @@ const FileButton: React.FC<FileButtonProps> = ({ id, label, onChange }) => {
     <div className='flex flex-col items-start gap-2'>
       <label
         htmlFor={id}
-        className='px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm cursor-pointer 
-                    hover:bg-blue-600 focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:ring-offset-2'
+        className='px-4 py-2 bg-mainDark text-white rounded-md shadow-sm cursor-pointer 
+                    hover:bg-mainDarkHover focus:outline-none focus:ring-2 
+                    focus:ring-mainDark focus:ring-offset-2'
       >
         {label}
       </label>

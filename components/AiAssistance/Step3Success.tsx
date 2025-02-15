@@ -13,13 +13,14 @@ const Step3Success: React.FC<Step3SuccessProps> = ({
   onCopyResult,
   onRestart,
 }) => {
+  const isBigResult = result && result?.length > 1500;
+
   return (
     <div className='max-w-[800px] mx-auto'>
       {/* Title */}
       <h2 className='text-2xl font-bold text-mainDark mb-6'>AI Usage Result</h2>
 
-      {/* Result Display Container */}
-      <div className='border border-mainDark text-mainDark p-4 pb-9 mb-4 rounded relative'>
+      <div className={`border border-mainDark text-mainDark p-4 pb-9 mb-4 rounded relative ${isBigResult && 'max-h-[60vh] overflow-y-scroll'}`}>
         <div className='flex text-gray-600 justify-between items-center mb-3'>
           <span className=' text-sm '>text</span>
           <button
@@ -40,7 +41,6 @@ const Step3Success: React.FC<Step3SuccessProps> = ({
         <p>{result ? result : 'No result available.'}</p>
       </div>
 
-      {/* Action Buttons */}
       <button
         onClick={onRestart}
         className='bg-mainDark hover:bg-mainDarkHover text-mainLight px-8 py-3 rounded transition-colors'

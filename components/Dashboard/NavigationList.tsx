@@ -12,7 +12,7 @@ const NavigationList = () => {
     <nav className='flex-1'>
       <ul className='space-y-2 p-4'>
         {navigation.map((item, index) => {
-          const isActive = pathname === item.href; // Check if the current path matches the navigation item's href
+          const isActive = pathname === item.href;
           return (
             <li key={index}>
               <Link

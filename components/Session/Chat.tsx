@@ -25,7 +25,6 @@ export default function Chat({
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Scroll to the bottom on messages or isOpen change
   useEffect(() => {
     if (isOpen) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

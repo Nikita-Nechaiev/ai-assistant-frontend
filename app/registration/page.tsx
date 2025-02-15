@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import axios, { AxiosError } from 'axios';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import Link from 'next/link';
 
 import useSnackbarStore from '@/store/useSnackbarStore';
 import InputField from '@/ui/InputField';
@@ -12,6 +12,8 @@ import FileButton from '@/ui/FileButton';
 import SubmitButton from '@/ui/SubmitButton';
 import GoogleSigninButton from '@/ui/GoogleSigninButton';
 import { SnackbarStatusEnum } from '@/models/enums';
+import { IUser } from '@/models/models';
+import { useUserStore } from '@/store/useUserStore';
 
 interface RegisterFormInputs {
   name: string;
@@ -30,63 +32,79 @@ const RegisterPage: React.FC = () => {
     setValue,
   } = useForm<RegisterFormInputs>();
   const { setSnackbar } = useSnackbarStore();
-  const [isLoading, setLoading] = useState<boolean>(false);
+  const { setUser } = useUserStore();
   const router = useRouter();
 
+  const [isLoading, setLoading] = useState(false);
+
   const password = watch('password');
-  const avatar = watch('avatar');
 
-  const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
-    const { name, email, password, avatar } = data;
-
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('email', email);
-    formData.append('password', password);
-
-    if (avatar && avatar[0]) {
-      formData.append('avatar', avatar[0]);
-    }
-
-    setLoading(true);
-
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
-        formData,
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+  const formOptions = useMemo(
+    () => ({
+      name: { required: 'Name is required' },
+      email: {
+        required: 'Email is required',
+        pattern: {
+          value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
+          message: 'Invalid email format',
         },
-      );
+      },
+      password: {
+        required: 'Password is required',
+        pattern: {
+          value: /^(?=.*[A-Z])(?=.*\d).{8,}$/,
+          message:
+            'Password must be at least 8 characters, include one uppercase letter and one number',
+        },
+      },
+      confirmPassword: {
+        required: 'Confirm password is required',
+        validate: (value: string) =>
+          value === password || 'Passwords do not match',
+      },
+    }),
+    [password],
+  );
 
-      setSnackbar('Registration successful!', SnackbarStatusEnum.SUCCESS);
-      setLoading(false);
-      router.push('/dashboard');
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.status === 409) {
-          setSnackbar(
-            'User with this email already exists!',
-            SnackbarStatusEnum.ERROR,
-          );
-        } else {
-          setSnackbar('Registration error', SnackbarStatusEnum.ERROR);
-        }
-        console.log(
-          'Registration error:',
-          error.response?.data || error.message,
-        );
+  const onSubmit: SubmitHandler<RegisterFormInputs> = useCallback(
+    async (data) => {
+      setLoading(true);
+      const { name, email, password, avatar } = data;
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      if (avatar?.[0]) formData.append('avatar', avatar[0]);
+
+      try {
+        const { data: responseData } = await axios.post<{
+          accessToken: string;
+          user: IUser;
+        }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, formData, {
+          withCredentials: true,
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        setUser(responseData.user);
+        setSnackbar('Registration successful!', SnackbarStatusEnum.SUCCESS);
+        router.push('/dashboard');
+      } catch (error) {
+        const errorMessage =
+          axios.isAxiosError(error) && error.response?.status === 409
+            ? 'User with this email already exists!'
+            : 'Registration error';
+        setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }
-  };
+    },
+    [setUser, setSnackbar, router],
+  );
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = useCallback(() => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-  };
+  }, []);
 
   return (
     <div className='flex justify-center items-center min-h-screen bg-gray-50'>
@@ -95,59 +113,42 @@ const RegisterPage: React.FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
-          marginBottom={20}
             id='name'
             label='Name'
             placeholder='Enter your name'
             error={errors.name}
-            {...register('name', { required: 'Name is required' })}
+            {...register('name', formOptions.name)}
+            marginBottom={20}
           />
 
           <InputField
-          marginBottom={20}
             id='email'
             type='email'
             label='Email'
             placeholder='Enter your email'
             error={errors.email}
-            {...register('email', {
-              required: 'Email is required',
-              pattern: {
-                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/,
-                message: 'Invalid email format',
-              },
-            })}
+            {...register('email', formOptions.email)}
+            marginBottom={20}
           />
 
           <InputField
-          marginBottom={20}
             id='password'
             type='password'
             label='Password'
             placeholder='Enter your password'
             error={errors.password}
-            {...register('password', {
-              required: 'Password is required',
-              pattern: {
-                value: /^(?=.*[A-Z])(?=.*\d).{8,}$/,
-                message:
-                  'Password must have at least 8 characters, one uppercase letter, and one number',
-              },
-            })}
+            {...register('password', formOptions.password)}
+            marginBottom={20}
           />
 
           <InputField
-          marginBottom={20}
             id='confirmPassword'
             type='password'
             label='Confirm Password'
             placeholder='Re-enter your password'
             error={errors.confirmPassword}
-            {...register('confirmPassword', {
-              required: 'Confirm password is required',
-              validate: (value) =>
-                value === password || 'Passwords do not match',
-            })}
+            {...register('confirmPassword', formOptions.confirmPassword)}
+            marginBottom={20}
           />
 
           <div className='mb-6'>
@@ -160,11 +161,11 @@ const RegisterPage: React.FC = () => {
             <FileButton
               id='avatar'
               label='Choose File'
-              onChange={(e) => {
+              onChange={(e) =>
                 setValue('avatar', e.target.files as FileList, {
                   shouldValidate: true,
-                });
-              }}
+                })
+              }
             />
           </div>
 
@@ -174,7 +175,7 @@ const RegisterPage: React.FC = () => {
         <div className='mt-6 text-center'>
           <p className='text-sm text-gray-600'>
             Already have an account?{' '}
-            <Link href='/login' className='text-blue-500 hover:underline'>
+            <Link href='/login' className='text-mainDark hover:underline'>
               Login here
             </Link>
           </p>
@@ -183,7 +184,6 @@ const RegisterPage: React.FC = () => {
             <span className='mx-4 text-gray-500 font-medium'>OR</span>
             <div className='flex-grow border-t border-gray-300'></div>
           </div>
-
           <GoogleSigninButton onClick={handleGoogleSignIn} />
         </div>
       </div>

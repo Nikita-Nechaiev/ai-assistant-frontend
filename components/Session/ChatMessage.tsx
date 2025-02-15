@@ -6,8 +6,8 @@ import { ICollaborator } from '@/models/models';
 
 interface ChatMessageProps {
   sender: ICollaborator;
-  text: string; // Message content
-  isCurrentUser: boolean; // Add this prop to indicate if the message is from the current user
+  text: string;
+  isCurrentUser: boolean; 
 }
 
 export default function ChatMessage({
@@ -25,7 +25,6 @@ export default function ChatMessage({
         <UserAvatarCircle isBelowTooltip={false} avatar={avatar}/>
       )}
 
-      {/* Message content */}
       <div
         className={`max-w-xs p-3 rounded-lg ${
           isCurrentUser

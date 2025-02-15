@@ -60,6 +60,7 @@ export async function middleware(req: NextRequest) {
       return res;
     }
 
+
     const failUrl = req.nextUrl.clone();
     failUrl.pathname = '/login';
 
@@ -81,7 +82,6 @@ export async function middleware(req: NextRequest) {
     return errRes;
   }
 }
-
 export const config = {
   matcher: [
     // protected routes (where we do the refresh logic)

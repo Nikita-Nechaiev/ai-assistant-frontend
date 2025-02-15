@@ -4,7 +4,6 @@ import {
   FaBullhorn,
   FaCompressAlt,
   FaPenFancy,
-  FaKeyboard,
   FaLanguage,
   FaKey,
   FaScroll,

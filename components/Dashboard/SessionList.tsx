@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
+import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
 import useSnackbarStore from '../../store/useSnackbarStore';
 import SessionItem from './SessionItem';
 import InputField from '@/ui/InputField';
@@ -12,79 +12,81 @@ import Modal from '@/ui/Modal';
 import axiosInstance from '@/services/axiosInstance';
 import { ICollaborationSession, ISessionItem } from '@/models/models';
 import { SnackbarStatusEnum } from '@/models/enums';
+import SmallLoader from '@/ui/SmallLoader';
+import { GoArrowSwitch } from 'react-icons/go';
 
-export const fetchUserSessions = async (): Promise<ISessionItem[]> => {
-  const response = await axiosInstance.get<ISessionItem[]>(
+export const fetchUserSessions = async ({
+  queryKey,
+  pageParam,
+}: {
+  queryKey: readonly unknown[];
+  pageParam?: unknown;
+}) => {
+  const [, search] = queryKey as [string, string];
+  const page = typeof pageParam === 'number' ? pageParam : 1;
+  const { data } = await axiosInstance.get<ISessionItem[]>(
     '/collaboration-session/get-user-sessions',
+    { params: { page, search } },
   );
-  return response.data;
-};
-
-export const createSession = async (
-  name: string,
-): Promise<ICollaborationSession> => {
-  const response = await axiosInstance.post<ICollaborationSession>(
-    '/collaboration-session/create',
-    {
-      name: name.trim(),
-    },
-  );
-  return response.data;
+  return data;
 };
 
 const SessionList: React.FC = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [sessionName, setSessionName] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
   const { setSnackbar } = useSnackbarStore();
   const { user } = useUserStore();
 
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
   const {
-    data: sessions,
+    data,
     isLoading,
     error,
-  } = useQuery<ISessionItem[], AxiosError>({
-    queryKey: ['userSessions'],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<ISessionItem[], AxiosError>({
+    queryKey: ['userSessions', debouncedSearch],
     queryFn: fetchUserSessions,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.length === 25 ? lastPage.length + 1 : undefined,
   });
 
   const mutation = useMutation<ICollaborationSession, AxiosError, string>({
-    mutationFn: createSession,
+    mutationFn: async (name) => {
+      const { data } = await axiosInstance.post<ICollaborationSession>(
+        '/collaboration-session/create',
+        { name: name.trim() },
+      );
+      return data;
+    },
     onSuccess: (newSession) => {
       setSnackbar('Session created successfully!', SnackbarStatusEnum.SUCCESS);
       router.push(`/session/${newSession.id}`);
-      setModalOpen(false); // Close popup on success
     },
     onError: () => {
       setSnackbar('Failed to create session!', SnackbarStatusEnum.ERROR);
     },
   });
 
-  const handleCreateSession = () => {
-    if (!sessionName.trim()) {
-      return;
-    }
+  const handleCreateSession = useCallback(() => {
+    if (!sessionName.trim()) return;
     mutation.mutate(sessionName);
-  };
+  }, [sessionName, mutation]);
 
-  const handlePopupOpen = () => {
+  const handlePopupOpen = useCallback(() => {
     setModalOpen(true);
     setSessionName(`${user?.name}'s session`);
-  };
-
-  if (isLoading) {
-    return <div className='text-center'>Loading sessions...</div>;
-  }
-
-  if (error) {
-    setSnackbar('Failed to fetch sessions!', SnackbarStatusEnum.ERROR);
-    return (
-      <div className='text-center text-red-500'>Failed to load sessions</div>
-    );
-  }
-
-  // Handle case when `sessions` is empty or undefined
-  const hasSessions = sessions && sessions.length > 0;
+  }, [user]);
 
   return (
     <div className='p-4 space-y-4'>
@@ -98,37 +100,81 @@ const SessionList: React.FC = () => {
         </button>
       </div>
 
-      {!hasSessions ? (
-        <div className='text-center text-gray-500'>
-          No sessions found. Click "Create Session" to add a new one!
+      <InputField
+        id='sessionSearch'
+        label='Search Sessions'
+        ref={inputRef}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder='Enter session name...'
+        marginBottom={20}
+      />
+
+      {error && (
+        <div className='text-center text-red-500'>
+          ⚠️ Failed to load sessions! Please try again later.
         </div>
-      ) : (
-        <ul className='space-y-2'>
-          {sessions.map((session, index) => (
-            <SessionItem index={index} key={session.id} session={session} />
-          ))}
-        </ul>
       )}
 
-      {isModalOpen && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setModalOpen(false)}
-          onSubmit={handleCreateSession}
-          title='Create New Session'
-          width='w-[500px]'
-          submitText='Create'
-        >
-          <InputField
-            marginBottom={20}
-            placeholder='Enter Session Name'
-            id='sessionName'
-            label='Session Name'
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-          />
-        </Modal>
+      {isLoading ? (
+        <div className='flex flex-col items-center justify-center space-y-3'>
+          <SmallLoader />
+          <p className='text-gray-500 text-sm animate-pulse'>
+            Loading sessions...
+          </p>
+        </div>
+      ) : data?.pages.flat().length === 0 ? (
+        <div className='flex flex-col items-center justify-center space-y-4 py-10 text-gray-500'>
+          <GoArrowSwitch size={30} />
+          <h2 className='text-lg font-semibold'>No sessions found</h2>
+        </div>
+      ) : (
+        <>
+          <ul className='space-y-2'>
+            {data?.pages.flat().map((session, index) => (
+              <SessionItem index={index} key={session.id} session={session} />
+            ))}
+          </ul>
+          {hasNextPage && (
+            <div className='text-center'>
+              <button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className={`bg-mainDark text-white py-2 px-4 rounded hover:bg-mainDarkHover transition-all ${
+                  isFetchingNextPage ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                {isFetchingNextPage ? (
+                  <div className='flex items-center space-x-2'>
+                    <SmallLoader />
+                    <span>Loading more...</span>
+                  </div>
+                ) : (
+                  'Show More'
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleCreateSession}
+        title='Create New Session'
+        width='w-[500px]'
+        submitText='Create'
+      >
+        <InputField
+          marginBottom={20}
+          placeholder='Enter Session Name'
+          id='sessionName'
+          label='Session Name'
+          value={sessionName}
+          onChange={(e) => setSessionName(e.target.value)}
+        />
+      </Modal>
     </div>
   );
 };

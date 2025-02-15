@@ -31,9 +31,7 @@ const NotificationsDrawer = ({
       isOpen={isOpen}
       handleClose={handleClose}
     >
-      {/* Flex container for the header and content */}
       <div className='flex flex-col h-full'>
-        {/* Sticky header */}
         <div className='sticky top-0 z-10 p-4 border-b border-gray-200 flex justify-between items-center bg-white'>
           <button
             onClick={handleClose}
@@ -44,7 +42,6 @@ const NotificationsDrawer = ({
           <h2 className='text-xl font-semibold'>Notifications</h2>
         </div>
 
-        {/* Scrollable content */}
         <div className='overflow-y-auto p-4 flex-1'>
           {invitations.length === 0 ? (
             <p>No new notifications</p>
@@ -54,9 +51,9 @@ const NotificationsDrawer = ({
                 <NotificationItem
                   key={invitation.id}
                   invitation={invitation}
-                  onAccept={onAccept} // Use prop methods
-                  onMarkAsRead={onMarkAsRead} // Use prop methods
-                  onDelete={onDelete} // Use prop methods
+                  onAccept={onAccept} 
+                  onMarkAsRead={onMarkAsRead}
+                  onDelete={onDelete}
                 />
               ))}
             </ul>

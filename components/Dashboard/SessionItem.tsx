@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import UserAvatarCircle from '../common/UserAvatarCircle';
 import { ISessionItem } from '@/models/models';
+import TruncatedText from '@/ui/TruncateText';
 
 interface SessionItemProps {
   session: ISessionItem;
-  index: number
+  index: number;
 }
 
 const SessionItem: React.FC<SessionItemProps> = ({ session, index }) => {
-  const sessionName =
-    session.name.length > 40 ? `${session.name.slice(0, 40)}...` : session.name;
-
   return (
     <Link
       href={`/session/${session.id}`}
@@ -19,15 +17,13 @@ const SessionItem: React.FC<SessionItemProps> = ({ session, index }) => {
     >
       <div className='flex items-center gap-[20px]'>
         <div>{index + 1}</div>
-        <div
-          className='text-mainDark font-medium truncate'
+        <TruncatedText
+          text={session.name}
+          maxLength={40}
+          className='text-mainDark font-medium'
           style={{ width: '250px' }}
-          title={session.name.length > 40 ? session.name : undefined}
-        >
-          {sessionName}
-        </div>
+        />
 
-        {/* Collaborators Avatars */}
         <div className='flex -space-x-2'>
           {session.collaborators.slice(0, 4).map((collaborator) => (
             <UserAvatarCircle
