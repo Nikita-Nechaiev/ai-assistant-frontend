@@ -4,8 +4,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'https://api.ai-editor-portfolio.com/api/:path*',
+        source: '/api/:path*', // Forward all API requests
+        destination: 'https://api.ai-editor-portfolio.com/:path*', // Removed extra "/api/"
       },
     ];
   },
