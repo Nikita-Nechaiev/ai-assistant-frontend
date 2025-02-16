@@ -17,8 +17,8 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
-
   const refreshToken = req.cookies.get('refreshToken')?.value;
+
   if (!refreshToken) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
@@ -38,7 +38,6 @@ export async function middleware(req: NextRequest) {
         Cookie: `refreshToken=${refreshToken}`,
       },
     });
-
     if (refreshResponse.status === 200) {
       const { accessToken, newRefreshToken, user } = refreshResponse.data;
 
@@ -46,20 +45,19 @@ export async function middleware(req: NextRequest) {
 
       res.cookies.set('accessToken', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         maxAge: 15 * 60, // 15 minutes in seconds
         sameSite: 'none',
       });
       res.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
         sameSite: 'none',
       });
       res.headers.set('x-user', JSON.stringify(user));
       return res;
     }
-
 
     const failUrl = req.nextUrl.clone();
     failUrl.pathname = '/login';

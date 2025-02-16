@@ -12,13 +12,12 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       try {
-        const refreshResponse = await axios.get<{message: string}>(
+        const refreshResponse = await axios.get<{ message: string }>(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-cookies`,
           {
             withCredentials: true,
           },
         );
-        console.log(refreshResponse.data.message)
 
         return axiosInstance.request(error.config);
       } catch (refreshError) {

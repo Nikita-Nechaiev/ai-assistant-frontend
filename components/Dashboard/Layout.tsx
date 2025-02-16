@@ -22,9 +22,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     deleteNotification,
   } = useCollaborationSocket({});
 
-  
-  console.log(typeof invitations[0]?.date); // Check if it's a string, undefined, or object
-  console.log(typeof invitations[0]?.expiresAt);
 
   const toggleDrawer = useCallback(() => {
     setIsDrawerOpen((prev) => !prev);

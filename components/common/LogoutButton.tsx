@@ -16,7 +16,6 @@ const LogoutButton = () => {
         {},
         { withCredentials: true },
       );
-
       if (response.status === 200) {
         clearUser();
 

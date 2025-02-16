@@ -50,7 +50,6 @@ export default function LoginPage() {
           withCredentials: true,
           headers: { 'Content-Type': 'application/json' },
         });
-
         setUser(responseData.user);
         setSnackbar('Successfully logged in!', SnackbarStatusEnum.SUCCESS);
         router.replace('/dashboard');
