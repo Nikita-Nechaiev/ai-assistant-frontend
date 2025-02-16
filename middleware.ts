@@ -46,7 +46,7 @@ export async function middleware(req: NextRequest) {
       res.cookies.set('accessToken', accessToken, {
         httpOnly: true,
         secure: true,
-        maxAge: 15 * 60, // 15 minutes in seconds
+        maxAge: 15 * 60,
         sameSite: 'strict',
       });
       res.cookies.set('refreshToken', newRefreshToken, {
