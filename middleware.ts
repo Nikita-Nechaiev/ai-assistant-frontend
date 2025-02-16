@@ -89,7 +89,6 @@ export const config = {
     '/session/:path*',
     '/document/:path*',
     '/ai-assistance/:path*',
-    '/settings',
     '/faq',
     // public routes we also want to check
     '/login',
