@@ -64,6 +64,7 @@ export default function UserAvatarCircle({
   }, [changeUserPermissions, userId, currentPermission]);
 
   const isGoogleAvatar = avatar && !avatar.startsWith('/uploads');
+  console.log('avatar', avatar)
 
   return (
     <div className='relative'>

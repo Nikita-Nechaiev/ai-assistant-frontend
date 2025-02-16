@@ -52,7 +52,7 @@ export function useCollaborationSocket({
   // Establish socket connection and listeners
   useEffect(() => {
     const socket = io(
-      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000',
+      process.env.NEXT_PUBLIC_API_URL,
       {
         path: '/collaboration-session-socket',
         transports: ['websocket'],
