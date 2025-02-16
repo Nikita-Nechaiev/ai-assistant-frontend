@@ -48,13 +48,13 @@ export async function middleware(req: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 15 * 60, // 15 minutes in seconds
-        sameSite: 'strict',
+        sameSite: 'none',
       });
       res.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
-        sameSite: 'strict',
+        sameSite: 'none',
       });
       res.headers.set('x-user', JSON.stringify(user));
       return res;
