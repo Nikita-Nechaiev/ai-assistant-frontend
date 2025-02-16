@@ -96,6 +96,10 @@ const SessionLayout: React.FC<SessionLayoutProps> = ({ children }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isInvitationModalOpen, setInvitationModalOpen] = useState(false);
 
+  console.log('session', session);
+  console.log('sessionId', sessionId);
+  console.log('onlineUsers', onlineUsers);
+
   if (!session) {
     return <LargeLoader />;
   }
