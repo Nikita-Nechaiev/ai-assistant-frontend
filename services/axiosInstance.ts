@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { useUserStore } from '@/store/useUserStore';
-import Router from 'next/router';
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -24,7 +23,7 @@ axiosInstance.interceptors.response.use(
         const { clearUser } = useUserStore.getState();
         clearUser();
 
-        Router.push('/login');
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }

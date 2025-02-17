@@ -7,6 +7,8 @@ import Snackbar from '@/ui/Snackbar';
 import NotificationsDrawer from './NotificationsDrawer';
 import { useCollaborationSocket } from '@/hooks/useCollaborationSocket';
 import { NotificationStatusEnum } from '@/models/enums';
+import { useUserStore } from '@/store/useUserStore';
+import LargeLoader from '@/ui/LargeLoader';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -14,6 +16,8 @@ interface MainLayoutProps {
 
 const MainLayout = ({ children }: MainLayoutProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { user: currentUser } = useUserStore();
+
   const {
     invitations,
     fetchNotifications,
@@ -21,7 +25,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     updateNotificationStatus,
     deleteNotification,
   } = useCollaborationSocket({});
-
 
   const toggleDrawer = useCallback(() => {
     setIsDrawerOpen((prev) => !prev);
@@ -40,6 +43,10 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     (id: number) => deleteNotification(id),
     [deleteNotification],
   );
+
+  if (!currentUser?.id) {
+    return <LargeLoader />
+  }
 
   return (
     <div className='flex h-screen overflow-clip'>

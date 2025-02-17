@@ -16,13 +16,11 @@ const LogoutButton = () => {
         {},
         { withCredentials: true },
       );
-      if (response.status === 200) {
-        clearUser();
-
-        router.push('/login');
-      } else {
+      if (response.status !== 200) {
         console.log('Logout failed:', response.statusText);
       }
+      clearUser();
+      router.replace('/login');
     } catch (error) {
       if (error instanceof AxiosError) {
         console.log(
