@@ -47,14 +47,14 @@ export async function middleware(req: NextRequest) {
         httpOnly: true,
         secure: true,
         maxAge: 15 * 60,
-        sameSite: 'none',
+        sameSite: 'strict',
         domain: '.ai-editor-portfolio.com',
       });
       res.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: true,
         maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
-        sameSite: 'none',
+        sameSite: 'strict',
         domain: '.ai-editor-portfolio.com',
       });
       res.headers.set('x-user', JSON.stringify(user));

@@ -55,11 +55,11 @@ const DocumentList: React.FC<DocumentListProps> = ({
         Session Documents
       </h1>
 
-      <div className='flex flex-wrap gap-[23.5]'>
+      <div className='flex flex-wrap gap-[23.5px]'>
         <RequirePermission permission={PermissionEnum.EDIT}>
           <button
             onClick={() => openModal()}
-            className='h-[268.8] w-[201.6] flex items-center justify-center bg-gray-200 rounded-sm hover:bg-gray-300 transition'
+            className='h-[268.8px] w-[201.6px] flex items-center justify-center bg-gray-200 rounded-sm hover:bg-gray-300 transition'
           >
             <PiPlusCircleDuotone className='w-10 h-10 text-gray-400' />
           </button>
