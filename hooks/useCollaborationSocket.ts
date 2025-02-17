@@ -51,14 +51,11 @@ export function useCollaborationSocket({
 
   // Establish socket connection and listeners
   useEffect(() => {
-    const socket = io(
-      process.env.NEXT_PUBLIC_SOCKET_URL,
-      {
-        path: '/collaboration-session-socket',
-        transports: ['websocket'],
-        withCredentials: true,
-      },
-    );
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+      path: '/collaboration-session-socket',
+      transports: ['websocket'],
+      withCredentials: true,
+    });
     socketRef.current = socket;
 
     socket.on('connect', () => {
