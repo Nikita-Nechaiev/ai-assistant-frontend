@@ -19,6 +19,7 @@ export async function middleware(req: NextRequest) {
   }
   const refreshToken = req.cookies.get('refreshToken')?.value;
 
+
   if (!refreshToken) {
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
@@ -42,22 +43,31 @@ export async function middleware(req: NextRequest) {
       const { accessToken, newRefreshToken, user } = refreshResponse.data;
 
       const res = NextResponse.next();
+      const isProduction = process.env.NODE_ENV === 'production';
+      const cookieDomain = isProduction
+        ? '.ai-editor-portfolio.com'
+        : undefined;
 
       res.cookies.set('accessToken', accessToken, {
         httpOnly: true,
         secure: true,
         maxAge: 15 * 60,
         sameSite: 'strict',
-        domain: '.ai-editor-portfolio.com',
+        domain: cookieDomain,
       });
       res.cookies.set('refreshToken', newRefreshToken, {
         httpOnly: true,
         secure: true,
-        maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
+        maxAge: 30 * 24 * 60 * 60,
         sameSite: 'strict',
-        domain: '.ai-editor-portfolio.com',
+        domain: cookieDomain,
       });
-      res.headers.set('x-user', JSON.stringify(user));
+
+
+      const encodedUser = Buffer.from(JSON.stringify(user)).toString('base64');
+
+      res.headers.set('x-user', encodedUser);
+
       return res;
     }
 
@@ -81,6 +91,7 @@ export async function middleware(req: NextRequest) {
     return errRes;
   }
 }
+
 export const config = {
   matcher: [
     // protected routes (where we do the refresh logic)

@@ -19,7 +19,17 @@ export default async function RootLayout({
 }>) {
   const serverHeaders = await headers();
   const userHeader = serverHeaders.get('x-user');
-  const user: IUser = userHeader ? JSON.parse(userHeader) : null;
+
+  let user: IUser | null = null;
+
+  if (userHeader) {
+    try {
+      const decodedUser = Buffer.from(userHeader, 'base64').toString('utf8');
+      user = JSON.parse(decodedUser);
+    } catch (error) {
+      console.error('Ошибка при декодировании x-user:', error);
+    }
+  }
 
   return (
     <html lang='en'>
