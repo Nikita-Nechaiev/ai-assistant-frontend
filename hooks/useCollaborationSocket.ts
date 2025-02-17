@@ -54,13 +54,11 @@ export function useCollaborationSocket({
     if (!currentUser) {
       return
     }
-    console.log(currentUser)
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       path: '/collaboration-session-socket',
       transports: ['websocket'],
       withCredentials: true,
     });
-    console.log(socket)
     socketRef.current = socket;
 
     socket.on('connect', () => {
