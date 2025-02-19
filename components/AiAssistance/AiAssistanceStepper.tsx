@@ -53,10 +53,13 @@ export default function AiAsssistanceStepper({
       setSnackbar('Result copied to clipboard', SnackbarStatusEnum.SUCCESS);
     }
   };
-
   const onGoBack = () => {
     setCurrentStep(1);
     setInputValue('');
+  };
+
+  const handleSubmit = () => {
+    onSubmit(inputValue);
   };
 
   return (
@@ -79,7 +82,7 @@ export default function AiAsssistanceStepper({
           onInputChange={setInputValue}
           targetLanguage={targetLanguage}
           onTargetLanguageChange={setTargetLanguage}
-          onSubmit={() => onSubmit(inputValue)}
+          onSubmit={handleSubmit}
           onGoBack={onGoBack}
           isLoading={isLoading}
           handleActivateTextSelection={handleActivateTextSelection}

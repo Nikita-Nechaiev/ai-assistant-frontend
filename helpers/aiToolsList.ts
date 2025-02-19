@@ -59,7 +59,7 @@ export const aiToolList: AITool[] = [
     id: 'text-generation',
     name: 'Text Generation',
     endpoint: 'text-generation',
-    bodyField: 'prompt',
+    bodyField: 'text',
     Icon: FaScroll,
   },
   {

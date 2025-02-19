@@ -23,10 +23,10 @@ export default function AiAssistanceStepperPage() {
 
       const payload: any = {};
       if (selectedTool.requiresTargetLanguage) {
-        payload['text'] = inputValue;
+        payload['text'] = inputValue.inputValue;
         payload['targetLanguage'] = targetLanguage;
       } else {
-        payload[selectedTool.bodyField] = inputValue;
+        payload[selectedTool.bodyField] = inputValue.inputValue;
       }
 
       const response = await axiosInstance.post<IAiToolUsage>(
@@ -48,25 +48,29 @@ export default function AiAssistanceStepperPage() {
     },
   });
 
-const handleSubmit = useCallback(
-  (inputValue: string) => {
-    if (!inputValue.trim()) {
-      setSnackbar('Input cannot be empty', SnackbarStatusEnum.ERROR);
-      return;
-    }
-    if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
-      setSnackbar('Please specify a target language', SnackbarStatusEnum.ERROR);
-      return;
-    }
-    mutation.mutate({ inputValue });
-  },
-  [setSnackbar, selectedTool, targetLanguage, mutation],
-);
+  const handleSubmit = useCallback(
+    (inputValue: string) => {
+      if (!inputValue.trim()) {
+        setSnackbar('Input cannot be empty', SnackbarStatusEnum.ERROR);
+        return;
+      }
+      if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
+        setSnackbar(
+          'Please specify a target language',
+          SnackbarStatusEnum.ERROR,
+        );
+        return;
+      }
 
-const handleRestart = useCallback(() => {
-  setResult(null);
-  mutation.reset();
-}, [setResult, mutation]);
+      mutation.mutate({ inputValue });
+    },
+    [setSnackbar, selectedTool, targetLanguage, mutation],
+  );
+
+  const handleRestart = useCallback(() => {
+    setResult(null);
+    mutation.reset();
+  }, [setResult, mutation]);
 
   return (
     <MainLayout>

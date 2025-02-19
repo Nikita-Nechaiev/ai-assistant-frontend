@@ -8,6 +8,7 @@ import InputField from '@/ui/InputField';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 import SmallLoader from '@/ui/SmallLoader';
+import { FiCopy } from 'react-icons/fi';
 
 const AiUsageTable = () => {
   const [modalOpen, setModalOpen] = useState(false);
@@ -169,7 +170,7 @@ const AiUsageTable = () => {
                     onClick={() => onCopy(selectedUsage.sentText)}
                     className='text-gray-500 hover:text-mainDark transition'
                   >
-                    📋
+                    <FiCopy size={18} />
                   </button>
                 </div>
                 <div className='p-3 bg-gray-100 rounded h-40 overflow-auto'>
@@ -183,7 +184,7 @@ const AiUsageTable = () => {
                     onClick={() => onCopy(selectedUsage.result)}
                     className='text-gray-500 hover:text-mainDark transition'
                   >
-                    📋
+                    <FiCopy size={18} />
                   </button>
                 </div>
                 <div className='p-3 bg-gray-100 rounded h-40 overflow-auto'>
