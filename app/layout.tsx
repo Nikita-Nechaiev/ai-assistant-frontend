@@ -6,7 +6,32 @@ import ZustandHydration from '@/hydration/ZustandHydration';
 import { IUser } from '@/models/models';
 
 export const metadata = {
-  title: 'Ai Editor',
+  title: 'AI Editor - Smart Text Processing',
+  description:
+    'AI-powered text analysis, translation, and content generation with real-time collaboration. Manage roles, track changes, and enhance documents with intelligent tools.',
+  openGraph: {
+    title: 'AI Editor - Smart Text Processing',
+    description:
+      'AI-powered text analysis, translation, and content generation using OpenAI API. Supports real-time collaboration, document versioning, role-based access, and advanced text formatting.',
+    url: 'https://www.ai-editor-portfolio.com',
+    siteName: 'AI Editor',
+    images: [
+      {
+        url: '/company_logo.png',
+        width: 1200,
+        height: 630,
+        alt: 'AI Editor Logo',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Editor - Smart Text Processing',
+    description:
+      'AI-powered text analysis, translation, and content generation with OpenAI API. Collaborate in real-time and track document changes effortlessly.',
+    images: ['/company_logo.png'],
+  },
   icons: {
     icon: '/favicon.ico',
   },
@@ -27,7 +52,7 @@ export default async function RootLayout({
       const decodedUser = Buffer.from(userHeader, 'base64').toString('utf8');
       user = JSON.parse(decodedUser);
     } catch (error) {
-      console.error('Ошибка при декодировании x-user:', error);
+      console.error('Error decoding x-user:', error);
     }
   }
 
