@@ -13,7 +13,6 @@ interface ModalProps {
   width?: string;
   title?: string;
   children?: React.ReactNode;
-  height?: string;
 }
 
 const Modal = ({
@@ -24,7 +23,6 @@ const Modal = ({
   cancelText = 'Cancel',
   submitText = 'Submit',
   width = 'w-96',
-  height = 'h-auto',
   title,
   children,
 }: ModalProps) => {
@@ -82,7 +80,7 @@ const Modal = ({
       onClick={handleBackgroundClick}
     >
       <div
-        className={`relative bg-white rounded-md shadow-md p-6 transition-all duration-300 ${width} ${height} overflow-y-auto`}
+        className={`relative bg-white rounded-md shadow-md p-6 transition-all duration-300 ${width} overflow-y-auto`}
         tabIndex={0}
         onKeyDown={handleKeyDown}
       >
@@ -95,7 +93,7 @@ const Modal = ({
 
         {title && <h2 className='text-lg font-bold mb-4'>{title}</h2>}
 
-        <div className={`${height && 'h-full'} mb-6`}>{children}</div>
+        <div className={`mb-6`}>{children}</div>
 
         <div className='flex justify-end space-x-4'>
           {onCancel && (

@@ -29,8 +29,8 @@ import {
   EmitterSource,
   Quill as QuillType,
 } from 'react-quill-new';
-import Delta from 'quill-delta';
 import LargeLoader from '@/ui/LargeLoader';
+import { normalizeHTML } from '@/helpers/normalizeHtml';
 
 type QuillUnprivilegedEditor = {
   getContents(): DeltaStatic;
@@ -42,10 +42,6 @@ const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
   loading: () => <LargeLoader />,
 });
-
-function cleanDelta(delta: DeltaStatic): DeltaStatic {
-  return new Delta(delta.ops.filter((op) => op.insert !== '\n'));
-}
 
 export default function DocumentPage() {
   const sessionContext = useContext(SessionContext);
@@ -103,11 +99,11 @@ export default function DocumentPage() {
 
   useEffect(() => {
     if (currentDocument) {
-      setLocalContent(currentDocument.richContent);
+      const normalizedHTML = normalizeHTML(currentDocument.richContent);
+      setLocalContent(normalizedHTML);
+
       const tempQuill = new QuillType(document.createElement('div'));
-      const delta = tempQuill.clipboard.convert({
-        html: currentDocument.richContent,
-      });
+      const delta = tempQuill.clipboard.convert({ html: normalizedHTML });
       setQuillDelta(delta);
     }
   }, [currentDocument]);
@@ -266,31 +262,28 @@ export default function DocumentPage() {
         return;
       }
 
-      const tempQuill = new QuillType(document.createElement('div'));
-      const oldDelta = cleanDelta(
-        tempQuill.clipboard.convert({ html: currentDocument.richContent }),
-      );
-      const newDelta = cleanDelta(editor.getContents());
-
-      if (JSON.stringify(oldDelta) === JSON.stringify(newDelta)) {
-        return;
-      }
-
       setLocalContent(newContent);
-      setQuillDelta(newDelta);
 
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
       debounceTimer.current = setTimeout(() => {
-        changeContentAndSaveDocument(documentId, newContent);
+        const oldNormalized = normalizeHTML(currentDocument.richContent);
+
+        const newNormalized = normalizeHTML(newContent);
+
+        if (oldNormalized === newNormalized) {
+          return;
+        }
+
+        changeContentAndSaveDocument(documentId, newNormalized);
       }, 700);
     },
     [previewContent, changeContentAndSaveDocument, currentDocument, documentId],
   );
 
   if (!currentDocument && session?.id) {
-    return <LargeLoader />
+    return <LargeLoader />;
   }
 
   if (!currentDocument) {
@@ -351,9 +344,8 @@ export default function DocumentPage() {
           isOpen={isAiModalOpen}
           onClose={handleModalClose}
           width='w-[80vw]'
-          height='h-[80vh]'
         >
-          <div className='flex justify-center items-center h-full w-full'>
+          <div className='flex justify-center items-center h-[70vh] w-full'>
             <AiAsssistanceStepper
               selectedTool={selectedTool}
               setSelectedTool={setSelectedTool}
