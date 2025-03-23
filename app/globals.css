@@ -9,7 +9,7 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);  
+  background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
   overflow-x: clip;
 }
@@ -18,15 +18,30 @@ body {
   height: calc(100% - 43px) !important;
 }
 
-/* Устанавливаем ярко-фиолетовый цвет фона для выделенного текста */
 .ql-editor ::selection {
-  background-color: #1f2937;
-  color: white; /* Белый цвет текста для контраста */
-}
-
-/* Для Firefox */
-.ql-editor ::-moz-selection {
-  background-color: #1f2937;
+  background-color: #3c516e;
   color: white;
 }
 
+.ql-editor ::-moz-selection {
+  background-color: #3c516e;
+  color: white;
+}
+
+.ql-editor {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.ql-editor .ql-size-20px {
+  font-size: 20px;
+}
+.ql-editor .ql-size-24px {
+  font-size: 24px;
+}
+.ql-editor .ql-size-28px {
+  font-size: 28px;
+}
+.ql-editor .ql-size-32px {
+  font-size: 32px;
+}

@@ -81,6 +81,11 @@ export const exportToPDF = async (
     }
   };
 
+  // Проверяем, есть ли среди опов заголовок
+  const isHeaderLine = (lineOps: any[]) => {
+    return lineOps.some((op) => op.attributes?.header);
+  };
+
   const groupOpsByLine = (ops: any[]): any[][] => {
     const lines: any[][] = [];
     let currentLine: any[] = [];
@@ -225,13 +230,30 @@ export const exportToPDF = async (
 
     const linesGroups = groupOpsByLine(quillDelta.ops);
 
-    for (let lineOps of linesGroups) {
-      if (
+    for (let i = 0; i < linesGroups.length; i++) {
+      let lineOps = linesGroups[i];
+
+      const isEmptyLine = lineOps.every((op: any) => op.insert === '');
+      const isImageLine =
         lineOps.length === 1 &&
         lineOps[0].insert &&
         typeof lineOps[0].insert !== 'string' &&
-        lineOps[0].insert.image
-      ) {
+        lineOps[0].insert.image;
+      const headerLine = isHeaderLine(lineOps);
+
+      if (isEmptyLine) {
+        y += 5;
+        if (y > 280) {
+          doc.addPage();
+          y = 20;
+        }
+        continue;
+      }
+
+      if (isImageLine) {
+        if (headerLine) {
+          y += 5;
+        }
         const op = lineOps[0];
         const imageData = op.insert.image;
 
@@ -248,7 +270,7 @@ export const exportToPDF = async (
           }
 
           let imgType = 'JPEG';
-          if (imageData.toLowerCase().indexOf('png') !== -1) {
+          if (imageData.toLowerCase().includes('png')) {
             imgType = 'PNG';
           }
 
@@ -264,21 +286,11 @@ export const exportToPDF = async (
         } catch (e) {
           console.error('Error loading image', e);
         }
-        continue;
-      }
 
-      const isEmptyLine = lineOps.every((op: any) => op.insert === '');
-      if (isEmptyLine) {
-        y += 5;
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
         continue;
       }
 
       const firstNonEmptyOp = lineOps.find((op: any) => op.insert !== '');
-      const alignment = firstNonEmptyOp?.attributes?.align || 'left';
       const listType = firstNonEmptyOp?.attributes?.list || null;
 
       if (listType === 'ordered') {
@@ -314,6 +326,11 @@ export const exportToPDF = async (
         lastListType = null;
       }
 
+      if (headerLine) {
+        y += 5;
+      }
+
+      const alignment = firstNonEmptyOp?.attributes?.align || 'left';
       const physicalLines = processTextGroup(
         lineOps,
         doc,
@@ -356,17 +373,26 @@ export const exportToPDF = async (
 
           doc.text(segment.text, offsetX, y, { align: 'left' });
 
+          // --------------------------------------
+          // Толщина линии зависит не от "bold", а от уровня заголовка (1,2,3)
+          const isHeader123 =
+            segment.op.attributes?.header &&
+            [1, 2, 3].includes(segment.op.attributes.header);
+          // --------------------------------------
+
+          // Underline
           if (segment.op.attributes?.underline) {
             const underlineY = y + segment.lineHeight * 0.15;
-            doc.setLineWidth(0.35);
+            doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, underlineY, offsetX + segment.width, underlineY);
+            // Восстановим "стандартную" толщину, которая в коде была 0.75:
             doc.setLineWidth(0.75);
           }
 
+          // Strike
           if (segment.op.attributes?.strike) {
             const strikeY = y - segment.lineHeight * 0.3;
-            const isBold = segment.op.attributes?.bold;
-            doc.setLineWidth(isBold ? 0.75 : 0.35);
+            doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, strikeY, offsetX + segment.width, strikeY);
             doc.setLineWidth(0.75);
           }
