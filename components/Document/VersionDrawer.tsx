@@ -63,10 +63,12 @@ const VersionDrawer: React.FC<VersionDrawerProps> = ({
   handleClose,
   handleSetPreview,
 }) => {
+  console.log('versions', versions);
+
   const onMouseLeave = () => {
     if (selectedVersion) {
       handleSetPreview(selectedVersion);
-      return
+      return;
     }
 
     if (versions.length > 0) {

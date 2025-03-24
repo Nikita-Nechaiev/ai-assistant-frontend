@@ -30,7 +30,6 @@ import {
   Quill as QuillType,
 } from 'react-quill-new';
 import LargeLoader from '@/ui/LargeLoader';
-import { normalizeHTML } from '@/helpers/normalizeHtml';
 
 type QuillUnprivilegedEditor = {
   getContents(): DeltaStatic;
@@ -99,7 +98,7 @@ export default function DocumentPage() {
 
   useEffect(() => {
     if (currentDocument) {
-      const normalizedHTML = normalizeHTML(currentDocument.richContent);
+      const normalizedHTML = currentDocument.richContent;
       setLocalContent(normalizedHTML);
 
       const tempQuill = new QuillType(document.createElement('div'));
@@ -268,15 +267,11 @@ export default function DocumentPage() {
         clearTimeout(debounceTimer.current);
       }
       debounceTimer.current = setTimeout(() => {
-        const oldNormalized = normalizeHTML(currentDocument.richContent);
-
-        const newNormalized = normalizeHTML(newContent);
-
-        if (oldNormalized === newNormalized) {
+        if (currentDocument.richContent === newContent) {
           return;
         }
 
-        changeContentAndSaveDocument(documentId, newNormalized);
+        changeContentAndSaveDocument(documentId, newContent);
       }, 700);
     },
     [previewContent, changeContentAndSaveDocument, currentDocument, documentId],
