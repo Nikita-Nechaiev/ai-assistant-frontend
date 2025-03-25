@@ -4,8 +4,9 @@ import { PermissionEnum } from '@/models/enums';
 import { SessionContext } from './SessionLayout';
 import { useRouter } from 'next/navigation';
 import { exportToPDF } from '@/helpers/exportToPdf';
-import { Quill } from 'react-quill-new';
+import { Quill as QuillType } from 'react-quill-new';
 import useSnackbarStore from '@/store/useSnackbarStore';
+import { convertRichContentToDelta } from '@/helpers/documentHelpers';
 
 interface PopupMenuProps {
   documentId: number;
@@ -48,8 +49,7 @@ const PopupMenu: React.FC<PopupMenuProps> = ({
   }, [deleteDocument, documentId]);
 
   const handleExportDoc = useCallback(() => {
-    const quill = new Quill(document.createElement('div'));
-    const delta = quill.clipboard.convert({ html: richContent });
+    const delta = convertRichContentToDelta(richContent, QuillType);
     exportToPDF(documentTitle, delta, setSnackbar);
   }, [richContent, documentTitle, setSnackbar]);
 

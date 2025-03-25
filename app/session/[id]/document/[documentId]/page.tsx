@@ -30,6 +30,7 @@ import {
   Quill as QuillType,
 } from 'react-quill-new';
 import LargeLoader from '@/ui/LargeLoader';
+import { convertRichContentToDelta } from '@/helpers/documentHelpers';
 
 type QuillUnprivilegedEditor = {
   getContents(): DeltaStatic;
@@ -98,12 +99,13 @@ export default function DocumentPage() {
 
   useEffect(() => {
     if (currentDocument) {
-      const normalizedHTML = currentDocument.richContent;
-      setLocalContent(normalizedHTML);
+      const fixedDelta = convertRichContentToDelta(
+        currentDocument.richContent,
+        QuillType,
+      );
+      setQuillDelta(fixedDelta);
 
-      const tempQuill = new QuillType(document.createElement('div'));
-      const delta = tempQuill.clipboard.convert({ html: normalizedHTML });
-      setQuillDelta(delta);
+      setLocalContent(currentDocument.richContent);
     }
   }, [currentDocument]);
 
@@ -266,6 +268,7 @@ export default function DocumentPage() {
       if (debounceTimer.current) {
         clearTimeout(debounceTimer.current);
       }
+
       debounceTimer.current = setTimeout(() => {
         if (currentDocument.richContent === newContent) {
           return;
@@ -327,7 +330,7 @@ export default function DocumentPage() {
           formats={formats}
           value={previewContent || localContent}
           onChange={handleContentChange}
-          className='h-full'
+          className='h-full whitespace-pre-wrap'
           readOnly={
             !userPermissions?.includes(PermissionEnum.EDIT) || !!previewContent
           }

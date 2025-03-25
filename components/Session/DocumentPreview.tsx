@@ -11,7 +11,7 @@ const DocumentPreview: React.FC<DocumentPreviewProps> = ({ richContent }) => {
   return (
     <div className='relative w-full h-[209px] bg-white overflow-hidden rounded-t-md p-2 text-[6px]'>
       <div
-        className='h-full overflow-hidden text-gray-800'
+        className='h-full overflow-hidden text-gray-800 whitespace-pre-wrap'
         dangerouslySetInnerHTML={{ __html: formattedContent }}
       />
     </div>
