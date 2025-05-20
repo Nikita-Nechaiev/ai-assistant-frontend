@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { useUserStore } from '@/store/useUserStore';
 
 const axiosInstance = axios.create({
@@ -11,22 +12,22 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       try {
-        const refreshResponse = await axios.get<{ message: string }>(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-cookies`,
-          {
-            withCredentials: true,
-          },
-        );
+        await axios.get<{ message: string }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-cookies`, {
+          withCredentials: true,
+        });
 
         return axiosInstance.request(error.config);
       } catch (refreshError) {
         const { clearUser } = useUserStore.getState();
+
         clearUser();
 
         window.location.href = '/login';
+
         return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   },
 );

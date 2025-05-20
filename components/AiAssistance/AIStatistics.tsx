@@ -18,9 +18,7 @@ const AIStatistics: React.FC<AIStatisticsProps> = ({
       <div>
         <p>
           <span>You started using AI assistance: </span>
-          <span className='font-bold'>
-            {firstRequestDate.toLocaleDateString()}
-          </span>
+          <span className='font-bold'>{firstRequestDate.toLocaleDateString()}</span>
         </p>
         <p>
           <span>Total number of requests: </span>

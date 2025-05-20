@@ -1,5 +1,6 @@
-import { SnackbarStatusEnum } from '@/models/enums';
 import { create } from 'zustand';
+
+import { SnackbarStatusEnum } from '@/models/enums';
 
 interface SnackbarState {
   message: string | null;
@@ -12,7 +13,7 @@ const useSnackbarStore = create<SnackbarState>((set) => ({
   message: null,
   status: null,
   setSnackbar: (message, status) => {
-    set({ message, status });
+    set({ message: message, status: status });
   },
   closeSnackbar: () => {
     set({ message: null, status: null });

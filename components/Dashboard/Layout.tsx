@@ -1,14 +1,16 @@
 'use client';
 import React, { ReactNode, useState, useCallback } from 'react';
-import Sidebar from './Sidebar';
-import Header from './Header';
-import MainContent from './MainContent';
+
 import Snackbar from '@/ui/Snackbar';
-import NotificationsDrawer from './NotificationsDrawer';
 import { useCollaborationSocket } from '@/hooks/useCollaborationSocket';
 import { NotificationStatusEnum } from '@/models/enums';
 import { useUserStore } from '@/store/useUserStore';
 import LargeLoader from '@/ui/LargeLoader';
+
+import NotificationsDrawer from './NotificationsDrawer';
+import MainContent from './MainContent';
+import Header from './Header';
+import Sidebar from './Sidebar';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -18,34 +20,24 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { user: currentUser } = useUserStore();
 
-  const {
-    invitations,
-    fetchNotifications,
-    acceptInvitation,
-    updateNotificationStatus,
-    deleteNotification,
-  } = useCollaborationSocket({});
+  const { invitations, fetchNotifications, acceptInvitation, updateNotificationStatus, deleteNotification } =
+    useCollaborationSocket({});
 
   const toggleDrawer = useCallback(() => {
     setIsDrawerOpen((prev) => !prev);
+
     if (!isDrawerOpen) fetchNotifications();
   }, [isDrawerOpen, fetchNotifications]);
 
-  const handleAccept = useCallback(
-    (id: number) => acceptInvitation(id),
-    [acceptInvitation],
-  );
+  const handleAccept = useCallback((id: number) => acceptInvitation(id), [acceptInvitation]);
   const handleMarkAsRead = useCallback(
     (id: number) => updateNotificationStatus(id, NotificationStatusEnum.READ),
     [updateNotificationStatus],
   );
-  const handleDelete = useCallback(
-    (id: number) => deleteNotification(id),
-    [deleteNotification],
-  );
+  const handleDelete = useCallback((id: number) => deleteNotification(id), [deleteNotification]);
 
   if (!currentUser?.id) {
-    return <LargeLoader />
+    return <LargeLoader />;
   }
 
   return (

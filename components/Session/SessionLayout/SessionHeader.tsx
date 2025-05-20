@@ -1,15 +1,17 @@
 'use client';
 import React, { useState } from 'react';
+
 import { useRouter, useParams } from 'next/navigation';
-import UserAvatarCircle from '../common/UserAvatarCircle';
 import { FcInvite } from 'react-icons/fc';
 import { RiArrowGoBackFill } from 'react-icons/ri';
 import { MdDelete, MdEdit } from 'react-icons/md';
+
 import { ICollaborator } from '@/models/models';
 import { PermissionEnum } from '@/models/enums';
 import RequirePermission from '@/helpers/RequirePermission';
 import ConfirmationModal from '@/ui/ConfirmationModal';
 import TruncatedText from '@/ui/TruncateText';
+import UserAvatarCircle from '@/components/common/UserAvatarCircle';
 
 interface SessionHeaderProps {
   sessionName: string;
@@ -27,9 +29,7 @@ const formatTimeSpent = (timeSpent: number): string => {
   const seconds = timeSpent % 60;
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
-      .toString()
-      .padStart(2, '0')}`;
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   } else {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
@@ -92,19 +92,12 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({
             />
           ) : (
             <h1 className='text-xl flex items-center'>
-              <TruncatedText
-                text={sessionName}
-                maxLength={55}
-                className='text-mainLight font-semibold'
-              />
+              <TruncatedText text={sessionName} maxLength={55} className='text-mainLight font-semibold' />
             </h1>
           )}
           <RequirePermission permission={PermissionEnum.ADMIN}>
             <div className='flex items-center space-x-4'>
-              <button
-                onClick={() => setIsEditing(true)}
-                className='text-mainLight hover:text-gray-300 transition'
-              >
+              <button onClick={() => setIsEditing(true)} className='text-mainLight hover:text-gray-300 transition'>
                 <MdEdit size={25} />
               </button>
               <button
@@ -123,9 +116,7 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({
           {displayedCollaborators.map((collaborator) => (
             <UserAvatarCircle
               userId={collaborator.id}
-              currentPermission={
-                collaborator.permissions[collaborator.permissions.length - 1]
-              }
+              currentPermission={collaborator.permissions[collaborator.permissions.length - 1]}
               changeUserPermissions={changeUserPermissions}
               isYellow={true}
               isBelowTooltip={true}
@@ -135,9 +126,7 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({
               avatar={collaborator.avatar}
             />
           ))}
-          {hasMoreCollaborators && (
-            <span className='text-sm font-medium'>...</span>
-          )}
+          {hasMoreCollaborators && <span className='text-sm font-medium'>...</span>}
         </div>
 
         <RequirePermission permission={PermissionEnum.EDIT}>
@@ -149,9 +138,7 @@ const SessionHeader: React.FC<SessionHeaderProps> = ({
           </button>
         </RequirePermission>
 
-        <div className='text-lg font-semibold'>
-          {formatTimeSpent(timeSpent)}
-        </div>
+        <div className='text-lg font-semibold'>{formatTimeSpent(timeSpent)}</div>
       </div>
 
       <ConfirmationModal

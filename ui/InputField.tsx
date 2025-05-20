@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { FieldError } from 'react-hook-form';
 
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -9,16 +10,9 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   ref?: React.Ref<HTMLInputElement>;
 }
 
-const InputField: React.FC<InputFieldProps> = ({
-  id,
-  label,
-  error,
-  ref,
-  marginBottom = 0,
-  ...props
-}) => {
+const InputField: React.FC<InputFieldProps> = ({ id, label, error, ref, marginBottom = 0, ...props }) => {
   return (
-    <div className='grow' style={{ marginBottom }}>
+    <div className='grow' style={{ marginBottom: marginBottom }}>
       <label htmlFor={id} className='block text-sm font-medium text-mainDark'>
         {label}
       </label>

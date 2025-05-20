@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+
 import Modal from '@/ui/Modal';
 
 interface ConfirmationModalProps {
@@ -26,14 +27,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       onClose={onClose}
       onCancel={onCancel}
       onSubmit={onSubmit}
-      title={"Confirm your action"}
+      title={'Confirm your action'}
       submitText={submitText}
       cancelText='Cancel'
       width='w-[30vw]'
     >
-      <p className='text-mainDark text-lg font-semibold mb-6 text-center'>
-        {description}
-      </p>
+      <p className='text-mainDark text-lg font-semibold mb-6 text-center'>{description}</p>
     </Modal>
   );
 };

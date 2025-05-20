@@ -6,7 +6,7 @@ export interface TextSelectionOverlayProps {
   hasSelectedText: boolean;
   onCancel: () => void;
   onSubmit: () => void;
-  isLoading: boolean
+  isLoading: boolean;
 }
 
 const TextSelectionOverlay: React.FC<TextSelectionOverlayProps> = ({
@@ -31,25 +31,15 @@ const TextSelectionOverlay: React.FC<TextSelectionOverlayProps> = ({
           key={position}
           style={{
             position: 'fixed',
-            top:
-              position === 'bottom'
-                ? qlRect.bottom
-                : position === 'top'
-                ? 0
-                : qlRect.top,
+            top: position === 'bottom' ? qlRect.bottom : position === 'top' ? 0 : qlRect.top,
             left: position === 'right' ? qlRect.right : 0,
-            width:
-              position === 'left'
-                ? qlRect.left
-                : position === 'right'
-                ? window.innerWidth - qlRect.right
-                : '100%',
+            width: position === 'left' ? qlRect.left : position === 'right' ? window.innerWidth - qlRect.right : '100%',
             height:
               position === 'top'
                 ? qlRect.top
                 : position === 'bottom'
-                ? window.innerHeight - qlRect.bottom
-                : qlRect.height,
+                  ? window.innerHeight - qlRect.bottom
+                  : qlRect.height,
             backgroundColor: 'rgba(0, 0, 0, 0.6)',
             opacity: isVisible ? 1 : 0,
             transform: isVisible ? 'translateY(0)' : 'translateY(-10px)',

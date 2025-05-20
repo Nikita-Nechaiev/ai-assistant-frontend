@@ -1,11 +1,14 @@
 import React from 'react';
+
 import { FaEllipsisV } from 'react-icons/fa';
 import Link from 'next/link';
+
 import { IDocument } from '@/models/models';
-import PopupMenu from './PopupMenu';
-import DocumentPreview from './DocumentPreview';
 import { sliceRichContent } from '@/helpers/sliceRichContent';
 import TruncatedText from '@/ui/TruncateText';
+
+import DocumentPreview from './DocumentPreview';
+import PopupMenu from './PopupMenu';
 
 interface DocumentItemProps {
   document: IDocument;
@@ -13,11 +16,7 @@ interface DocumentItemProps {
   onEditTitle: () => void;
 }
 
-const DocumentItem: React.FC<DocumentItemProps> = ({
-  document,
-  sessionId,
-  onEditTitle,
-}) => {
+const DocumentItem: React.FC<DocumentItemProps> = ({ document, sessionId, onEditTitle }) => {
   const [isShowPopup, setShowPopup] = React.useState<number | null>(null);
 
   const handleEllipsisClick = (event: React.MouseEvent) => {
@@ -40,11 +39,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
       <div className='flex justify-between items-center px-3 py-2 rounded-b-md bg-white'>
         <div className='flex flex-col'>
-          <TruncatedText
-            text={document.title}
-            maxLength={17}
-            className='text-gray-700 font-medium'
-          />
+          <TruncatedText text={document.title} maxLength={17} className='text-gray-700 font-medium' />
           <span className='text-gray-500 text-sm'>
             {new Date(document.createdAt).toLocaleDateString('en-US', {
               year: 'numeric',

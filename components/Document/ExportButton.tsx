@@ -1,19 +1,18 @@
 'use client';
 
+import React from 'react';
+
+import { DeltaStatic } from 'react-quill-new';
+
 import { exportToPDF } from '@/helpers/exportToPdf';
 import useSnackbarStore from '@/store/useSnackbarStore';
-import React from 'react';
-import { DeltaStatic } from 'react-quill-new';
 
 interface ExportButtonProps {
   documentTitle: string;
   quillDelta: DeltaStatic | null;
 }
 
-const ExportButton: React.FC<ExportButtonProps> = ({
-  documentTitle,
-  quillDelta,
-}) => {
+const ExportButton: React.FC<ExportButtonProps> = ({ documentTitle, quillDelta }) => {
   const { setSnackbar } = useSnackbarStore();
 
   return (

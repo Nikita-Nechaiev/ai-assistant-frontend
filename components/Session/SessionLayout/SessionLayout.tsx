@@ -1,26 +1,19 @@
 'use client';
 
-import React, {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useState,
-} from 'react';
+import React, { createContext, Dispatch, SetStateAction, useState } from 'react';
+
 import { useParams } from 'next/navigation';
-import { useCollaborationSocket } from '@/hooks/useCollaborationSocket';
-import SessionHeader from '@/components/Session/SessionHeader';
-import Chat from '@/components/Session/Chat';
-import InvitationModal from '@/components/Session/InvitationModal';
 import { BsChatDots } from 'react-icons/bs';
+
+import { useCollaborationSocket } from '@/hooks/useCollaborationSocket';
 import { PermissionEnum } from '@/models/enums';
 import RequirePermission from '@/helpers/RequirePermission';
-import {
-  IAiToolUsage,
-  ICollaborationSession,
-  IDocument,
-  IVersion,
-} from '@/models/models';
+import { IAiToolUsage, ICollaborationSession, IDocument, IVersion } from '@/models/models';
 import LargeLoader from '@/ui/LargeLoader';
+
+import InvitationModal from '../InvitationModal/InvitationModal';
+import Chat from '../Chat/Chat';
+import SessionHeader from './SessionHeader';
 
 interface SessionContextType {
   session: ICollaborationSession;
@@ -30,10 +23,7 @@ interface SessionContextType {
   createDocument: (title: string) => void;
   deleteDocument: (documentId: number) => void;
   duplicateDocument: (documentId: number) => void;
-  changeContentAndSaveDocument: (
-    documentId: number,
-    newContent: string,
-  ) => void;
+  changeContentAndSaveDocument: (documentId: number, newContent: string) => void;
   applyVersion: (documentId: number, versionId: number) => void;
   getDocument: (documentId: number) => void;
   createDocumentAiUsage: (params: {
@@ -91,7 +81,7 @@ const SessionLayout: React.FC<SessionLayoutProps> = ({ children }) => {
     newAiUsage,
     setCurrentDocument,
     deleteSession,
-  } = useCollaborationSocket({ sessionId });
+  } = useCollaborationSocket({ sessionId: sessionId });
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isInvitationModalOpen, setInvitationModalOpen] = useState(false);
@@ -108,23 +98,23 @@ const SessionLayout: React.FC<SessionLayoutProps> = ({ children }) => {
   return (
     <SessionContext.Provider
       value={{
-        session,
-        versions,
-        getVersions,
-        documents,
-        currentDocument,
-        changeDocumentTitle,
-        createDocument,
-        deleteDocument,
-        duplicateDocument,
-        changeContentAndSaveDocument,
-        applyVersion,
-        getDocument,
-        createDocumentAiUsage,
-        isAiUsageFetching,
-        setNewAiUsage,
-        newAiUsage,
-        setCurrentDocument,
+        session: session,
+        versions: versions,
+        getVersions: getVersions,
+        documents: documents,
+        currentDocument: currentDocument,
+        changeDocumentTitle: changeDocumentTitle,
+        createDocument: createDocument,
+        deleteDocument: deleteDocument,
+        duplicateDocument: duplicateDocument,
+        changeContentAndSaveDocument: changeContentAndSaveDocument,
+        applyVersion: applyVersion,
+        getDocument: getDocument,
+        createDocumentAiUsage: createDocumentAiUsage,
+        isAiUsageFetching: isAiUsageFetching,
+        setNewAiUsage: setNewAiUsage,
+        newAiUsage: newAiUsage,
+        setCurrentDocument: setCurrentDocument,
       }}
     >
       <div className='relative min-h-screen'>
@@ -146,12 +136,7 @@ const SessionLayout: React.FC<SessionLayoutProps> = ({ children }) => {
             <BsChatDots size={30} />
           </button>
         )}
-        <Chat
-          isOpen={isChatOpen}
-          handleClose={handleCloseChat}
-          messages={messages}
-          sendMessage={sendMessage}
-        />
+        <Chat isOpen={isChatOpen} handleClose={handleCloseChat} messages={messages} sendMessage={sendMessage} />
         <RequirePermission permission={PermissionEnum.EDIT}>
           <InvitationModal
             deleteInvitation={deleteNotification}

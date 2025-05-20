@@ -1,8 +1,11 @@
 import React from 'react';
+
 import Link from 'next/link';
-import UserAvatarCircle from '../common/UserAvatarCircle';
+
 import { ISessionItem } from '@/models/models';
 import TruncatedText from '@/ui/TruncateText';
+
+import UserAvatarCircle from '../common/UserAvatarCircle';
 
 interface SessionItemProps {
   session: ISessionItem;
@@ -44,8 +47,7 @@ const SessionItem: React.FC<SessionItemProps> = ({ session, index }) => {
       {/* Last Interacted */}
       {session.lastInteracted && (
         <div className='text-mainGray text-sm whitespace-nowrap'>
-          Last Interacted:{' '}
-          {new Date(session.lastInteracted).toLocaleDateString()}
+          Last Interacted: {new Date(session.lastInteracted).toLocaleDateString()}
         </div>
       )}
     </Link>

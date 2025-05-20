@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/useUserStore';
 import axios, { AxiosError } from 'axios';
+
+import { useUserStore } from '@/store/useUserStore';
 
 const LogoutButton = () => {
   const clearUser = useUserStore((state) => state.clearUser);
@@ -16,20 +18,20 @@ const LogoutButton = () => {
         {},
         { withCredentials: true },
       );
+
       if (response.status !== 200) {
         console.log('Logout failed:', response.statusText);
       }
+
       clearUser();
       router.replace('/login');
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.log(
-          'Axios error during logout:',
-          error.response?.data || error.message,
-        );
+        console.log('Axios error during logout:', error.response?.data || error.message);
       }
     }
   };
+
   return (
     <button
       onClick={handleLogout}

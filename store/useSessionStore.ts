@@ -1,5 +1,6 @@
-import { IUserCollaborationSession } from '@/models/models';
 import { create } from 'zustand';
+
+import { IUserCollaborationSession } from '@/models/models';
 
 interface SessionStoreState {
   session: IUserCollaborationSession | null;
@@ -11,7 +12,7 @@ interface SessionStoreState {
 export const useSessionStore = create<SessionStoreState>((set) => ({
   session: null,
 
-  setSession: (session) => set({ session }),
+  setSession: (session) => set({ session: session }),
 
   updateSession: (updates) =>
     set((state) => ({

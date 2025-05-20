@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+
 import { PiPlusCircleDuotone } from 'react-icons/pi';
-import DocumentItem from './DocumentItem';
+import { GoArrowSwitch } from 'react-icons/go';
+
 import Modal from '@/ui/Modal';
 import InputField from '@/ui/InputField';
 import { IDocument } from '@/models/models';
 import RequirePermission from '@/helpers/RequirePermission';
 import { PermissionEnum } from '@/models/enums';
-import { GoArrowSwitch } from 'react-icons/go';
+
+import DocumentItem from './DocumentItem';
 
 interface DocumentListProps {
   documents?: IDocument[];
@@ -23,17 +26,23 @@ const DocumentList: React.FC<DocumentListProps> = ({
 }) => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [documentTitle, setDocumentTitle] = useState('');
-  const [editingDocumentId, setEditingDocumentId] = useState<number | null>(
-    null,
-  );
+  const [editingDocumentId, setEditingDocumentId] = useState<number | null>(null);
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setDocumentTitle('');
+    setEditingDocumentId(null);
+  };
 
   const handleModalSubmit = () => {
     if (!documentTitle.trim()) return;
+
     if (editingDocumentId !== null) {
       changeDocumentTitle(editingDocumentId, documentTitle);
     } else {
       createDocument(documentTitle);
     }
+
     closeModal();
   };
 
@@ -43,17 +52,9 @@ const DocumentList: React.FC<DocumentListProps> = ({
     setModalOpen(true);
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setDocumentTitle('');
-    setEditingDocumentId(null);
-  };
-
   return (
     <section className='px-6 max-w-[1150px] mx-auto'>
-      <h1 className='text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-300 pb-2'>
-        Session Documents
-      </h1>
+      <h1 className='text-2xl font-bold text-gray-800 mb-6 border-b-2 border-gray-300 pb-2'>Session Documents</h1>
 
       <div className='flex flex-wrap gap-[23.5px]'>
         <RequirePermission permission={PermissionEnum.EDIT}>
@@ -92,9 +93,7 @@ const DocumentList: React.FC<DocumentListProps> = ({
             isOpen={isModalOpen}
             onClose={closeModal}
             onSubmit={handleModalSubmit}
-            title={
-              editingDocumentId ? 'Edit Document Title' : 'Create New Document'
-            }
+            title={editingDocumentId ? 'Edit Document Title' : 'Create New Document'}
             width='w-[500px]'
             submitText={editingDocumentId ? 'Save' : 'Create'}
           >

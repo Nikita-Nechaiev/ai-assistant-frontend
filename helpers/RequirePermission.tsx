@@ -6,10 +6,7 @@ interface RequirePermissionProps {
   permission: PermissionEnum;
 }
 
-export default function RequirePermission({
-  children,
-  permission,
-}: RequirePermissionProps) {
+export default function RequirePermission({ children, permission }: RequirePermissionProps) {
   const { session } = useSessionStore();
 
   const userPermissions = session?.permissions;
@@ -17,5 +14,6 @@ export default function RequirePermission({
   if (!userPermissions || !userPermissions.includes(permission)) {
     return null;
   }
+
   return <>{children}</>;
 }

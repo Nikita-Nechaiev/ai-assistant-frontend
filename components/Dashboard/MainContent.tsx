@@ -1,15 +1,11 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode } from 'react';
 
 interface MainContentProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 const MainContent: React.FC<MainContentProps> = ({ children }) => {
-  return (
-    <main className='flex-1 pl-[40px] pt-[100px] overflow-auto bg-white'>
-      {children}
-    </main>
-  );
+  return <main className='flex-1 pl-[40px] pt-[100px] overflow-auto bg-white'>{children}</main>;
 };
 
 export default MainContent;

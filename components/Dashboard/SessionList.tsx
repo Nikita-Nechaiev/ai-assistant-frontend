@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
-import useSnackbarStore from '../../store/useSnackbarStore';
-import SessionItem from './SessionItem';
+import { GoArrowSwitch } from 'react-icons/go';
+
 import InputField from '@/ui/InputField';
 import { useUserStore } from '@/store/useUserStore';
 import Modal from '@/ui/Modal';
@@ -13,7 +14,9 @@ import axiosInstance from '@/services/axiosInstance';
 import { ICollaborationSession, ISessionItem } from '@/models/models';
 import { SnackbarStatusEnum } from '@/models/enums';
 import SmallLoader from '@/ui/SmallLoader';
-import { GoArrowSwitch } from 'react-icons/go';
+
+import SessionItem from './SessionItem';
+import useSnackbarStore from '../../store/useSnackbarStore';
 
 export const fetchUserSessions = async ({
   queryKey,
@@ -24,10 +27,10 @@ export const fetchUserSessions = async ({
 }) => {
   const [, search] = queryKey as [string, string];
   const page = typeof pageParam === 'number' ? pageParam : 1;
-  const { data } = await axiosInstance.get<ISessionItem[]>(
-    '/collaboration-session/get-user-sessions',
-    { params: { page, search } },
-  );
+  const { data } = await axiosInstance.get<ISessionItem[]>('/collaboration-session/get-user-sessions', {
+    params: { page: page, search: search },
+  });
+
   return data;
 };
 
@@ -43,31 +46,27 @@ const SessionList: React.FC = () => {
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery<ISessionItem[], AxiosError>({
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<
+    ISessionItem[],
+    AxiosError
+  >({
     queryKey: ['userSessions', debouncedSearch],
     queryFn: fetchUserSessions,
     initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.length === 25 ? lastPage.length + 1 : undefined,
+    getNextPageParam: (lastPage) => (lastPage.length === 25 ? lastPage.length + 1 : undefined),
   });
 
   const mutation = useMutation<ICollaborationSession, AxiosError, string>({
     mutationFn: async (name) => {
-      const { data } = await axiosInstance.post<ICollaborationSession>(
-        '/collaboration-session/create',
-        { name: name.trim() },
-      );
-      return data;
+      const response = await axiosInstance.post<ICollaborationSession>('/collaboration-session/create', {
+        name: name.trim(),
+      });
+
+      return response.data;
     },
     onSuccess: (newSession) => {
       setSnackbar('Session created successfully!', SnackbarStatusEnum.SUCCESS);
@@ -80,6 +79,7 @@ const SessionList: React.FC = () => {
 
   const handleCreateSession = useCallback(() => {
     if (!sessionName.trim()) return;
+
     mutation.mutate(sessionName);
   }, [sessionName, mutation]);
 
@@ -92,10 +92,7 @@ const SessionList: React.FC = () => {
     <div className='p-4 space-y-4'>
       <div className='flex justify-between items-center'>
         <h1 className='text-2xl font-bold text-mainDark'>Sessions</h1>
-        <button
-          className='bg-mainDark text-white py-2 px-4 rounded hover:bg-mainDarkHover'
-          onClick={handlePopupOpen}
-        >
+        <button className='bg-mainDark text-white py-2 px-4 rounded hover:bg-mainDarkHover' onClick={handlePopupOpen}>
           Create Session
         </button>
       </div>
@@ -110,18 +107,12 @@ const SessionList: React.FC = () => {
         marginBottom={20}
       />
 
-      {error && (
-        <div className='text-center text-red-500'>
-          ⚠️ Failed to load sessions! Please try again later.
-        </div>
-      )}
+      {error && <div className='text-center text-red-500'>⚠️ Failed to load sessions! Please try again later.</div>}
 
       {isLoading ? (
         <div className='flex flex-col items-center justify-center space-y-3'>
           <SmallLoader />
-          <p className='text-gray-500 text-sm animate-pulse'>
-            Loading sessions...
-          </p>
+          <p className='text-gray-500 text-sm animate-pulse'>Loading sessions...</p>
         </div>
       ) : data?.pages.flat().length === 0 ? (
         <div className='flex flex-col items-center justify-center space-y-4 py-10 text-gray-500'>
@@ -131,9 +122,9 @@ const SessionList: React.FC = () => {
       ) : (
         <>
           <ul className='space-y-2'>
-            {data?.pages.flat().map((session, index) => (
-              <SessionItem index={index} key={session.id} session={session} />
-            ))}
+            {data?.pages
+              .flat()
+              .map((session, index) => <SessionItem index={index} key={session.id} session={session} />)}
           </ul>
           {hasNextPage && (
             <div className='text-center'>

@@ -1,8 +1,10 @@
 'use client';
 import React from 'react';
-import { AITool } from '@/models/models';
+
 import { RiArrowGoBackFill } from 'react-icons/ri';
 import { useRouter } from 'next/navigation';
+
+import { AITool } from '@/models/models';
 import { aiToolList } from '@/helpers/aiToolsList';
 
 interface Step1SelectToolProps {
@@ -10,10 +12,7 @@ interface Step1SelectToolProps {
   isOnDocumentPage: boolean;
 }
 
-const Step1SelectTool: React.FC<Step1SelectToolProps> = ({
-  onToolSelect,
-  isOnDocumentPage,
-}) => {
+const Step1SelectTool: React.FC<Step1SelectToolProps> = ({ onToolSelect, isOnDocumentPage }) => {
   const router = useRouter();
 
   return (
@@ -28,9 +27,7 @@ const Step1SelectTool: React.FC<Step1SelectToolProps> = ({
         </button>
       )}
 
-      <h2 className='text-2xl text-center font-bold mb-4 '>
-        Select an AI Tool
-      </h2>
+      <h2 className='text-2xl text-center font-bold mb-4 '>Select an AI Tool</h2>
 
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4'>
         {aiToolList.map((tool) => (

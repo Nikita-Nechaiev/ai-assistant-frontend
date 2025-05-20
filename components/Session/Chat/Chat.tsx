@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import ChatMessage from './ChatMessage';
+
 import { IoMdClose } from 'react-icons/io';
+
 import InputField from '@/ui/InputField';
 import { useUserStore } from '@/store/useUserStore';
 import Drawer from '@/ui/Drawer';
 import { IMessage } from '@/models/models';
+
+import ChatMessage from './ChatMessage';
 
 interface ChatProps {
   isOpen: boolean;
@@ -15,12 +18,7 @@ interface ChatProps {
   sendMessage: (message: string) => void;
 }
 
-export default function Chat({
-  isOpen,
-  handleClose,
-  messages,
-  sendMessage,
-}: ChatProps) {
+export default function Chat({ isOpen, handleClose, messages, sendMessage }: ChatProps) {
   const { user } = useUserStore();
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -39,18 +37,9 @@ export default function Chat({
   };
 
   return (
-    <Drawer
-      initialWidth={50}
-      minWidth={25}
-      maxWidth={70}
-      isOpen={isOpen}
-      handleClose={handleClose}
-    >
+    <Drawer initialWidth={50} minWidth={25} maxWidth={70} isOpen={isOpen} handleClose={handleClose}>
       <div className='p-4 border-b border-gray-200 flex justify-between items-center'>
-        <button
-          onClick={handleClose}
-          className='text-gray-500 hover:text-gray-700'
-        >
+        <button onClick={handleClose} className='text-gray-500 hover:text-gray-700'>
           <IoMdClose size={30} />
         </button>
         <h2 className='text-xl font-semibold'>Session Chat</h2>
@@ -58,12 +47,7 @@ export default function Chat({
 
       <div className='flex-1 overflow-y-auto p-4 space-y-4'>
         {messages.map((msg, idx) => (
-          <ChatMessage
-            key={idx}
-            sender={msg.sender}
-            text={msg.text}
-            isCurrentUser={msg.sender.email === user?.email}
-          />
+          <ChatMessage key={idx} sender={msg.sender} text={msg.text} isCurrentUser={msg.sender.email === user?.email} />
         ))}
         <div ref={messagesEndRef} />
       </div>

@@ -2,25 +2,15 @@
 
 import { useEffect } from 'react';
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error;
-  reset: () => void;
-}) {
+export default function Error({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
     console.error('Application Error:', error);
   }, [error]);
 
   return (
     <div className='flex h-screen flex-col items-center justify-center bg-mainLight text-mainDark'>
-      <h1 className='text-6xl font-extrabold text-mainDark drop-shadow-lg'>
-        Oops!
-      </h1>
-      <p className='mt-4 text-xl text-mainGray'>
-        Something went wrong. Please try again.
-      </p>
+      <h1 className='text-6xl font-extrabold text-mainDark drop-shadow-lg'>Oops!</h1>
+      <p className='mt-4 text-xl text-mainGray'>Something went wrong. Please try again.</p>
       <div className='mt-6 flex gap-4'>
         <button
           onClick={() => reset()}
@@ -35,9 +25,7 @@ export default function Error({
           Go Home
         </a>
       </div>
-      <div className='absolute bottom-10 text-sm text-mainGray'>
-        If the problem persists, please contact support.
-      </div>
+      <div className='absolute bottom-10 text-sm text-mainGray'>If the problem persists, please contact support.</div>
     </div>
   );
 }

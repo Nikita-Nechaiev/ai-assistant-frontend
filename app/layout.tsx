@@ -1,7 +1,8 @@
 import './globals.css';
+import { headers } from 'next/headers';
+
 import Snackbar from '@/ui/Snackbar';
 import ReactQueryProvider from '@/providers/ReactQueryProvider';
-import { headers } from 'next/headers';
 import ZustandHydration from '@/hydration/ZustandHydration';
 import { IUser } from '@/models/models';
 
@@ -50,6 +51,7 @@ export default async function RootLayout({
   if (userHeader) {
     try {
       const decodedUser = Buffer.from(userHeader, 'base64').toString('utf8');
+
       user = JSON.parse(decodedUser);
     } catch (error) {
       console.error('Error decoding x-user:', error);

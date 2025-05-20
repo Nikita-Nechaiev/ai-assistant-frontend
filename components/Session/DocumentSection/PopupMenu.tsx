@@ -1,12 +1,15 @@
 import React, { useContext, useEffect, useCallback } from 'react';
-import RequirePermission from '@/helpers/RequirePermission';
-import { PermissionEnum } from '@/models/enums';
-import { SessionContext } from './SessionLayout';
+
 import { useRouter } from 'next/navigation';
-import { exportToPDF } from '@/helpers/exportToPdf';
 import { Quill as QuillType } from 'react-quill-new';
+
+import { exportToPDF } from '@/helpers/exportToPdf';
+import { PermissionEnum } from '@/models/enums';
+import RequirePermission from '@/helpers/RequirePermission';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { convertRichContentToDelta } from '@/helpers/documentHelpers';
+
+import { SessionContext } from '../SessionLayout/SessionLayout';
 
 interface PopupMenuProps {
   documentId: number;
@@ -16,13 +19,7 @@ interface PopupMenuProps {
   documentTitle: string;
 }
 
-const PopupMenu: React.FC<PopupMenuProps> = ({
-  documentId,
-  onClose,
-  onEditTitle,
-  richContent,
-  documentTitle,
-}) => {
+const PopupMenu: React.FC<PopupMenuProps> = ({ documentId, onClose, onEditTitle, richContent, documentTitle }) => {
   const sessionContext = useContext(SessionContext);
   const router = useRouter();
   const { deleteDocument, duplicateDocument, session } = sessionContext || {};
@@ -50,6 +47,7 @@ const PopupMenu: React.FC<PopupMenuProps> = ({
 
   const handleExportDoc = useCallback(() => {
     const delta = convertRichContentToDelta(richContent, QuillType);
+
     exportToPDF(documentTitle, delta, setSnackbar);
   }, [richContent, documentTitle, setSnackbar]);
 
@@ -61,6 +59,7 @@ const PopupMenu: React.FC<PopupMenuProps> = ({
     };
 
     window.addEventListener('mousedown', handleOutsideClick);
+
     return () => {
       window.removeEventListener('mousedown', handleOutsideClick);
     };
@@ -70,35 +69,20 @@ const PopupMenu: React.FC<PopupMenuProps> = ({
     <div className='popup-menu absolute bottom-[60px] right-0 bg-white shadow-md rounded-md p-2 w-40 z-10'>
       <ul className='space-y-2'>
         <RequirePermission permission={PermissionEnum.EDIT}>
-          <li
-            onClick={handleRenameDoc}
-            className='cursor-pointer hover:text-blue-500 transition'
-          >
+          <li onClick={handleRenameDoc} className='cursor-pointer hover:text-blue-500 transition'>
             Rename
           </li>
-          <li
-            onClick={handleEditDoc}
-            className='cursor-pointer hover:text-blue-500 transition'
-          >
+          <li onClick={handleEditDoc} className='cursor-pointer hover:text-blue-500 transition'>
             Edit
           </li>
-          <li
-            onClick={handleDuplicateDoc}
-            className='cursor-pointer hover:text-blue-500 transition'
-          >
+          <li onClick={handleDuplicateDoc} className='cursor-pointer hover:text-blue-500 transition'>
             Duplicate
           </li>
-          <li
-            onClick={handleDeleteDoc}
-            className='cursor-pointer hover:text-blue-500 transition'
-          >
+          <li onClick={handleDeleteDoc} className='cursor-pointer hover:text-blue-500 transition'>
             Delete
           </li>
         </RequirePermission>
-        <li
-          onClick={handleExportDoc}
-          className='cursor-pointer hover:text-blue-500 transition'
-        >
+        <li onClick={handleExportDoc} className='cursor-pointer hover:text-blue-500 transition'>
           Export as PDF
         </li>
       </ul>

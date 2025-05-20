@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+
 import Step1SelectTool from '@/components/AiAssistance/Step1SelectTool';
 import Step2Input from '@/components/AiAssistance/Step2Input';
 import Step3Success from '@/components/AiAssistance/Step3Success';
@@ -89,13 +90,7 @@ export default function AiAsssistanceStepper({
         />
       )}
 
-      {currentStep === 3 && (
-        <Step3Success
-          result={result}
-          onCopyResult={handleCopyResult}
-          onRestart={handleRestart}
-        />
-      )}
+      {currentStep === 3 && <Step3Success result={result} onCopyResult={handleCopyResult} onRestart={handleRestart} />}
     </div>
   );
 }

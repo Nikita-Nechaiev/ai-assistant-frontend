@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { IUser } from '@/models/models';
 import { useUserStore } from '@/store/useUserStore';
-import { useEffect } from 'react';
 
 interface Props {
   user: IUser | null;

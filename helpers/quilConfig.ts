@@ -4,21 +4,9 @@ export const modules = {
     ['bold', 'italic', 'underline', 'strike'],
     [{ align: ['right', 'center', 'justify'] }],
     [{ list: 'ordered' }, { list: 'bullet' }],
-    // ['image'],
     [{ color: [] }],
     [{ background: [] }],
   ],
 };
 
-export const formats = [
-  'header',
-  'bold',
-  'italic',
-  'underline',
-  'strike',
-  'list',
-  // 'image',
-  'color',
-  'background',
-  'align',
-];
+export const formats = ['header', 'bold', 'italic', 'underline', 'strike', 'list', 'color', 'background', 'align'];

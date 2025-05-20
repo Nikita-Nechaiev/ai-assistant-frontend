@@ -1,8 +1,8 @@
 import { IconType } from 'react-icons';
+
 import { AppRolesEnum, NotificationStatusEnum } from './enums';
 import { InvitationStatusEnum } from './enums';
 import { PermissionEnum } from './enums';
-import { ThemeEnum } from './enums';
 
 export interface IUser {
   id: number;
@@ -65,7 +65,7 @@ export interface IInvitation {
   invitationStatus: InvitationStatusEnum;
   notificationStatus: NotificationStatusEnum;
   date: string;
-  expiresAt: string
+  expiresAt: string;
   inviterEmail: string;
   receiver: IUser;
 

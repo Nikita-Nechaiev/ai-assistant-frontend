@@ -1,4 +1,3 @@
-import { AITool } from '@/models/models';
 import {
   FaSpellCheck,
   FaBullhorn,
@@ -10,6 +9,8 @@ import {
   FaBook,
   FaHeading,
 } from 'react-icons/fa';
+
+import { AITool } from '@/models/models';
 
 export const aiToolList: AITool[] = [
   {

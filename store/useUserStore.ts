@@ -1,5 +1,6 @@
-import { IUser } from '@/models/models';
 import { create } from 'zustand';
+
+import { IUser } from '@/models/models';
 
 type UserState = {
   user: IUser | null;

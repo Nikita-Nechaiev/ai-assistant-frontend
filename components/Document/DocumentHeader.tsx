@@ -1,10 +1,12 @@
 'use client';
 import React, { useState } from 'react';
+
 import { MdEdit } from 'react-icons/md';
+import { DeltaStatic } from 'react-quill-new';
+
 import { PermissionEnum } from '@/models/enums';
 import ExportButton from '@/components/Document/ExportButton';
 import RequirePermission from '@/helpers/RequirePermission';
-import { DeltaStatic } from 'react-quill-new';
 import TruncatedText from '@/ui/TruncateText';
 
 interface DocumentHeaderProps {
@@ -29,6 +31,7 @@ export default function DocumentHeader({
     if (tempTitle.trim()) {
       onTitleSave(tempTitle);
     }
+
     setIsEditing(false);
   };
 
@@ -47,11 +50,7 @@ export default function DocumentHeader({
           />
         ) : (
           <h1 className='text-xl flex items-center'>
-            <TruncatedText
-              text={documentTitle}
-              maxLength={55}
-              className='text-mainDark font-semibold'
-            />
+            <TruncatedText text={documentTitle} maxLength={55} className='text-mainDark font-semibold' />
           </h1>
         )}
         <RequirePermission permission={PermissionEnum.EDIT}>
@@ -68,16 +67,10 @@ export default function DocumentHeader({
       </div>
       <div className='flex items-center space-x-4'>
         <RequirePermission permission={PermissionEnum.EDIT}>
-          <button
-            onClick={onOpenAiModal}
-            className='bg-mainDark text-white h-10 px-4 py-2 rounded'
-          >
+          <button onClick={onOpenAiModal} className='bg-mainDark text-white h-10 px-4 py-2 rounded'>
             AI Assistance
           </button>
-          <button
-            onClick={onOpenVersionDrawer}
-            className='bg-mainDark text-white h-10 px-4 py-2 rounded'
-          >
+          <button onClick={onOpenVersionDrawer} className='bg-mainDark text-white h-10 px-4 py-2 rounded'>
             Show Versions
           </button>
         </RequirePermission>

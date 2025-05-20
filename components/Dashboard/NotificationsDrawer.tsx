@@ -1,9 +1,12 @@
 'use client';
 
 import React from 'react';
+
 import { IoMdClose } from 'react-icons/io';
+
 import Drawer from '@/ui/Drawer';
 import { IInvitation } from '@/models/models';
+
 import NotificationItem from './NotificationItem';
 
 interface NotificationsDrawerProps {
@@ -24,19 +27,10 @@ const NotificationsDrawer = ({
   onDelete,
 }: NotificationsDrawerProps) => {
   return (
-    <Drawer
-      initialWidth={50}
-      minWidth={25}
-      maxWidth={70}
-      isOpen={isOpen}
-      handleClose={handleClose}
-    >
+    <Drawer initialWidth={50} minWidth={25} maxWidth={70} isOpen={isOpen} handleClose={handleClose}>
       <div className='flex flex-col h-full'>
         <div className='sticky top-0 z-10 p-4 border-b border-gray-200 flex justify-between items-center bg-white'>
-          <button
-            onClick={handleClose}
-            className='text-gray-500 hover:text-gray-700'
-          >
+          <button onClick={handleClose} className='text-gray-500 hover:text-gray-700'>
             <IoMdClose size={30} />
           </button>
           <h2 className='text-xl font-semibold'>Notifications</h2>
@@ -51,7 +45,7 @@ const NotificationsDrawer = ({
                 <NotificationItem
                   key={invitation.id}
                   invitation={invitation}
-                  onAccept={onAccept} 
+                  onAccept={onAccept}
                   onMarkAsRead={onMarkAsRead}
                   onDelete={onDelete}
                 />

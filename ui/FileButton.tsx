@@ -12,12 +12,14 @@ const FileButton: React.FC<FileButtonProps> = ({ id, label, onChange }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
       if (file.type.startsWith('image/')) {
         setPreview(URL.createObjectURL(file));
       } else {
         setPreview(null);
       }
     }
+
     onChange(e);
   };
 
@@ -31,13 +33,7 @@ const FileButton: React.FC<FileButtonProps> = ({ id, label, onChange }) => {
       >
         {label}
       </label>
-      <input
-        type='file'
-        id={id}
-        className='hidden'
-        onChange={handleFileChange}
-        accept='image/*'
-      />
+      <input type='file' id={id} className='hidden' onChange={handleFileChange} accept='image/*' />
 
       {preview && (
         <div className='mt-2 max-w-[100px]'>

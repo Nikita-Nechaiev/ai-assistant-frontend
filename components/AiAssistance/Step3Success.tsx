@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+
 import { FiCopy } from 'react-icons/fi';
 
 interface Step3SuccessProps {
@@ -8,11 +9,7 @@ interface Step3SuccessProps {
   onRestart: () => void;
 }
 
-const Step3Success: React.FC<Step3SuccessProps> = ({
-  result,
-  onCopyResult,
-  onRestart,
-}) => {
+const Step3Success: React.FC<Step3SuccessProps> = ({ result, onCopyResult, onRestart }) => {
   const isBigResult = result && result?.length > 1300;
 
   return (
@@ -20,16 +17,16 @@ const Step3Success: React.FC<Step3SuccessProps> = ({
       {/* Title */}
       <h2 className='text-2xl font-bold text-mainDark mb-6'>AI Usage Result</h2>
 
-      <div className={`border border-mainDark text-mainDark p-4 pb-9 mb-4 rounded relative ${isBigResult && 'max-h-[50vh] overflow-y-scroll'}`}>
+      <div
+        className={`border border-mainDark text-mainDark p-4 pb-9 mb-4 rounded relative ${isBigResult && 'max-h-[50vh] overflow-y-scroll'}`}
+      >
         <div className='flex text-gray-600 justify-between items-center mb-3'>
           <span className=' text-sm '>text</span>
           <button
             onClick={onCopyResult}
             disabled={!result}
             className={`flex items-center gap-2 px-3 py-1 rounded transition-colors ${
-              result
-                ? 'text-mainDark hover:text-mainDarkHover'
-                : 'text-gray-400 cursor-not-allowed'
+              result ? 'text-mainDark hover:text-mainDarkHover' : 'text-gray-400 cursor-not-allowed'
             }`}
           >
             <FiCopy size={18} />

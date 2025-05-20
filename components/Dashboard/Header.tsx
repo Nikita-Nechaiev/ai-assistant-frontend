@@ -1,25 +1,22 @@
 'use client';
-import { useUserStore } from '@/store/useUserStore';
 import React from 'react';
+
 import { IoMdNotifications } from 'react-icons/io';
-import UserAvatarCircle from '../common/UserAvatarCircle';
+
+import { useUserStore } from '@/store/useUserStore';
 import { IInvitation } from '@/models/models';
+
+import UserAvatarCircle from '../common/UserAvatarCircle';
 
 interface HeaderProps {
   handleToggleDrawwer: () => void;
   invitations: IInvitation[];
 }
 
-const Header: React.FC<HeaderProps> = ({
-  handleToggleDrawwer,
-  invitations,
-}) => {
+const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => {
   const { user } = useUserStore();
 
-  const unreadCount =
-    invitations?.filter(
-      (invitation) => invitation.notificationStatus === 'unread',
-    ).length || 0;
+  const unreadCount = invitations?.filter((invitation) => invitation.notificationStatus === 'unread').length || 0;
 
   return (
     <header className='flex z-50 items-center justify-between px-6 py-4 bg-mainDark text-mainLight shadow-md fixed w-[calc(100%-16rem)] left-64'>

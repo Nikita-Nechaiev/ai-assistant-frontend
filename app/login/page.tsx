@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -42,6 +43,7 @@ export default function LoginPage() {
   const onSubmit: SubmitHandler<LoginFormInputs> = useCallback(
     async (data) => {
       setIsLoading(true);
+
       try {
         const { data: responseData } = await axios.post<{
           accessToken: string;
@@ -50,13 +52,13 @@ export default function LoginPage() {
           withCredentials: true,
           headers: { 'Content-Type': 'application/json' },
         });
+
         setUser(responseData.user);
         setSnackbar('Successfully logged in!', SnackbarStatusEnum.SUCCESS);
         router.replace('/dashboard');
       } catch (error) {
-        const errorMessage = axios.isAxiosError(error)
-          ? 'Invalid email or password!'
-          : 'An unexpected error occurred';
+        const errorMessage = axios.isAxiosError(error) ? 'Invalid email or password!' : 'An unexpected error occurred';
+
         setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
       } finally {
         setIsLoading(false);
@@ -96,10 +98,7 @@ export default function LoginPage() {
           />
 
           <div className='text-right mb-6'>
-            <Link
-              href='/forgot-password'
-              className='text-sm text-mainDark hover:underline'
-            >
+            <Link href='/forgot-password' className='text-sm text-mainDark hover:underline'>
               Forgot Password?
             </Link>
           </div>
@@ -110,10 +109,7 @@ export default function LoginPage() {
         <div className='mt-6 text-center'>
           <p className='text-sm text-gray-600'>
             Don&apos;t have an account?{' '}
-            <Link
-              href='/registration'
-              className='text-mainDark hover:underline'
-            >
+            <Link href='/registration' className='text-mainDark hover:underline'>
               Register here
             </Link>
           </p>

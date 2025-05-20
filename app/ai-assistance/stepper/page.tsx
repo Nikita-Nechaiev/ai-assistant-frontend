@@ -1,6 +1,8 @@
 'use client';
 import React, { useCallback, useState } from 'react';
+
 import { useMutation } from '@tanstack/react-query';
+
 import MainLayout from '@/components/Dashboard/Layout';
 import { SnackbarStatusEnum } from '@/models/enums';
 import { AITool, IAiToolUsage } from '@/models/models';
@@ -22,17 +24,15 @@ export default function AiAssistanceStepperPage() {
       }
 
       const payload: any = {};
+
       if (selectedTool.requiresTargetLanguage) {
-        payload['text'] = inputValue.inputValue;
-        payload['targetLanguage'] = targetLanguage;
+        payload.text = inputValue.inputValue;
+        payload.targetLanguage = targetLanguage;
       } else {
         payload[selectedTool.bodyField] = inputValue.inputValue;
       }
 
-      const response = await axiosInstance.post<IAiToolUsage>(
-        `/ai-tool-usage/${selectedTool.endpoint}`,
-        payload,
-      );
+      const response = await axiosInstance.post<IAiToolUsage>(`/ai-tool-usage/${selectedTool.endpoint}`, payload);
 
       return response.data;
     },
@@ -41,10 +41,7 @@ export default function AiAssistanceStepperPage() {
       setCurrentStep(3);
     },
     onError: (error) => {
-      setSnackbar(
-        error?.message || 'An error occurred',
-        SnackbarStatusEnum.ERROR,
-      );
+      setSnackbar(error?.message || 'An error occurred', SnackbarStatusEnum.ERROR);
     },
   });
 
@@ -52,17 +49,17 @@ export default function AiAssistanceStepperPage() {
     (inputValue: string) => {
       if (!inputValue.trim()) {
         setSnackbar('Input cannot be empty', SnackbarStatusEnum.ERROR);
-        return;
-      }
-      if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
-        setSnackbar(
-          'Please specify a target language',
-          SnackbarStatusEnum.ERROR,
-        );
+
         return;
       }
 
-      mutation.mutate({ inputValue });
+      if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
+        setSnackbar('Please specify a target language', SnackbarStatusEnum.ERROR);
+
+        return;
+      }
+
+      mutation.mutate({ inputValue: inputValue });
     },
     [setSnackbar, selectedTool, targetLanguage, mutation],
   );

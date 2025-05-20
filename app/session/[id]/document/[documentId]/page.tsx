@@ -1,42 +1,27 @@
 'use client';
 
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useRef,
-  useCallback,
-} from 'react';
-import dynamic from 'next/dynamic';
+import React, { useState, useEffect, useContext, useRef, useCallback } from 'react';
+
 import 'react-quill-new/dist/quill.snow.css';
+
+import { useParams, useRouter } from 'next/navigation';
+import { DeltaStatic, Quill as QuillType } from 'react-quill-new';
+import dynamic from 'next/dynamic';
 
 import DocumentHeader from '@/components/Document/DocumentHeader';
 import VersionDrawer from '@/components/Document/VersionDrawer';
 import { formats, modules } from '@/helpers/quilConfig';
-import { SessionContext } from '@/components/Session/SessionLayout';
 import Modal from '@/ui/Modal';
 import { AITool, IVersion } from '@/models/models';
-import { useParams, useRouter } from 'next/navigation';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { PermissionEnum, SnackbarStatusEnum } from '@/models/enums';
 import AiAsssistanceStepper from '@/components/AiAssistance/AiAssistanceStepper';
 import TextSelectionOverlay from '@/components/Document/TextSelectionOverlay';
 import { useUserStore } from '@/store/useUserStore';
 import { useSessionStore } from '@/store/useSessionStore';
-
-import {
-  DeltaStatic,
-  EmitterSource,
-  Quill as QuillType,
-} from 'react-quill-new';
 import LargeLoader from '@/ui/LargeLoader';
 import { convertRichContentToDelta } from '@/helpers/documentHelpers';
-
-type QuillUnprivilegedEditor = {
-  getContents(): DeltaStatic;
-  getHTML?(): string;
-  getText?(index?: number, length?: number): string;
-};
+import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
@@ -69,8 +54,7 @@ export default function DocumentPage() {
 
   const [selectedVersion, setSelectedVersion] = useState<IVersion | null>(null);
   const [previewContent, setPreviewContent] = useState<string>('');
-  const [isVersionDrawerOpen, setIsVersionDrawerOpen] =
-    useState<boolean>(false);
+  const [isVersionDrawerOpen, setIsVersionDrawerOpen] = useState<boolean>(false);
 
   const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -99,10 +83,8 @@ export default function DocumentPage() {
 
   useEffect(() => {
     if (currentDocument) {
-      const fixedDelta = convertRichContentToDelta(
-        currentDocument.richContent,
-        QuillType,
-      );
+      const fixedDelta = convertRichContentToDelta(currentDocument.richContent, QuillType);
+
       setQuillDelta(fixedDelta);
 
       setLocalContent(currentDocument.richContent);
@@ -121,6 +103,7 @@ export default function DocumentPage() {
     if (!isTextSelectionActive) return;
 
     const qlEditor = document.querySelector('.ql-editor') as HTMLElement;
+
     if (qlEditor) {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
@@ -145,12 +128,14 @@ export default function DocumentPage() {
 
     const handleSelectionChange = () => {
       const selection = window.getSelection();
+
       if (selection) {
         setSelectedText(selection.toString().trim());
       } else {
         setSelectedText('');
       }
     };
+
     document.addEventListener('selectionchange', handleSelectionChange);
 
     return () => {
@@ -185,17 +170,19 @@ export default function DocumentPage() {
   const handleCreateAiUsage = useCallback(
     (inputValue = '') => {
       const textToSend = selectedText || inputValue;
+
       if (!textToSend.trim()) {
         setSnackbar('Input cannot be empty', SnackbarStatusEnum.ERROR);
+
         return;
       }
+
       if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
-        setSnackbar(
-          'Please specify a target language',
-          SnackbarStatusEnum.ERROR,
-        );
+        setSnackbar('Please specify a target language', SnackbarStatusEnum.ERROR);
+
         return;
       }
+
       if (!selectedTool) {
         return;
       }
@@ -203,20 +190,13 @@ export default function DocumentPage() {
       createDocumentAiUsage?.({
         toolName: selectedTool.endpoint,
         text: textToSend,
-        documentId,
-        targetLanguage,
+        documentId: documentId,
+        targetLanguage: targetLanguage,
       });
 
       setSelectedText('');
     },
-    [
-      selectedText,
-      selectedTool,
-      documentId,
-      targetLanguage,
-      setSnackbar,
-      createDocumentAiUsage,
-    ],
+    [selectedText, selectedTool, documentId, targetLanguage, setSnackbar, createDocumentAiUsage],
   );
 
   const handleRestartStepper = useCallback(() => {
@@ -238,8 +218,10 @@ export default function DocumentPage() {
   const handleActivateTextSelection = useCallback(() => {
     if (selectedTool?.requiresTargetLanguage && !targetLanguage) {
       setSnackbar('Please specify a target language', SnackbarStatusEnum.ERROR);
+
       return;
     }
+
     setIsAiModalOpen(false);
     document.body.style.overflowY = 'auto';
     setIsTextSelectionActive(true);
@@ -253,12 +235,7 @@ export default function DocumentPage() {
   }, []);
 
   const handleContentChange = useCallback(
-    (
-      newContent: string,
-      delta: DeltaStatic,
-      source: EmitterSource,
-      editor: QuillUnprivilegedEditor,
-    ) => {
+    (newContent: string) => {
       if (previewContent || !changeContentAndSaveDocument || !currentDocument) {
         return;
       }
@@ -288,17 +265,12 @@ export default function DocumentPage() {
     return (
       <div className='flex items-center justify-center h-[80vh] bg-gray-100'>
         <div className='text-center'>
-          <h1 className='text-3xl font-bold text-mainDark mb-4'>
-            Document not found
-          </h1>
+          <h1 className='text-3xl font-bold text-mainDark mb-4'>Document not found</h1>
           <p className='text-gray-500 mb-6'>
-            The document you are trying to access does not exist or has been
-            deleted.
+            The document you are trying to access does not exist or has been deleted.
           </p>
           <button
-            onClick={() =>
-              router.replace('/session/' + sessionContext?.session?.id)
-            }
+            onClick={() => router.replace('/session/' + sessionContext?.session?.id)}
             className='bg-mainDark text-white px-6 py-3 rounded hover:bg-mainDarkHover'
           >
             Return to Session
@@ -322,27 +294,17 @@ export default function DocumentPage() {
         <ReactQuill
           key={JSON.stringify(userSession)}
           theme='snow'
-          modules={
-            userPermissions?.includes(PermissionEnum.EDIT)
-              ? modules
-              : { toolbar: false }
-          }
+          modules={userPermissions?.includes(PermissionEnum.EDIT) ? modules : { toolbar: false }}
           formats={formats}
           value={previewContent || localContent}
           onChange={handleContentChange}
           className='h-full whitespace-pre-wrap'
-          readOnly={
-            !userPermissions?.includes(PermissionEnum.EDIT) || !!previewContent
-          }
+          readOnly={!userPermissions?.includes(PermissionEnum.EDIT) || !!previewContent}
         />
       </div>
 
       {isAiModalOpen && (
-        <Modal
-          isOpen={isAiModalOpen}
-          onClose={handleModalClose}
-          width='w-[80vw]'
-        >
+        <Modal isOpen={isAiModalOpen} onClose={handleModalClose} width='w-[80vw]'>
           <div className='flex justify-center items-center h-[70vh] w-full'>
             <AiAsssistanceStepper
               selectedTool={selectedTool}
@@ -356,9 +318,7 @@ export default function DocumentPage() {
               onSubmit={handleCreateAiUsage}
               onRestart={handleRestartStepper}
               isLoading={Boolean(isAiUsageFetching)}
-              result={
-                newAiUsage ? newAiUsage.result : 'Error. No result to display'
-              }
+              result={newAiUsage ? newAiUsage.result : 'Error. No result to display'}
             />
           </div>
         </Modal>

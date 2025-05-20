@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { DeltaStatic } from 'react-quill-new';
+
 import { SnackbarStatusEnum } from '@/models/enums';
 
 interface Segment {
@@ -21,11 +22,10 @@ export const exportToPDF = async (
   quillDelta: DeltaStatic | null,
   setSnackbar: (message: string, status: SnackbarStatusEnum) => void,
 ) => {
-  const loadImageDimensions = (
-    imageData: string,
-  ): Promise<{ width: number; height: number }> => {
+  const loadImageDimensions = (imageData: string): Promise<{ width: number; height: number }> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
+
       img.onload = () => resolve({ width: img.width, height: img.height });
       img.onerror = (err) => reject(err);
       img.src = imageData;
@@ -35,8 +35,10 @@ export const exportToPDF = async (
   const getFontProps = (op: any): { fontSize: number; lineHeight: number } => {
     const baseFontSize = 13;
     const baseLineHeight = 5;
+
     if (op.attributes?.header) {
       const headerLevel = op.attributes.header;
+
       switch (headerLevel) {
         case 1:
           return { fontSize: baseFontSize * 2, lineHeight: baseLineHeight * 2 };
@@ -66,6 +68,7 @@ export const exportToPDF = async (
           return { fontSize: baseFontSize, lineHeight: baseLineHeight };
       }
     }
+
     return { fontSize: baseFontSize, lineHeight: baseLineHeight };
   };
 
@@ -93,18 +96,24 @@ export const exportToPDF = async (
     for (const op of ops) {
       if (typeof op.insert === 'string') {
         const parts = op.insert.split('\n');
-        parts.forEach((part: string, index: number) => {
+
+        for (let index = 0; index < parts.length; index++) {
+          const part = parts[index];
+
           currentLine.push({ ...op, insert: part });
+
           if (index < parts.length - 1) {
             lines.push(currentLine);
             currentLine = [];
           }
-        });
+        }
+        /* ---------------------------------------------------------------- */
       } else if (op.insert && op.insert.image) {
         if (currentLine.length > 0) {
           lines.push(currentLine);
           currentLine = [];
         }
+
         lines.push([op]);
       }
     }
@@ -115,6 +124,8 @@ export const exportToPDF = async (
 
     return lines;
   };
+
+  const isValidColor = (value?: string): value is string => typeof value === 'string' && value !== 'initial';
 
   const processTextGroup = (
     lineOps: any[],
@@ -140,10 +151,12 @@ export const exportToPDF = async (
       if (op.insert === '') continue;
 
       const { fontSize, lineHeight: opLineHeight } = getFontProps(op);
+
       doc.setFontSize(fontSize);
       setFontStyle(op, doc);
 
       let textRemaining = op.insert;
+
       while (textRemaining.length > 0) {
         const availableSpace = availableWidthTotal - currentLine.totalWidth;
         let fitText = '';
@@ -155,6 +168,7 @@ export const exportToPDF = async (
         for (let i = 0; i < textRemaining.length; i++) {
           const char = textRemaining[i];
           const charWidth = doc.getTextWidth(char);
+
           if (fitWidth + charWidth > availableSpace) break;
 
           fitText += char;
@@ -167,10 +181,7 @@ export const exportToPDF = async (
           }
         }
 
-        if (
-          lastSpaceIndex !== -1 &&
-          fitText.trim().length !== textRemaining.trim().length
-        ) {
+        if (lastSpaceIndex !== -1 && fitText.trim().length !== textRemaining.trim().length) {
           fitText = lastSpaceFitText.trimEnd();
           fitWidth = lastSpaceFitWidth;
         }
@@ -182,18 +193,15 @@ export const exportToPDF = async (
 
         const segment: Segment = {
           text: fitText,
-          fontSize,
+          fontSize: fontSize,
           lineHeight: opLineHeight,
           width: fitWidth,
-          op,
+          op: op,
         };
 
         currentLine.segments.push(segment);
         currentLine.totalWidth += fitWidth;
-        currentLine.maxLineHeight = Math.max(
-          currentLine.maxLineHeight,
-          opLineHeight,
-        );
+        currentLine.maxLineHeight = Math.max(currentLine.maxLineHeight, opLineHeight);
 
         textRemaining = textRemaining.substring(fitText.length);
 
@@ -204,12 +212,14 @@ export const exportToPDF = async (
     }
 
     pushCurrentLine();
+
     return physicalLines;
   };
 
   try {
     if (!quillDelta || !quillDelta.ops?.length) {
       setSnackbar('No content for export', SnackbarStatusEnum.ERROR);
+
       return;
     }
 
@@ -235,18 +245,17 @@ export const exportToPDF = async (
 
       const isEmptyLine = lineOps.every((op: any) => op.insert === '');
       const isImageLine =
-        lineOps.length === 1 &&
-        lineOps[0].insert &&
-        typeof lineOps[0].insert !== 'string' &&
-        lineOps[0].insert.image;
+        lineOps.length === 1 && lineOps[0].insert && typeof lineOps[0].insert !== 'string' && lineOps[0].insert.image;
       const headerLine = isHeaderLine(lineOps);
 
       if (isEmptyLine) {
         y += 5;
+
         if (y > 280) {
           doc.addPage();
           y = 20;
         }
+
         continue;
       }
 
@@ -254,13 +263,12 @@ export const exportToPDF = async (
         if (headerLine) {
           y += 5;
         }
+
         const op = lineOps[0];
         const imageData = op.insert.image;
 
         try {
-          const { width: imgW, height: imgH } = await loadImageDimensions(
-            imageData,
-          );
+          const { width: imgW, height: imgH } = await loadImageDimensions(imageData);
           const scaledWidth = availableWidthTotal;
           const scaledHeight = (imgH / imgW) * scaledWidth;
 
@@ -270,18 +278,12 @@ export const exportToPDF = async (
           }
 
           let imgType = 'JPEG';
+
           if (imageData.toLowerCase().includes('png')) {
             imgType = 'PNG';
           }
 
-          doc.addImage(
-            imageData,
-            imgType,
-            leftMargin,
-            y,
-            scaledWidth,
-            scaledHeight,
-          );
+          doc.addImage(imageData, imgType, leftMargin, y, scaledWidth, scaledHeight);
           y += scaledHeight;
         } catch (e) {
           console.error('Error loading image', e);
@@ -315,14 +317,17 @@ export const exportToPDF = async (
           },
           ...lineOps,
         ];
+
         if (lastListType === 'ordered') {
           orderedListCounter = 1;
         }
+
         lastListType = 'bullet';
       } else {
         if (lastListType === 'ordered') {
           orderedListCounter = 1;
         }
+
         lastListType = null;
       }
 
@@ -331,19 +336,13 @@ export const exportToPDF = async (
       }
 
       const alignment = firstNonEmptyOp?.attributes?.align || 'left';
-      const physicalLines = processTextGroup(
-        lineOps,
-        doc,
-        availableWidthTotal,
-        leftMargin,
-      );
+      const physicalLines = processTextGroup(lineOps, doc, availableWidthTotal, leftMargin);
 
       for (const physLine of physicalLines) {
         let offsetX = leftMargin;
 
         if (alignment === 'center') {
-          offsetX =
-            leftMargin + (availableWidthTotal - physLine.totalWidth) / 2;
+          offsetX = leftMargin + (availableWidthTotal - physLine.totalWidth) / 2;
         } else if (alignment === 'right') {
           offsetX = leftMargin + (availableWidthTotal - physLine.totalWidth);
         }
@@ -352,37 +351,34 @@ export const exportToPDF = async (
           doc.setFontSize(segment.fontSize);
           setFontStyle(segment.op, doc);
 
-          if (segment.op.attributes?.color) {
-            doc.setTextColor(segment.op.attributes.color);
-            doc.setDrawColor(segment.op.attributes.color);
+          const textColor = segment.op.attributes?.color;
+
+          if (isValidColor(textColor)) {
+            doc.setTextColor(textColor);
+            doc.setDrawColor(textColor);
           } else {
             doc.setTextColor(0, 0, 0);
             doc.setDrawColor(0, 0, 0);
           }
 
-          if (segment.op.attributes?.background) {
-            doc.setFillColor(segment.op.attributes.background);
-            doc.rect(
-              offsetX,
-              y - segment.lineHeight * 0.7,
-              segment.width,
-              segment.lineHeight,
-              'F',
-            );
+          const bgColor = segment.op.attributes?.background;
+
+          if (isValidColor(bgColor)) {
+            doc.setFillColor(bgColor);
+            doc.rect(offsetX, y - segment.lineHeight * 0.7, segment.width, segment.lineHeight, 'F');
           }
 
           doc.text(segment.text, offsetX, y, { align: 'left' });
 
           // --------------------------------------
           // Толщина линии зависит не от "bold", а от уровня заголовка (1,2,3)
-          const isHeader123 =
-            segment.op.attributes?.header &&
-            [1, 2, 3].includes(segment.op.attributes.header);
+          const isHeader123 = segment.op.attributes?.header && [1, 2, 3].includes(segment.op.attributes.header);
           // --------------------------------------
 
           // Underline
           if (segment.op.attributes?.underline) {
             const underlineY = y + segment.lineHeight * 0.15;
+
             doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, underlineY, offsetX + segment.width, underlineY);
             // Восстановим "стандартную" толщину, которая в коде была 0.75:
@@ -392,6 +388,7 @@ export const exportToPDF = async (
           // Strike
           if (segment.op.attributes?.strike) {
             const strikeY = y - segment.lineHeight * 0.3;
+
             doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, strikeY, offsetX + segment.width, strikeY);
             doc.setLineWidth(0.75);

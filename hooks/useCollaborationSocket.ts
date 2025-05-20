@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import { io, Socket } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
+
 import {
   ICollaborationSession,
   ICollaborator,
@@ -15,15 +17,14 @@ import { useUserStore } from '@/store/useUserStore';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { isConvertableToNumber } from '@/helpers/isConvertableToNumber';
+
 import { useSocketEmitters } from './useSocketEmitters';
 
 interface UseCollaborationSocketParams {
   sessionId?: string | string[] | undefined;
 }
 
-export function useCollaborationSocket({
-  sessionId,
-}: UseCollaborationSocketParams) {
+export function useCollaborationSocket({ sessionId }: UseCollaborationSocketParams) {
   const router = useRouter();
   const { setSnackbar } = useSnackbarStore();
   const { user: currentUser } = useUserStore();
@@ -36,9 +37,7 @@ export function useCollaborationSocket({
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [invitations, setInvitations] = useState<IInvitation[]>([]);
   const [documents, setDocuments] = useState<IDocument[]>([]);
-  const [currentDocument, setCurrentDocument] = useState<IDocument | null>(
-    null,
-  );
+  const [currentDocument, setCurrentDocument] = useState<IDocument | null>(null);
   const [documentAiUsage, setDocumentAiUsage] = useState<IAiToolUsage[]>([]);
   const [isAiUsageFetching, setAiUsageFetching] = useState<boolean>(false);
   const [newAiUsage, setNewAiUsage] = useState<IAiToolUsage | null>(null);
@@ -52,13 +51,15 @@ export function useCollaborationSocket({
   // Establish socket connection and listeners
   useEffect(() => {
     if (!currentUser) {
-      return
+      return;
     }
+
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       path: '/collaboration-session-socket',
       transports: ['websocket'],
       withCredentials: true,
     });
+
     socketRef.current = socket;
 
     socket.on('connect', () => {
@@ -66,14 +67,13 @@ export function useCollaborationSocket({
       startTimeRef.current = Date.now();
 
       if (sessionId) {
-        if (
-          typeof sessionId === 'string' &&
-          !isConvertableToNumber(sessionId)
-        ) {
+        if (typeof sessionId === 'string' && !isConvertableToNumber(sessionId)) {
           setSnackbar('Invalid session page', SnackbarStatusEnum.ERROR);
           router.replace('/dashboard');
+
           return;
         }
+
         socket.emit('joinSession', { sessionId: Number(sessionId) });
         socket.emit('getMessages');
         socket.emit('getInvitations');
@@ -94,14 +94,8 @@ export function useCollaborationSocket({
 
     socket.on(
       'sessionData',
-      ({
-        session,
-        users,
-      }: {
-        session: ICollaborationSession;
-        users: ICollaborator[];
-      }) => {
-        setSession(session);
+      ({ sessionData, users }: { sessionData: ICollaborationSession; users: ICollaborator[] }) => {
+        setSession(sessionData);
         setOnlineUsers(users);
       },
     );
@@ -133,73 +127,48 @@ export function useCollaborationSocket({
     });
     socket.on('newInvitation', (newInvitation: IInvitation) => {
       if (sessionId && newInvitation.inviterEmail === currentUser?.email) {
-        setSnackbar(
-          `Invitation is sent to ${newInvitation.receiver.email}`,
-          SnackbarStatusEnum.SUCCESS,
-        );
+        setSnackbar(`Invitation is sent to ${newInvitation.receiver.email}`, SnackbarStatusEnum.SUCCESS);
       }
+
       setInvitations((prev) => [...prev, newInvitation]);
     });
     socket.on('invitationRoleChanged', (updatedInvitation: IInvitation) => {
-      setSnackbar(
-        `Invitation role changed to ${updatedInvitation.role}`,
-        SnackbarStatusEnum.SUCCESS,
-      );
-      setInvitations((prev) =>
-        prev.map((inv) =>
-          inv.id === updatedInvitation.id ? updatedInvitation : inv,
-        ),
-      );
+      setSnackbar(`Invitation role changed to ${updatedInvitation.role}`, SnackbarStatusEnum.SUCCESS);
+      setInvitations((prev) => prev.map((inv) => (inv.id === updatedInvitation.id ? updatedInvitation : inv)));
     });
     socket.on('invitationUpdated', (updatedInvitation: IInvitation) => {
-      setInvitations((prev) =>
-        prev.map((inv) =>
-          inv.id === updatedInvitation.id ? updatedInvitation : inv,
-        ),
-      );
+      setInvitations((prev) => prev.map((inv) => (inv.id === updatedInvitation.id ? updatedInvitation : inv)));
     });
     socket.on('notifications', (allInvitations: IInvitation[]) => {
       setInvitations(allInvitations);
     });
     socket.on('notificationUpdated', (updatedInvitation: IInvitation) => {
-      setInvitations((prev) =>
-        prev.map((inv) =>
-          inv.id === updatedInvitation.id ? updatedInvitation : inv,
-        ),
-      );
+      setInvitations((prev) => prev.map((inv) => (inv.id === updatedInvitation.id ? updatedInvitation : inv)));
     });
-    socket.on(
-      'notificationDeleted',
-      ({ invitationId }: { invitationId: number }) => {
-        setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
-      },
-    );
-    socket.on('invitationAccepted', ({ sessionId }: { sessionId: number }) => {
-      setSnackbar(
-        'Invitation accepted. Redirecting...',
-        SnackbarStatusEnum.SUCCESS,
-      );
-      router.push(`/session/${sessionId}`);
+    socket.on('notificationDeleted', ({ invitationId }: { invitationId: number }) => {
+      setInvitations((prev) => prev.filter((inv) => inv.id !== invitationId));
+    });
+    socket.on('invitationAccepted', ({ invitationSessionId }: { invitationSessionId: number }) => {
+      setSnackbar('Invitation accepted. Redirecting...', SnackbarStatusEnum.SUCCESS);
+      router.push(`/session/${invitationSessionId}`);
     });
     socket.on('permissionsChanged', ({ userId, permissions }) => {
       setSession((prev) => {
         if (!prev) return prev;
+
         const updated = prev.userCollaborationSessions.map((ucs) =>
-          ucs.user.id === userId ? { ...ucs, permissions } : ucs,
+          ucs.user.id === userId ? { ...ucs, permissions: permissions } : ucs,
         );
+
         return { ...prev, userCollaborationSessions: updated };
       });
-      setOnlineUsers((prev) =>
-        prev.map((user) =>
-          user.id === userId ? { ...user, permissions } : user,
-        ),
-      );
+      setOnlineUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, permissions: permissions } : user)));
+
       if (currentUser && session) {
-        const existing = session.userCollaborationSessions.find(
-          (el) => el.user.id === currentUser.id,
-        );
+        const existing = session.userCollaborationSessions.find((el) => el.user.id === currentUser.id);
+
         if (existing) {
-          setUserSessionInStore({ ...existing, permissions });
+          setUserSessionInStore({ ...existing, permissions: permissions });
         }
       }
     });
@@ -211,16 +180,11 @@ export function useCollaborationSocket({
       setDocuments((prev) => [doc, ...prev]);
     });
     socket.on('documentDeleted', ({ documentId }: { documentId: number }) => {
-      if (
-        currentDocumentRef.current &&
-        currentDocumentRef.current.id === documentId
-      ) {
+      if (currentDocumentRef.current && currentDocumentRef.current.id === documentId) {
         router.replace('/session/' + sessionId);
-        setSnackbar(
-          'The document has been deleted by the editor',
-          SnackbarStatusEnum.WARNING,
-        );
+        setSnackbar('The document has been deleted by the editor', SnackbarStatusEnum.WARNING);
       }
+
       setDocuments((prev) => prev.filter((d) => d.id !== documentId));
     });
     socket.on('sessionDocuments', (docs: IDocument[]) => {
@@ -231,10 +195,8 @@ export function useCollaborationSocket({
     });
     socket.on('documentUpdated', (doc: IDocument) => {
       setDocuments((prev) => [doc, ...prev.filter((d) => d.id !== doc.id)]);
-      if (
-        currentDocumentRef.current &&
-        currentDocumentRef.current.id === doc.id
-      ) {
+
+      if (currentDocumentRef.current && currentDocumentRef.current.id === doc.id) {
         setCurrentDocument(doc);
       }
     });
@@ -261,6 +223,7 @@ export function useCollaborationSocket({
       } else {
         setSnackbar('Session has been deleted', SnackbarStatusEnum.SUCCESS);
       }
+
       router.replace('/dashboard');
     });
     socket.on('invalidSession', ({ message }) => {
@@ -277,6 +240,7 @@ export function useCollaborationSocket({
         if (sessionId) {
           socketRef.current.emit('leaveSession');
         }
+
         socketRef.current.disconnect();
       }
     };
@@ -285,12 +249,15 @@ export function useCollaborationSocket({
   // Timer for timeSpent
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
+
     if (isConnected && startTimeRef.current) {
       intervalId = setInterval(() => {
         const diff = Date.now() - (startTimeRef.current as number);
+
         setTimeSpent(totalTimeRef.current + diff);
       }, 1000);
     }
+
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
@@ -299,14 +266,10 @@ export function useCollaborationSocket({
   // Verify user permission for the session
   useEffect(() => {
     if (session && currentUser) {
-      const userSession = session.userCollaborationSessions.find(
-        (el) => el.user.id === currentUser.id,
-      );
+      const userSession = session.userCollaborationSessions.find((el) => el.user.id === currentUser.id);
+
       if (!userSession) {
-        setSnackbar(
-          'You don’t have permissions to access this page',
-          SnackbarStatusEnum.ERROR,
-        );
+        setSnackbar('You don’t have permissions to access this page', SnackbarStatusEnum.ERROR);
         router.push('/dashboard');
       } else {
         setUserSessionInStore(userSession);
@@ -329,25 +292,25 @@ export function useCollaborationSocket({
   const timeSpentInSeconds = Math.floor(timeSpent / 1000);
 
   const sendMessage = useCallback((message: string) => {
-    socketRef.current?.emit('sendMessage', { message });
+    socketRef.current?.emit('sendMessage', { message: message });
   }, []);
 
   const socketEmitters = useSocketEmitters({
-    sessionId,
+    sessionId: sessionId,
     socket: socketRef.current,
-    setAiUsageFetching,
+    setAiUsageFetching: setAiUsageFetching,
   });
 
   return useMemo(
     () => ({
-      session,
+      session: session,
       changeSessionName: socketEmitters.changeSessionName,
       deleteSession: socketEmitters.deleteSession,
       timeSpent: timeSpentInSeconds,
-      onlineUsers,
-      sendMessage,
-      messages,
-      invitations,
+      onlineUsers: onlineUsers,
+      sendMessage: sendMessage,
+      messages: messages,
+      invitations: invitations,
       createInvitation: socketEmitters.createInvitation,
       fetchNotifications: socketEmitters.fetchNotifications,
       updateNotificationStatus: socketEmitters.updateNotificationStatus,
@@ -355,7 +318,7 @@ export function useCollaborationSocket({
       acceptInvitation: socketEmitters.acceptInvitation,
       changeInvitationRole: socketEmitters.changeInvitationRole,
       changeUserPermissions: socketEmitters.changeUserPermissions,
-      setCurrentDocument,
+      setCurrentDocument: setCurrentDocument,
       changeDocumentTitle: socketEmitters.changeDocumentTitle,
       createDocument: socketEmitters.createDocument,
       deleteDocument: socketEmitters.deleteDocument,
@@ -366,13 +329,13 @@ export function useCollaborationSocket({
       createDocumentAiUsage: socketEmitters.createDocumentAiUsage,
       applyVersion: socketEmitters.applyVersion,
       getVersions: socketEmitters.getVersions,
-      versions,
-      documents,
-      currentDocument,
-      documentAiUsage,
-      newAiUsage,
-      setNewAiUsage,
-      isAiUsageFetching,
+      versions: versions,
+      documents: documents,
+      currentDocument: currentDocument,
+      documentAiUsage: documentAiUsage,
+      newAiUsage: newAiUsage,
+      setNewAiUsage: setNewAiUsage,
+      isAiUsageFetching: isAiUsageFetching,
     }),
     [
       session,

@@ -1,10 +1,12 @@
 'use client';
 import React, { useEffect } from 'react';
-import useSnackbarStore from '@/store/useSnackbarStore';
+
 import { RxCross1 } from 'react-icons/rx';
 import { FiCheckCircle } from 'react-icons/fi';
 import { IoWarningOutline } from 'react-icons/io5';
 import { PiWarningOctagon } from 'react-icons/pi';
+
+import useSnackbarStore from '@/store/useSnackbarStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 
 const Snackbar: React.FC = () => {
@@ -45,7 +47,7 @@ const Snackbar: React.FC = () => {
         ${backgroundColorMap[status]}
         text-white
       `}
-      style={{zIndex: 1010}}
+      style={{ zIndex: 1010 }}
     >
       <div className='flex justify-between items-center gap-[10px]'>
         <div>{iconMap[status]}</div>

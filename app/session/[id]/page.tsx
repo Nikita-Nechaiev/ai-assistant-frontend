@@ -1,31 +1,25 @@
 'use client';
 
 import { useContext, useEffect } from 'react';
-import DocumentList from '@/components/Session/DocumentList';
-import { SessionContext } from '@/components/Session/SessionLayout';
+
 import LargeLoader from '@/ui/LargeLoader';
+import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
+import DocumentList from '@/components/Session/DocumentSection/DocumentList';
 
 export default function SessionPage() {
   const sessionContext = useContext(SessionContext);
+
+  useEffect(() => {
+    if (sessionContext?.currentDocument) {
+      sessionContext.setCurrentDocument?.(null);
+    }
+  }, [sessionContext]);
 
   if (!sessionContext || !sessionContext.session || !sessionContext.documents) {
     return <LargeLoader />;
   }
 
-  const {
-    session,
-    documents,
-    currentDocument,
-    setCurrentDocument,
-    createDocument = () => {},
-    changeDocumentTitle = () => {},
-  } = sessionContext;
-
-  useEffect(() => {
-    if (currentDocument) {
-      setCurrentDocument?.(null);
-    }
-  }, [currentDocument, setCurrentDocument]);
+  const { session, documents, createDocument = () => {}, changeDocumentTitle = () => {} } = sessionContext;
 
   return (
     <div className='py-4'>

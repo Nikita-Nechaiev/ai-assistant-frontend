@@ -1,12 +1,14 @@
 'use client';
 
-import MainLayout from '@/components/Dashboard/Layout';
+import { useMemo } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { GoArrowSwitch } from 'react-icons/go';
+
+import MainLayout from '@/components/Dashboard/Layout';
 import axiosInstance from '@/services/axiosInstance';
 import AiUsageTable from '@/components/AiAssistance/AiUsageTable';
-import { GoArrowSwitch } from 'react-icons/go';
-import { useMemo } from 'react';
 import AIStatistics from '@/components/AiAssistance/AIStatistics';
 
 function NoActivityFound() {
@@ -34,27 +36,19 @@ export default function AiAssistancePage() {
     queryKey: ['mostUsedTool'],
     queryFn: async () => {
       const res = await axiosInstance.get('/ai-tool-usage/user/most-used-tool');
+
       return res.data;
     },
   });
 
   const firstRequestDate = useMemo(() => {
-    return mostUsedData?.firstAiUsage
-      ? new Date(mostUsedData.firstAiUsage)
-      : new Date();
+    return mostUsedData?.firstAiUsage ? new Date(mostUsedData.firstAiUsage) : new Date();
   }, [mostUsedData?.firstAiUsage]);
 
-  const totalWordCount = useMemo(
-    () => mostUsedData?.totalWordCount ?? 0,
-    [mostUsedData],
-  );
-  const totalRequests = useMemo(
-    () => mostUsedData?.totalUsageNumber ?? 0,
-    [mostUsedData],
-  );
+  const totalWordCount = useMemo(() => mostUsedData?.totalWordCount ?? 0, [mostUsedData]);
+  const totalRequests = useMemo(() => mostUsedData?.totalUsageNumber ?? 0, [mostUsedData]);
   const mostUsedTool = useMemo(
-    () =>
-      mostUsedData?.mostFrequentTool || 'You did not make any recent requests',
+    () => mostUsedData?.mostFrequentTool || 'You did not make any recent requests',
     [mostUsedData],
   );
 
@@ -72,12 +66,10 @@ export default function AiAssistancePage() {
     <MainLayout>
       <div className='py-8 px-4'>
         <div className='flex flex-col justify-center py-8'>
-          <h1 className='text-4xl font-bold text-mainDark mb-4'>
-            Welcome to AI Assistance
-          </h1>
+          <h1 className='text-4xl font-bold text-mainDark mb-4'>Welcome to AI Assistance</h1>
           <p className='text-lg text-gray-500 mb-6 max-w-xl'>
-            Here you can use AI-powered tools for text analysis, generation, and
-            processing. Simply follow the steps to get started.
+            Here you can use AI-powered tools for text analysis, generation, and processing. Simply follow the steps to
+            get started.
           </p>
           <button
             onClick={handleStartClick}
@@ -88,9 +80,7 @@ export default function AiAssistancePage() {
         </div>
 
         <div className='mt-12 border border-mainDark rounded p-6 max-w-3xl'>
-          <h2 className='text-2xl font-bold text-mainDark mb-4'>
-            Your recent activity and statistics:
-          </h2>
+          <h2 className='text-2xl font-bold text-mainDark mb-4'>Your recent activity and statistics:</h2>
 
           {isLoading ? (
             <p className='text-gray-500'>Loading...</p>

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import LogoutButton from '../common/LogoutButton';
 import NavigationList from './NavigationList';
 import AppLogo from '../common/AppLogo';

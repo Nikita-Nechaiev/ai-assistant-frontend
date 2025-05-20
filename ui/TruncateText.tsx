@@ -7,12 +7,7 @@ interface TruncatedTextProps {
   style?: React.CSSProperties;
 }
 
-const TruncatedText: React.FC<TruncatedTextProps> = ({
-  text,
-  maxLength = 40,
-  className = '',
-  style = {},
-}) => {
+const TruncatedText: React.FC<TruncatedTextProps> = ({ text, maxLength = 40, className = '', style = {} }) => {
   const isTruncated = text.length > maxLength;
   const displayedText = isTruncated ? `${text.slice(0, maxLength)}...` : text;
 

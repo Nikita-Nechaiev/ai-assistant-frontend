@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
+
 import { AiOutlineClose } from 'react-icons/ai';
 
 interface ModalProps {
@@ -48,6 +49,7 @@ const Modal = ({
     };
 
     document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -84,10 +86,7 @@ const Modal = ({
         tabIndex={0}
         onKeyDown={handleKeyDown}
       >
-        <button
-          onClick={onClose}
-          className='absolute top-3 right-3 text-gray-500 hover:text-gray-700'
-        >
+        <button onClick={onClose} className='absolute top-3 right-3 text-gray-500 hover:text-gray-700'>
           <AiOutlineClose size={20} />
         </button>
 
@@ -105,10 +104,7 @@ const Modal = ({
             </button>
           )}
           {onSubmit && (
-            <button
-              className='py-2 px-4 bg-mainDark text-mainLight hover:bg-mainDarkHover rounded'
-              onClick={onSubmit}
-            >
+            <button className='py-2 px-4 bg-mainDark text-mainLight hover:bg-mainDarkHover rounded' onClick={onSubmit}>
               {submitText}
             </button>
           )}

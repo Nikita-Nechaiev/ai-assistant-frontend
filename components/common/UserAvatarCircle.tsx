@@ -1,7 +1,8 @@
 'use client';
 
-import { PermissionEnum } from '@/models/enums';
 import { useState, useEffect, useRef, useCallback } from 'react';
+
+import { PermissionEnum } from '@/models/enums';
 import RequirePermission from '@/helpers/RequirePermission';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -30,16 +31,10 @@ export default function UserAvatarCircle({
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { user: currentUser } = useUserStore();
 
-  const toggleTooltip = useCallback(
-    () => setIsTooltipOpen((prev) => !prev),
-    [],
-  );
+  const toggleTooltip = useCallback(() => setIsTooltipOpen((prev) => !prev), []);
 
   const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (
-      tooltipRef.current &&
-      !tooltipRef.current.contains(event.target as Node)
-    ) {
+    if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
       setIsTooltipOpen(false);
     }
   }, []);
@@ -50,16 +45,16 @@ export default function UserAvatarCircle({
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
     }
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isTooltipOpen, handleClickOutside]);
 
   const handleTogglePermission = useCallback(() => {
     if (!changeUserPermissions || !userId) return;
+
     changeUserPermissions(
       userId,
-      currentPermission === PermissionEnum.EDIT
-        ? PermissionEnum.READ
-        : PermissionEnum.EDIT,
+      currentPermission === PermissionEnum.EDIT ? PermissionEnum.READ : PermissionEnum.EDIT,
     );
   }, [changeUserPermissions, userId, currentPermission]);
 
@@ -68,11 +63,7 @@ export default function UserAvatarCircle({
   return (
     <div className='relative'>
       <img
-        src={
-          isGoogleAvatar
-            ? avatar
-            : `${process.env.NEXT_PUBLIC_API_URL}${avatar}`
-        }
+        src={isGoogleAvatar ? avatar : `${process.env.NEXT_PUBLIC_API_URL}${avatar}`}
         alt={name}
         referrerPolicy='no-referrer'
         className={`w-10 h-10 rounded-full border-2 ${
@@ -94,19 +85,16 @@ export default function UserAvatarCircle({
             <span className='font-semibold'>Role:</span> {currentPermission}
           </div>
 
-          {changeUserPermissions &&
-            currentPermission !== PermissionEnum.ADMIN &&
-            currentUser?.id !== userId && (
-              <RequirePermission permission={PermissionEnum.ADMIN}>
-                <button
-                  onClick={handleTogglePermission}
-                  className='mt-2 bg-mainLight text-mainDark px-2 py-1 rounded hover:bg-mainLightGray transition'
-                >
-                  Change to{' '}
-                  {currentPermission === PermissionEnum.EDIT ? 'Read' : 'Edit'}
-                </button>
-              </RequirePermission>
-            )}
+          {changeUserPermissions && currentPermission !== PermissionEnum.ADMIN && currentUser?.id !== userId && (
+            <RequirePermission permission={PermissionEnum.ADMIN}>
+              <button
+                onClick={handleTogglePermission}
+                className='mt-2 bg-mainLight text-mainDark px-2 py-1 rounded hover:bg-mainLightGray transition'
+              >
+                Change to {currentPermission === PermissionEnum.EDIT ? 'Read' : 'Edit'}
+              </button>
+            </RequirePermission>
+          )}
         </div>
       )}
     </div>

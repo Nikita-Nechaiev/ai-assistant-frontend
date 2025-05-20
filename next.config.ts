@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  async rewrites() {
+  rewrites: async function () {
     return [
       {
         source: '/api/:path*', // Forward all API requests

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -37,7 +38,7 @@ const RegisterPage: React.FC = () => {
 
   const [isLoading, setLoading] = useState(false);
 
-  const password = watch('password');
+  const watchedPassword = watch('password');
 
   const formOptions = useMemo(
     () => ({
@@ -53,28 +54,29 @@ const RegisterPage: React.FC = () => {
         required: 'Password is required',
         pattern: {
           value: /^(?=.*[A-Z])(?=.*\d).{8,}$/,
-          message:
-            'Password must be at least 8 characters, include one uppercase letter and one number',
+          message: 'Password must be at least 8 characters, include one uppercase letter and one number',
         },
       },
       confirmPassword: {
         required: 'Confirm password is required',
-        validate: (value: string) =>
-          value === password || 'Passwords do not match',
+        validate: (value: string) => value === watchedPassword || 'Passwords do not match',
       },
     }),
-    [password],
+    [watchedPassword],
   );
 
   const onSubmit: SubmitHandler<RegisterFormInputs> = useCallback(
     async (data) => {
       setLoading(true);
+
       const { name, email, password, avatar } = data;
 
       const formData = new FormData();
+
       formData.append('name', name);
       formData.append('email', email);
       formData.append('password', password);
+
       if (avatar?.[0]) formData.append('avatar', avatar[0]);
 
       try {
@@ -94,6 +96,7 @@ const RegisterPage: React.FC = () => {
           axios.isAxiosError(error) && error.response?.status === 409
             ? 'User with this email already exists!'
             : 'Registration error';
+
         setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
       } finally {
         setLoading(false);
@@ -152,10 +155,7 @@ const RegisterPage: React.FC = () => {
           />
 
           <div className='mb-6'>
-            <label
-              htmlFor='avatar'
-              className='block text-sm font-medium text-gray-700 mb-2'
-            >
+            <label htmlFor='avatar' className='block text-sm font-medium text-gray-700 mb-2'>
               Avatar (optional)
             </label>
             <FileButton

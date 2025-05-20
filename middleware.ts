@@ -11,22 +11,28 @@ export async function middleware(req: NextRequest) {
     url.pathname.startsWith('/reset-password')
   ) {
     const accessToken = req.cookies.get('accessToken')?.value;
+
     if (accessToken) {
       url.pathname = '/dashboard';
+
       return NextResponse.redirect(url);
     }
+
     return NextResponse.next();
   }
-  const refreshToken = req.cookies.get('refreshToken')?.value;
 
+  const refreshToken = req.cookies.get('refreshToken')?.value;
 
   if (!refreshToken) {
     const loginUrl = req.nextUrl.clone();
+
     loginUrl.pathname = '/login';
 
     const res = NextResponse.redirect(loginUrl);
+
     res.cookies.delete('accessToken');
     res.cookies.delete('refreshToken');
+
     return res;
   }
 
@@ -39,14 +45,13 @@ export async function middleware(req: NextRequest) {
         Cookie: `refreshToken=${refreshToken}`,
       },
     });
+
     if (refreshResponse.status === 200) {
       const { accessToken, newRefreshToken, user } = refreshResponse.data;
 
       const res = NextResponse.next();
       const isProduction = process.env.NODE_ENV === 'production';
-      const cookieDomain = isProduction
-        ? '.ai-editor-portfolio.com'
-        : undefined;
+      const cookieDomain = isProduction ? '.ai-editor-portfolio.com' : undefined;
 
       res.cookies.set('accessToken', accessToken, {
         httpOnly: true,
@@ -63,7 +68,6 @@ export async function middleware(req: NextRequest) {
         domain: cookieDomain,
       });
 
-
       const encodedUser = Buffer.from(JSON.stringify(user)).toString('base64');
 
       res.headers.set('x-user', encodedUser);
@@ -72,22 +76,29 @@ export async function middleware(req: NextRequest) {
     }
 
     const failUrl = req.nextUrl.clone();
+
     failUrl.pathname = '/login';
 
     const failRes = NextResponse.redirect(failUrl);
+
     failRes.cookies.delete('accessToken');
     failRes.cookies.delete('refreshToken');
+
     return failRes;
   } catch (error) {
     if (error instanceof AxiosError) {
       console.log('Error refreshing token:', error.message);
     }
+
     const errUrl = req.nextUrl.clone();
+
     errUrl.pathname = '/login';
 
     const errRes = NextResponse.redirect(errUrl);
+
     errRes.cookies.delete('accessToken');
     errRes.cookies.delete('refreshToken');
+
     return errRes;
   }
 }

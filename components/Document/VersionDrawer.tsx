@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+
+import { IoMdClose } from 'react-icons/io';
+
 import Drawer from '@/ui/Drawer';
 import { IVersion } from '@/models/models';
-import { IoMdClose } from 'react-icons/io';
 
 interface VersionDrawerProps {
   isOpen: boolean;
@@ -44,12 +46,8 @@ const VersionItem: React.FC<VersionItemProps> = ({
       onMouseEnter={() => onMouseEnter(version)}
       onMouseLeave={onMouseLeave}
     >
-      <p className='text-base font-medium text-mainDark'>
-        Changed by: {version.userEmail}
-      </p>
-      <p className='text-sm text-mainGray'>
-        At: {new Date(version.createdAt).toLocaleDateString()}
-      </p>
+      <p className='text-base font-medium text-mainDark'>Changed by: {version.userEmail}</p>
+      <p className='text-sm text-mainGray'>At: {new Date(version.createdAt).toLocaleDateString()}</p>
     </div>
   );
 };
@@ -66,6 +64,7 @@ const VersionDrawer: React.FC<VersionDrawerProps> = ({
   const onMouseLeave = () => {
     if (selectedVersion) {
       handleSetPreview(selectedVersion);
+
       return;
     }
 
@@ -75,19 +74,10 @@ const VersionDrawer: React.FC<VersionDrawerProps> = ({
   };
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      handleClose={handleClose}
-      initialWidth={40}
-      minWidth={25}
-      maxWidth={70}
-    >
+    <Drawer isOpen={isOpen} handleClose={handleClose} initialWidth={40} minWidth={25} maxWidth={70}>
       <div className='p-4'>
         <div className='sticky top-0 z-10 p-4 border-b border-mainLightGray flex justify-between items-center bg-mainLight'>
-          <button
-            onClick={handleClose}
-            className='text-mainGray hover:text-mainDarkHover transition'
-          >
+          <button onClick={handleClose} className='text-mainGray hover:text-mainDarkHover transition'>
             <IoMdClose size={30} />
           </button>
           <h2 className='text-xl font-semibold text-mainDark'>Versions</h2>

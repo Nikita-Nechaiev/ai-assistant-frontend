@@ -1,9 +1,11 @@
 'use client';
 
-import { navigation } from '@/helpers/navigation';
+import React from 'react';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+
+import { navigation } from '@/helpers/navigation';
 
 const NavigationList = () => {
   const pathname = usePathname();
@@ -13,6 +15,7 @@ const NavigationList = () => {
       <ul className='space-y-2 p-4'>
         {navigation.map((item, index) => {
           const isActive = pathname === item.href;
+
           return (
             <li key={index}>
               <Link
