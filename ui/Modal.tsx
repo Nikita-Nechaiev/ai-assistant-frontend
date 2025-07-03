@@ -78,8 +78,9 @@ const Modal = ({
 
   return (
     <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'
+      className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'
       onClick={handleBackgroundClick}
+      style={{ zIndex: 1000 }}
     >
       <div
         className={`relative bg-white rounded-md shadow-md p-6 transition-all duration-300 ${width} overflow-y-auto`}

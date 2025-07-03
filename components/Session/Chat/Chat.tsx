@@ -3,37 +3,37 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { IoMdClose } from 'react-icons/io';
+import { Socket } from 'socket.io-client';
 
+import Drawer from '@/ui/Drawer';
 import InputField from '@/ui/InputField';
 import { useUserStore } from '@/store/useUserStore';
-import Drawer from '@/ui/Drawer';
 import { IMessage } from '@/models/models';
+import { useChatSocket } from '@/hooks/sockets/useChatSocket';
 
 import ChatMessage from './ChatMessage';
 
 interface ChatProps {
   isOpen: boolean;
   handleClose: () => void;
-  messages: IMessage[];
-  sendMessage: (message: string) => void;
+  socket: Socket;
 }
 
-export default function Chat({ isOpen, handleClose, messages, sendMessage }: ChatProps) {
+export default function Chat({ isOpen, handleClose, socket }: ChatProps) {
   const { user } = useUserStore();
+
+  const { messages, sendMessage } = useChatSocket({ socket, isOpen });
+
   const [messageText, setMessageText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen]);
 
-  const handleSendMessage = () => {
-    if (messageText.trim()) {
-      sendMessage(messageText.trim());
-      setMessageText('');
-    }
+  const handleSend = () => {
+    sendMessage(messageText);
+    setMessageText('');
   };
 
   return (
@@ -42,12 +42,17 @@ export default function Chat({ isOpen, handleClose, messages, sendMessage }: Cha
         <button onClick={handleClose} className='text-gray-500 hover:text-gray-700'>
           <IoMdClose size={30} />
         </button>
-        <h2 className='text-xl font-semibold'>Session Chat</h2>
+        <h2 className='text-xl font-semibold'>Session&nbsp;Chat</h2>
       </div>
 
       <div className='flex-1 overflow-y-auto p-4 space-y-4'>
-        {messages.map((msg, idx) => (
-          <ChatMessage key={idx} sender={msg.sender} text={msg.text} isCurrentUser={msg.sender.email === user?.email} />
+        {messages.map((msg: IMessage) => (
+          <ChatMessage
+            key={msg.id ?? `${msg.sender.id}-${msg.createdAt}`}
+            sender={msg.sender}
+            text={msg.text}
+            isCurrentUser={msg.sender.email === user?.email}
+          />
         ))}
         <div ref={messagesEndRef} />
       </div>
@@ -59,14 +64,9 @@ export default function Chat({ isOpen, handleClose, messages, sendMessage }: Cha
           placeholder='Type your message...'
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSendMessage();
-          }}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
-        <button
-          className='bg-mainDark text-mainLight px-4 py-2 rounded-lg hover:bg-mainDarkHover'
-          onClick={handleSendMessage}
-        >
+        <button className='bg-mainDark text-mainLight px-4 py-2 rounded-lg hover:bg-mainDarkHover' onClick={handleSend}>
           Send
         </button>
       </div>

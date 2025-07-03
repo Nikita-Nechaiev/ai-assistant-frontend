@@ -7,6 +7,7 @@ import ZustandHydration from '@/hydration/ZustandHydration';
 import { IUser } from '@/models/models';
 
 export const metadata = {
+  metadataBase: new URL('https://www.ai-editor-portfolio.com'),
   title: 'AI Editor - Smart Text Processing',
   description:
     'AI-powered text analysis, translation, and content generation with real-time collaboration. Manage roles, track changes, and enhance documents with intelligent tools.',

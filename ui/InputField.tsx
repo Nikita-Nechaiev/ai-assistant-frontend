@@ -12,7 +12,7 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const InputField: React.FC<InputFieldProps> = ({ id, label, error, ref, marginBottom = 0, ...props }) => {
   return (
-    <div className='grow' style={{ marginBottom: marginBottom }}>
+    <div className='grow' style={{ marginBottom }}>
       <label htmlFor={id} className='block text-sm font-medium text-mainDark'>
         {label}
       </label>

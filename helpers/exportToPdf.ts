@@ -17,23 +17,15 @@ interface PhysicalLine {
   totalWidth: number;
 }
 
+const SPACE_W = new jsPDF({ unit: 'mm' }).getTextWidth(' ');
+
 export const exportToPDF = async (
   documentTitle: string,
   quillDelta: DeltaStatic | null,
   setSnackbar: (message: string, status: SnackbarStatusEnum) => void,
 ) => {
-  const loadImageDimensions = (imageData: string): Promise<{ width: number; height: number }> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-
-      img.onload = () => resolve({ width: img.width, height: img.height });
-      img.onerror = (err) => reject(err);
-      img.src = imageData;
-    });
-  };
-
   const getFontProps = (op: any): { fontSize: number; lineHeight: number } => {
-    const baseFontSize = 13;
+    const baseFontSize = 12;
     const baseLineHeight = 5;
 
     if (op.attributes?.header) {
@@ -41,11 +33,11 @@ export const exportToPDF = async (
 
       switch (headerLevel) {
         case 1:
-          return { fontSize: baseFontSize * 2, lineHeight: baseLineHeight * 2 };
+          return { fontSize: baseFontSize * 2.1, lineHeight: baseLineHeight * 2.1 };
         case 2:
           return {
-            fontSize: baseFontSize * 1.5,
-            lineHeight: baseLineHeight * 1.5,
+            fontSize: baseFontSize * 1.48,
+            lineHeight: baseLineHeight * 1.48,
           };
         case 3:
           return {
@@ -56,13 +48,13 @@ export const exportToPDF = async (
           return { fontSize: baseFontSize, lineHeight: baseLineHeight };
         case 5:
           return {
-            fontSize: baseFontSize * 0.83,
-            lineHeight: baseLineHeight * 0.83,
+            fontSize: baseFontSize * 0.87,
+            lineHeight: baseLineHeight * 0.87,
           };
         case 6:
           return {
-            fontSize: baseFontSize * 0.67,
-            lineHeight: baseLineHeight * 0.67,
+            fontSize: baseFontSize * 0.7,
+            lineHeight: baseLineHeight * 0.7,
           };
         default:
           return { fontSize: baseFontSize, lineHeight: baseLineHeight };
@@ -84,11 +76,6 @@ export const exportToPDF = async (
     }
   };
 
-  // Проверяем, есть ли среди опов заголовок
-  const isHeaderLine = (lineOps: any[]) => {
-    return lineOps.some((op) => op.attributes?.header);
-  };
-
   const groupOpsByLine = (ops: any[]): any[][] => {
     const lines: any[][] = [];
     let currentLine: any[] = [];
@@ -107,7 +94,6 @@ export const exportToPDF = async (
             currentLine = [];
           }
         }
-        /* ---------------------------------------------------------------- */
       } else if (op.insert && op.insert.image) {
         if (currentLine.length > 0) {
           lines.push(currentLine);
@@ -127,12 +113,39 @@ export const exportToPDF = async (
 
   const isValidColor = (value?: string): value is string => typeof value === 'string' && value !== 'initial';
 
-  const processTextGroup = (
-    lineOps: any[],
-    doc: jsPDF,
-    availableWidthTotal: number,
-    leftMargin: number,
-  ): PhysicalLine[] => {
+  const getHdrLevel = (ops: any[] | undefined) => {
+    if (!ops || !ops.length) return 0;
+
+    const h = ops.find((o) => o.attributes?.header);
+
+    return h ? (h.attributes.header as number) : 0;
+  };
+
+  const LH: { [key: number]: number } = {
+    0: 5,
+    1: 10.5, // h1
+    2: 7.4, // h2
+    3: 5.9, // h3
+    4: 5,
+    5: 4.35,
+    6: 3.5,
+  };
+
+  const getBottomFix = (curLvl: number) => {
+    return LH[curLvl];
+  };
+
+  const getExtraSpacing = (ops: any[]): { topAdd: number } => {
+    const hdrOp = ops.find((o) => o.attributes?.header);
+
+    if (!hdrOp) {
+      return { topAdd: 2 };
+    }
+
+    return { topAdd: LH[hdrOp.attributes.header] };
+  };
+
+  const processTextGroup = (lineOps: any[], doc: jsPDF, availableWidthTotal: number): PhysicalLine[] => {
     const physicalLines: PhysicalLine[] = [];
     let currentLine: PhysicalLine = {
       segments: [],
@@ -193,10 +206,10 @@ export const exportToPDF = async (
 
         const segment: Segment = {
           text: fitText,
-          fontSize: fontSize,
+          fontSize,
           lineHeight: opLineHeight,
           width: fitWidth,
-          op: op,
+          op,
         };
 
         currentLine.segments.push(segment);
@@ -243,50 +256,18 @@ export const exportToPDF = async (
     for (let i = 0; i < linesGroups.length; i++) {
       let lineOps = linesGroups[i];
 
+      const curLvl = getHdrLevel(lineOps);
+
+      const { topAdd } = getExtraSpacing(lineOps);
+
       const isEmptyLine = lineOps.every((op: any) => op.insert === '');
-      const isImageLine =
-        lineOps.length === 1 && lineOps[0].insert && typeof lineOps[0].insert !== 'string' && lineOps[0].insert.image;
-      const headerLine = isHeaderLine(lineOps);
 
       if (isEmptyLine) {
-        y += 5;
+        y += 7;
 
         if (y > 280) {
           doc.addPage();
           y = 20;
-        }
-
-        continue;
-      }
-
-      if (isImageLine) {
-        if (headerLine) {
-          y += 5;
-        }
-
-        const op = lineOps[0];
-        const imageData = op.insert.image;
-
-        try {
-          const { width: imgW, height: imgH } = await loadImageDimensions(imageData);
-          const scaledWidth = availableWidthTotal;
-          const scaledHeight = (imgH / imgW) * scaledWidth;
-
-          if (y + scaledHeight > 280) {
-            doc.addPage();
-            y = 20;
-          }
-
-          let imgType = 'JPEG';
-
-          if (imageData.toLowerCase().includes('png')) {
-            imgType = 'PNG';
-          }
-
-          doc.addImage(imageData, imgType, leftMargin, y, scaledWidth, scaledHeight);
-          y += scaledHeight;
-        } catch (e) {
-          console.error('Error loading image', e);
         }
 
         continue;
@@ -331,15 +312,18 @@ export const exportToPDF = async (
         lastListType = null;
       }
 
-      if (headerLine) {
-        y += 5;
-      }
+      y += topAdd;
 
       const alignment = firstNonEmptyOp?.attributes?.align || 'left';
-      const physicalLines = processTextGroup(lineOps, doc, availableWidthTotal, leftMargin);
+      const physicalLines = processTextGroup(lineOps, doc, availableWidthTotal);
 
-      for (const physLine of physicalLines) {
+      for (let j = 0; j < physicalLines.length; j++) {
+        const physLine = physicalLines[j];
+        const isLast = j === physicalLines.length - 1;
+
         let offsetX = leftMargin;
+
+        offsetX += SPACE_W;
 
         if (alignment === 'center') {
           offsetX = leftMargin + (availableWidthTotal - physLine.totalWidth) / 2;
@@ -364,16 +348,19 @@ export const exportToPDF = async (
           const bgColor = segment.op.attributes?.background;
 
           if (isValidColor(bgColor)) {
+            const padding = segment.lineHeight * 0.12;
+            const expand = segment.lineHeight * 0.05;
+
+            const top = y - segment.lineHeight * 0.78 - expand + padding;
+            const height = segment.lineHeight * 0.96 + expand * 2 - padding * 2;
+
             doc.setFillColor(bgColor);
-            doc.rect(offsetX, y - segment.lineHeight * 0.7, segment.width, segment.lineHeight, 'F');
+            doc.rect(offsetX, top, segment.width, height, 'F');
           }
 
           doc.text(segment.text, offsetX, y, { align: 'left' });
 
-          // --------------------------------------
-          // Толщина линии зависит не от "bold", а от уровня заголовка (1,2,3)
           const isHeader123 = segment.op.attributes?.header && [1, 2, 3].includes(segment.op.attributes.header);
-          // --------------------------------------
 
           // Underline
           if (segment.op.attributes?.underline) {
@@ -381,13 +368,12 @@ export const exportToPDF = async (
 
             doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, underlineY, offsetX + segment.width, underlineY);
-            // Восстановим "стандартную" толщину, которая в коде была 0.75:
             doc.setLineWidth(0.75);
           }
 
           // Strike
           if (segment.op.attributes?.strike) {
-            const strikeY = y - segment.lineHeight * 0.3;
+            const strikeY = y - segment.lineHeight * 0.25;
 
             doc.setLineWidth(isHeader123 ? 0.75 : 0.35);
             doc.line(offsetX, strikeY, offsetX + segment.width, strikeY);
@@ -398,6 +384,10 @@ export const exportToPDF = async (
         }
 
         y += physLine.maxLineHeight;
+
+        if (isLast) {
+          y -= getBottomFix(curLvl);
+        }
 
         if (y > 280) {
           doc.addPage();

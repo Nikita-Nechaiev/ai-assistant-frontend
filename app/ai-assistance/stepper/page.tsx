@@ -3,12 +3,12 @@ import React, { useCallback, useState } from 'react';
 
 import { useMutation } from '@tanstack/react-query';
 
-import MainLayout from '@/components/Dashboard/Layout';
 import { SnackbarStatusEnum } from '@/models/enums';
 import { AITool, IAiToolUsage } from '@/models/models';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import axiosInstance from '@/services/axiosInstance';
 import AiAsssistanceStepper from '@/components/AiAssistance/AiAssistanceStepper';
+import MainLayout from '@/components/Layout/Layout';
 
 export default function AiAssistanceStepperPage() {
   const [result, setResult] = useState<IAiToolUsage | null>(null);
@@ -59,7 +59,7 @@ export default function AiAssistanceStepperPage() {
         return;
       }
 
-      mutation.mutate({ inputValue: inputValue });
+      mutation.mutate({ inputValue });
     },
     [setSnackbar, selectedTool, targetLanguage, mutation],
   );

@@ -1,11 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  rewrites: async function () {
+  async rewrites() {
     return [
       {
-        source: '/api/:path*', // Forward all API requests
-        destination: 'https://api.ai-editor-portfolio.com/:path*', // Removed extra "/api/"
+        source: '/api/:path*',
+        destination: 'https://api.ai-editor-portfolio.com/:path*',
       },
     ];
   },

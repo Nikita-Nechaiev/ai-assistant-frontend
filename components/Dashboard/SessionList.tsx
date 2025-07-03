@@ -8,46 +8,31 @@ import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
 import { GoArrowSwitch } from 'react-icons/go';
 
 import InputField from '@/ui/InputField';
-import { useUserStore } from '@/store/useUserStore';
 import Modal from '@/ui/Modal';
-import axiosInstance from '@/services/axiosInstance';
-import { ICollaborationSession, ISessionItem } from '@/models/models';
-import { SnackbarStatusEnum } from '@/models/enums';
 import SmallLoader from '@/ui/SmallLoader';
+import { SessionApi } from '@/services/SessionApi';
+import { ISessionItem, ICollaborationSession } from '@/models/models';
+import { SnackbarStatusEnum } from '@/models/enums';
+import { useUserStore } from '@/store/useUserStore';
+import useSnackbarStore from '@/store/useSnackbarStore';
 
 import SessionItem from './SessionItem';
-import useSnackbarStore from '../../store/useSnackbarStore';
-
-export const fetchUserSessions = async ({
-  queryKey,
-  pageParam,
-}: {
-  queryKey: readonly unknown[];
-  pageParam?: unknown;
-}) => {
-  const [, search] = queryKey as [string, string];
-  const page = typeof pageParam === 'number' ? pageParam : 1;
-  const { data } = await axiosInstance.get<ISessionItem[]>('/collaboration-session/get-user-sessions', {
-    params: { page: page, search: search },
-  });
-
-  return data;
-};
 
 const SessionList: React.FC = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [sessionName, setSessionName] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+
   const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
-  const { setSnackbar } = useSnackbarStore();
   const { user } = useUserStore();
+  const { setSnackbar } = useSnackbarStore();
 
   useEffect(() => {
-    const handler = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    const id = setTimeout(() => setDebouncedSearch(searchTerm), 500);
 
-    return () => clearTimeout(handler);
+    return () => clearTimeout(id);
   }, [searchTerm]);
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery<
@@ -55,19 +40,13 @@ const SessionList: React.FC = () => {
     AxiosError
   >({
     queryKey: ['userSessions', debouncedSearch],
-    queryFn: fetchUserSessions,
+    queryFn: ({ pageParam = 1 }) => SessionApi.fetchUserSessions(pageParam as number, debouncedSearch),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.length === 25 ? lastPage.length + 1 : undefined),
   });
 
-  const mutation = useMutation<ICollaborationSession, AxiosError, string>({
-    mutationFn: async (name) => {
-      const response = await axiosInstance.post<ICollaborationSession>('/collaboration-session/create', {
-        name: name.trim(),
-      });
-
-      return response.data;
-    },
+  const createSessionMutation = useMutation<ICollaborationSession, AxiosError, string>({
+    mutationFn: SessionApi.createSession,
     onSuccess: (newSession) => {
       setSnackbar('Session created successfully!', SnackbarStatusEnum.SUCCESS);
       router.push(`/session/${newSession.id}`);
@@ -80,8 +59,8 @@ const SessionList: React.FC = () => {
   const handleCreateSession = useCallback(() => {
     if (!sessionName.trim()) return;
 
-    mutation.mutate(sessionName);
-  }, [sessionName, mutation]);
+    createSessionMutation.mutate(sessionName);
+  }, [sessionName, createSessionMutation]);
 
   const handlePopupOpen = useCallback(() => {
     setModalOpen(true);
@@ -126,6 +105,7 @@ const SessionList: React.FC = () => {
               .flat()
               .map((session, index) => <SessionItem index={index} key={session.id} session={session} />)}
           </ul>
+
           {hasNextPage && (
             <div className='text-center'>
               <button

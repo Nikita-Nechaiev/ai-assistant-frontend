@@ -12,7 +12,7 @@ interface SessionStoreState {
 export const useSessionStore = create<SessionStoreState>((set) => ({
   session: null,
 
-  setSession: (session) => set({ session: session }),
+  setSession: (session) => set({ session }),
 
   updateSession: (updates) =>
     set((state) => ({

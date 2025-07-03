@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { PermissionEnum } from '@/models/enums';
 import RequirePermission from '@/helpers/RequirePermission';
 import { useUserStore } from '@/store/useUserStore';
+import { isGoogleAvatar } from '@/helpers/isGoogleAvatar';
 
 interface UserAvatarCircleProps {
   avatar?: string;
@@ -58,12 +59,10 @@ export default function UserAvatarCircle({
     );
   }, [changeUserPermissions, userId, currentPermission]);
 
-  const isGoogleAvatar = avatar && !avatar.startsWith('/uploads');
-
   return (
     <div className='relative'>
       <img
-        src={isGoogleAvatar ? avatar : `${process.env.NEXT_PUBLIC_API_URL}${avatar}`}
+        src={isGoogleAvatar(avatar) ? avatar : `${process.env.NEXT_PUBLIC_API_URL}${avatar}`}
         alt={name}
         referrerPolicy='no-referrer'
         className={`w-10 h-10 rounded-full border-2 ${

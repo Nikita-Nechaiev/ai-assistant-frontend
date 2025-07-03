@@ -48,7 +48,7 @@ module.exports = {
     'no-param-reassign': 'off',
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/return-await': 'off',
-    'object-shorthand': ['warn', 'never'],
+    'object-shorthand': ['warn', 'always'],
 
     'import/order': [
       'error',
@@ -99,7 +99,7 @@ module.exports = {
         selector: 'variable',
         format: ['PascalCase', 'UPPER_CASE'],
         types: ['boolean'],
-        prefix: ['is', 'are', 'was', 'were', 'has', 'have', 'had', 'do', 'does', 'did', 'can', 'should'],
+        prefix: ['is', 'are', 'was', 'were', 'has', 'have', 'had', 'do', 'does', 'did', 'can', 'should', 'will'],
       },
       {
         selector: 'variableLike',
@@ -108,6 +108,7 @@ module.exports = {
       {
         selector: 'parameter',
         format: ['camelCase'],
+        leadingUnderscore: 'allow',
       },
       {
         selector: 'typeLike',

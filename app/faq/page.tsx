@@ -1,4 +1,4 @@
-import MainLayout from '@/components/Dashboard/Layout';
+import MainLayout from '@/components/Layout/Layout';
 
 export default function FAQPage() {
   return (
@@ -43,7 +43,6 @@ export default function FAQPage() {
             </li>
           </ul>
 
-          {/* New Section for Deployment Information */}
           <h2 className='text-2xl font-semibold text-black mt-6'>Deployment & Hosting:</h2>
           <p className='text-black text-lg leading-relaxed'>This project is fully deployed and accessible online:</p>
           <ul className='list-disc pl-5 mt-2 space-y-2 text-black text-lg'>

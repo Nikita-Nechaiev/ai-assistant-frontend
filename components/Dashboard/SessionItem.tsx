@@ -44,7 +44,6 @@ const SessionItem: React.FC<SessionItemProps> = ({ session, index }) => {
         </div>
       </div>
 
-      {/* Last Interacted */}
       {session.lastInteracted && (
         <div className='text-mainGray text-sm whitespace-nowrap'>
           Last Interacted: {new Date(session.lastInteracted).toLocaleDateString()}
