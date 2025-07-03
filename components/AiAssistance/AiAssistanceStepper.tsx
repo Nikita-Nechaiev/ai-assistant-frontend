@@ -15,12 +15,12 @@ interface AiAsssistanceStepperProps {
   isLoading: boolean;
   result?: string;
   currentStep: number;
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentStep: (n: number) => void;
   handleActivateTextSelection?: () => void;
-  setTargetLanguage: React.Dispatch<React.SetStateAction<string>>;
+  setTargetLanguage: (l: string) => void;
   targetLanguage: string;
   selectedTool: AITool | null;
-  setSelectedTool: React.Dispatch<React.SetStateAction<AITool | null>>;
+  setSelectedTool: (t: AITool | null) => void;
 }
 
 export default function AiAsssistanceStepper({

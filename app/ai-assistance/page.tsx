@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { GoArrowSwitch } from 'react-icons/go';
 
-import MainLayout from '@/components/Dashboard/Layout';
 import axiosInstance from '@/services/axiosInstance';
 import AiUsageTable from '@/components/AiAssistance/AiUsageTable';
 import AIStatistics from '@/components/AiAssistance/AIStatistics';
+import MainLayout from '@/components/Layout/Layout';
 
 function NoActivityFound() {
   return (

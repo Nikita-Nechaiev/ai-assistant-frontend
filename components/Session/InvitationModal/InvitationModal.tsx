@@ -1,17 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useForm } from 'react-hook-form';
+import { Socket } from 'socket.io-client';
 
 import Modal from '@/ui/Modal';
-import { PermissionEnum } from '@/models/enums';
-import { IInvitation } from '@/models/models';
+import { PermissionEnum, SnackbarStatusEnum } from '@/models/enums';
+import useSnackbarStore from '@/store/useSnackbarStore';
+import { useInvitationModalSocket } from '@/hooks/sockets/useInvitationModalSocket';
 
-import InvitationList from './InvitationList';
 import InvitationForm from './InvitationForm';
+import InvitationList from './InvitationList';
 
-interface InvitationFormInputs {
+interface FormInputs {
   email: string;
   role: PermissionEnum;
 }
@@ -19,34 +21,30 @@ interface InvitationFormInputs {
 interface InvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  createInvitation: (invitationData: InvitationFormInputs) => void;
-  invitations: IInvitation[];
-  changeInvitationRole: (invitationId: number, newRole: PermissionEnum) => void;
-  deleteInvitation: (invitationId: number) => void;
+  socket: Socket;
 }
 
-const InvitationModal: React.FC<InvitationModalProps> = ({
-  isOpen,
-  onClose,
-  createInvitation,
-  invitations,
-  deleteInvitation,
-  changeInvitationRole,
-}) => {
+const InvitationModal: React.FC<InvitationModalProps> = ({ isOpen, onClose, socket }) => {
+  const { setSnackbar } = useSnackbarStore();
+
   const {
-    handleSubmit,
     control,
+    handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<InvitationFormInputs>({
-    defaultValues: {
-      email: '',
-      role: PermissionEnum.READ,
-    },
+  } = useForm<FormInputs>({
+    defaultValues: { email: '', role: PermissionEnum.READ },
   });
 
-  const onSubmit = (data: InvitationFormInputs) => {
-    createInvitation(data);
+  const { invitations, createInvitation, changeInvitationRole, deleteInvitation, fetchNotifications } =
+    useInvitationModalSocket(socket, (msg) => setSnackbar(msg, SnackbarStatusEnum.ERROR));
+
+  useEffect(() => {
+    if (isOpen) fetchNotifications();
+  }, [isOpen, fetchNotifications]);
+
+  const onSubmit = (form: FormInputs) => {
+    createInvitation(form);
     reset();
     onClose();
   };
@@ -59,15 +57,16 @@ const InvitationModal: React.FC<InvitationModalProps> = ({
         onClose();
       }}
       onSubmit={handleSubmit(onSubmit)}
+      width='w-full max-w-xl'
       title='Invite a Collaborator'
       submitText='Send Invitation'
-      width='w-full max-w-xl'
       cancelText='Cancel'
     >
       <InvitationForm control={control} errors={errors} />
+
       <InvitationList
-        deleteInvitation={deleteInvitation}
         invitations={invitations}
+        deleteInvitation={deleteInvitation}
         changeInvitationRole={changeInvitationRole}
       />
     </Modal>

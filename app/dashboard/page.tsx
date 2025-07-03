@@ -1,5 +1,5 @@
-import MainLayout from '@/components/Dashboard/Layout';
 import SessionList from '@/components/Dashboard/SessionList';
+import MainLayout from '@/components/Layout/Layout';
 
 export default async function DashboardPage() {
   return (

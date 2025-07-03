@@ -13,7 +13,7 @@ const useSnackbarStore = create<SnackbarState>((set) => ({
   message: null,
   status: null,
   setSnackbar: (message, status) => {
-    set({ message: message, status: status });
+    set({ message, status });
   },
   closeSnackbar: () => {
     set({ message: null, status: null });

@@ -5,11 +5,13 @@ import { IUser } from '@/models/models';
 type UserState = {
   user: IUser | null;
   setUser: (user: Partial<IUser>) => void;
+  updateUser: (user: Partial<IUser>) => void;
   clearUser: () => void;
 };
 
 export const useUserStore = create<UserState>((set) => ({
   user: null,
+
   setUser: (user) => {
     return set((state) => ({
       user: {
@@ -26,6 +28,23 @@ export const useUserStore = create<UserState>((set) => ({
       },
     }));
   },
+
+  updateUser: (patch) =>
+    set((state) => {
+      if (!state.user) return state;
+
+      const sanitizedPatch = Object.fromEntries(
+        Object.entries(patch).filter(([, value]) => value !== undefined),
+      ) as Partial<IUser>;
+
+      return {
+        user: {
+          ...state.user,
+          ...sanitizedPatch,
+        },
+      };
+    }),
+
   clearUser: () =>
     set({
       user: null,

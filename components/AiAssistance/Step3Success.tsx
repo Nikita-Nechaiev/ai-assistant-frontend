@@ -14,7 +14,6 @@ const Step3Success: React.FC<Step3SuccessProps> = ({ result, onCopyResult, onRes
 
   return (
     <div className='max-w-[800px] mx-auto'>
-      {/* Title */}
       <h2 className='text-2xl font-bold text-mainDark mb-6'>AI Usage Result</h2>
 
       <div
@@ -34,7 +33,6 @@ const Step3Success: React.FC<Step3SuccessProps> = ({ result, onCopyResult, onRes
           </button>
         </div>
 
-        {/* Result Text */}
         <p>{result ? result : 'No result available.'}</p>
       </div>
 

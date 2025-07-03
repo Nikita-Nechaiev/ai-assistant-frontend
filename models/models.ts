@@ -85,6 +85,7 @@ export interface IVersion {
   richContent: string;
   createdAt: Date;
   userEmail: string;
+  document: IDocument;
 }
 
 export interface IAnalyticsSummary {

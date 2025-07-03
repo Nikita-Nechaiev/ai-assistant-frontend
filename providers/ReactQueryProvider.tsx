@@ -16,7 +16,7 @@ const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children }) => 
         queryFn: async ({ queryKey }) => {
           const [endpoint, params] = queryKey;
           const response = await axiosInstance.get(endpoint as string, {
-            params: params,
+            params,
           });
 
           return response.data;

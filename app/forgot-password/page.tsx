@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 
 import { useForm, SubmitHandler } from 'react-hook-form';
 import axios from 'axios';
+import Link from 'next/link';
 
 import useSnackbarStore from '@/store/useSnackbarStore';
 import InputField from '@/ui/InputField';
@@ -20,6 +21,7 @@ export default function ForgotPasswordPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<ForgotPasswordFormInputs>();
+
   const [isLoading, setIsLoading] = useState(false);
   const { setSnackbar } = useSnackbarStore();
 
@@ -52,20 +54,28 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className='flex justify-center items-center min-h-screen bg-gray-50'>
-      <div className='w-full max-w-md bg-white shadow-md rounded-lg p-8'>
-        <h1 className='text-2xl font-semibold text-center mb-6'>Forgot Password</h1>
+      <div className='w-full max-w-md bg-white shadow-md rounded-lg p-8 space-y-6'>
+        <h1 className='text-2xl font-semibold text-center'>Forgot Password</h1>
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <InputField
-            marginBottom={20}
             id='email'
             label='Email'
             type='email'
             placeholder='Enter your email'
             error={errors.email}
             {...register('email', formOptions.email)}
+            marginBottom={20}
           />
+
           <SubmitButton isLoading={isLoading} label='Send Reset Link' />
         </form>
+
+        <div className='text-right'>
+          <Link href='/login' className='text-sm text-mainDark hover:underline'>
+            Back to Login
+          </Link>
+        </div>
       </div>
     </div>
   );

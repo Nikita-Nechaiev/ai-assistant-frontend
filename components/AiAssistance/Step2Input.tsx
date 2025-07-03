@@ -30,7 +30,6 @@ const Step2Input: React.FC<Step2InputProps> = ({
 }) => {
   return (
     <div className='max-w-[800px] mx-auto relative'>
-      {/* Заголовок */}
       <h2 className='text-2xl font-bold mb-4'>{selectedTool.name}</h2>
 
       <div className='mb-4'>
