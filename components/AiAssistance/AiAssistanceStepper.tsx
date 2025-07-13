@@ -8,7 +8,7 @@ import useSnackbarStore from '@/store/useSnackbarStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 import { AITool } from '@/models/models';
 
-interface AiAsssistanceStepperProps {
+export interface AiAsssistanceStepperProps {
   isOnDocumentPage: boolean;
   onSubmit: (inputValue: string) => void;
   onRestart: () => void;

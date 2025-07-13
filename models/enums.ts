@@ -3,11 +3,6 @@ export enum AppRolesEnum {
   USER = 'user',
 }
 
-export enum InvitationStatusEnum {
-  PENDING = 'pending',
-  ACCEPTED = 'accepted',
-}
-
 export enum PermissionEnum {
   READ = 'read',
   EDIT = 'edit',
@@ -29,4 +24,9 @@ export enum SnackbarStatusEnum {
 export enum NotificationStatusEnum {
   UNREAD = 'unread',
   READ = 'read',
+}
+
+export enum InvitationStatusEnum {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
 }

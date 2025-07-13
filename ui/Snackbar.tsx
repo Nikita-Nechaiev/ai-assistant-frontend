@@ -38,6 +38,7 @@ const Snackbar: React.FC = () => {
 
   return (
     <div
+      data-testid='snackbar-root'
       className={`
         absolute bottom-[40px] left-[20px]
         min-w-[300px] max-w-[500px] h-[60px]
