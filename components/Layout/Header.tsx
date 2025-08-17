@@ -6,6 +6,7 @@ import { FiSettings } from 'react-icons/fi';
 
 import { useUserStore } from '@/store/useUserStore';
 import { IInvitation } from '@/models/models';
+import { NotificationStatusEnum } from '@/models/enums';
 
 import UserAvatarCircle from '../common/UserAvatarCircle';
 import ProfileModal from './ProfileModal';
@@ -19,7 +20,8 @@ const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => 
   const { user } = useUserStore();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const unreadCount = invitations?.filter((inv) => inv.notificationStatus === 'unread').length || 0;
+  const unreadCount =
+    invitations?.filter((inv) => inv.notificationStatus === NotificationStatusEnum.UNREAD).length || 0;
 
   const openProfileModal = useCallback(() => setIsProfileModalOpen(true), []);
   const closeProfileModal = useCallback(() => setIsProfileModalOpen(false), []);
@@ -37,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => 
 
         <div className='flex items-center space-x-4 relative'>
           <button
-            aria-label='Настройки профиля'
+            aria-label='Profile settings'
             onClick={openProfileModal}
             className='h-10 w-10 hover:bg-gray-700 rounded-full flex items-center justify-center'
           >
@@ -45,6 +47,7 @@ const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => 
           </button>
 
           <button
+            data-testid='open-notifications-drawer'
             onClick={handleToggleDrawwer}
             className='h-10 w-10 hover:bg-gray-700 rounded-full flex items-center justify-center relative'
           >

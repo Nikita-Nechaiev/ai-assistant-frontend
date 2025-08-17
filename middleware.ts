@@ -49,28 +49,25 @@ export async function middleware(req: NextRequest) {
     if (refreshResponse.status === 200) {
       const { accessToken, newRefreshToken, user } = refreshResponse.data;
 
-      const res = NextResponse.next();
+      const encodedUser = Buffer.from(JSON.stringify(user)).toString('base64');
+
+      const res = NextResponse.next({
+        headers: new Headers({ 'x-user': encodedUser }),
+      });
+
       const isProduction = process.env.NODE_ENV === 'production';
       const cookieDomain = isProduction ? '.ai-editor-portfolio.com' : undefined;
 
-      res.cookies.set('accessToken', accessToken, {
+      const common = {
         httpOnly: true,
-        secure: true,
-        maxAge: 15 * 60,
+        secure: isProduction,
         sameSite: 'strict',
         domain: cookieDomain,
-      });
-      res.cookies.set('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 30 * 24 * 60 * 60,
-        sameSite: 'strict',
-        domain: cookieDomain,
-      });
+        path: '/',
+      } as const;
 
-      const encodedUser = Buffer.from(JSON.stringify(user)).toString('base64');
-
-      res.headers.set('x-user', encodedUser);
+      res.cookies.set('accessToken', accessToken, { ...common, maxAge: 15 * 60 });
+      res.cookies.set('refreshToken', newRefreshToken, { ...common, maxAge: 30 * 24 * 60 * 60 });
 
       return res;
     }
