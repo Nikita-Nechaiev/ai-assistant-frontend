@@ -6,33 +6,23 @@ import { PermissionEnum } from '@/models/enums';
 
 import UserAvatarCircle from '../UserAvatarCircle';
 
-/* ------------------------------------------------------------------ */
-/*                    1 – Mocks for external helpers                   */
-/* ------------------------------------------------------------------ */
-
-// isGoogleAvatar → возвращает true/false в разных тестах
 const isGoogleAvatarMock = jest.fn();
 
 jest.mock('@/helpers/isGoogleAvatar', () => ({
   isGoogleAvatar: (...args: any) => isGoogleAvatarMock(...args),
 }));
 
-// RequirePermission → просто рендерит детей (права не проверяем)
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: any) => <>{children}</>,
 }));
 
-// Zustand store
 const currentUser = { id: 99 };
 
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({ user: currentUser }),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                               Tests                                */
-/* ------------------------------------------------------------------ */
 describe('UserAvatarCircle', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -43,17 +33,14 @@ describe('UserAvatarCircle', () => {
 
     const url = 'https://lh3.googleusercontent.com/photo.jpg';
 
-    // ⬇️ cохраняем rerender из первоначального render
     const { rerender } = render(<UserAvatarCircle avatar={url} />);
 
     expect(screen.getByRole('img')).toHaveAttribute('src', url);
 
-    // not google
     isGoogleAvatarMock.mockReturnValueOnce(false);
 
     const apiPath = '/uploads/avatar.png';
 
-    // ⬇️ используем rerender, а не второй render
     rerender(<UserAvatarCircle avatar={apiPath} />);
     expect(screen.getByRole('img')).toHaveAttribute('src', `${process.env.NEXT_PUBLIC_API_URL}${apiPath}`);
   });
@@ -71,14 +58,11 @@ describe('UserAvatarCircle', () => {
       />,
     );
 
-    // tooltip закрыт
     expect(screen.queryByText('John Doe')).toBeNull();
 
-    // открываем
     fireEvent.click(screen.getByRole('img'));
     expect(screen.getByText('John Doe')).toBeInTheDocument();
 
-    // клик вне тултипа
     fireEvent.mouseDown(document.body);
     expect(screen.queryByText('John Doe')).toBeNull();
   });
@@ -97,7 +81,7 @@ describe('UserAvatarCircle', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('img')); // открыть тултип
+    fireEvent.click(screen.getByRole('img'));
 
     const btn = screen.getByRole('button', { name: /change to edit/i });
 

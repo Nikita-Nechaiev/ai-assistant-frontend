@@ -20,10 +20,8 @@ describe('useDebouncedCallback', () => {
       result.current('foo', 'bar');
     });
 
-    // nothing yet – still within debounce window
     expect(spy).not.toHaveBeenCalled();
 
-    // fast-forward 300 ms
     act(() => {
       jest.advanceTimersByTime(300);
     });
@@ -38,15 +36,15 @@ describe('useDebouncedCallback', () => {
 
     act(() => {
       result.current('first');
-      jest.advanceTimersByTime(150); // 50 ms left
-      result.current('second'); // restart debounce
-      jest.advanceTimersByTime(199); // still 1 ms left
+      jest.advanceTimersByTime(150);
+      result.current('second');
+      jest.advanceTimersByTime(199);
     });
 
     expect(spy).not.toHaveBeenCalled();
 
     act(() => {
-      jest.advanceTimersByTime(1); // finish debounce
+      jest.advanceTimersByTime(1);
     });
 
     expect(spy).toHaveBeenCalledTimes(1);

@@ -5,7 +5,6 @@ import type { IAiToolUsage } from '@/models/models';
 
 import useDocumentAI from '../useDocumentAI';
 
-/* ─────────── Store mocks ─────────── */
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({ user: { id: 1 } }),
 }));
@@ -17,7 +16,6 @@ jest.mock('@/store/useSnackbarStore', () => ({
   default: () => ({ setSnackbar: setSnackbarMock }),
 }));
 
-/* ─────────── Child-hook mocks ─────────── */
 const overlayMock = {
   isTextSelectionActive: false,
   qlRect: null,
@@ -51,7 +49,6 @@ jest.mock('../useAiModal', () => ({
   default: () => aiModalMock,
 }));
 
-/* ─────────── helpers ─────────── */
 const makeUsage = (userId: number): IAiToolUsage => ({
   id: 1,
   toolName: 'rewrite',
@@ -64,7 +61,6 @@ const makeUsage = (userId: number): IAiToolUsage => ({
 describe('useDocumentAI', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // reset mutable mocks
     overlayMock.selectedText = '';
     aiModalMock.selectedTool = null;
     aiModalMock.targetLanguage = '';
@@ -74,7 +70,7 @@ describe('useDocumentAI', () => {
     renderHook(() =>
       useDocumentAI({
         documentId: 1,
-        newAiUsage: makeUsage(1), // same user id
+        newAiUsage: makeUsage(1),
         isFetchingAI: false,
       }),
     );

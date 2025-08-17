@@ -1,38 +1,26 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 
-/* ──────────────────────────────────────────────────────────
- * 1 – global mocks (router, socket hook, permission helper)
- * ───────────────────────────────────────────────────────── */
 const paramsMock = { id: '5', documentId: undefined };
 
 jest.mock('next/navigation', () => ({
   useParams: () => paramsMock,
-  // router isn’t used inside SessionLayout itself – no other stubs needed
 }));
 
-// The collaboration-socket hook: we’ll mutate its return between tests
-const socketObj = {}; // dummy instance
+const socketObj = {};
 let hookReturn: any = { socket: socketObj };
 
 jest.mock('@/hooks/sockets/useCollaborationSocket', () => ({
   useCollaborationSocket: () => hookReturn,
 }));
 
-// By-pass permission checks
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-/* ──────────────────────────────────────────────────────────
- * 2 – simple stubs for children rendered by SessionLayout
- * ───────────────────────────────────────────────────────── */
 jest.mock('@/ui/LargeLoader', () => ({
   __esModule: true,
   default: () => <div data-testid='loader' />,
@@ -47,7 +35,6 @@ jest.mock('../SessionHeader', () => ({
   ),
 }));
 
-// Expose Chat’s open/close state via data-attribute for easy testing
 jest.mock('../../Chat/Chat', () => ({
   __esModule: true,
   default: ({ isOpen }: { isOpen: boolean }) => (
@@ -62,20 +49,11 @@ jest.mock('../../InvitationModal/InvitationModal', () => ({
   default: ({ isOpen }: { isOpen: boolean }) => (isOpen ? <div data-testid='invite-modal'>INVITE</div> : null),
 }));
 
-/* ──────────────────────────────────────────────────────────
- * 3 – import component under test AFTER mocks
- * ───────────────────────────────────────────────────────── */
 import SessionLayout from '../SessionLayout';
 
-/* ──────────────────────────────────────────────────────────
- * 4 – helpers
- * ───────────────────────────────────────────────────────── */
 const Child = () => <p data-testid='child'>page-content</p>;
 const renderLayout = () => render(<SessionLayout>{<Child />}</SessionLayout>);
 
-/* ──────────────────────────────────────────────────────────
- * 5 – tests
- * ───────────────────────────────────────────────────────── */
 describe('SessionLayout', () => {
   afterEach(() => jest.clearAllMocks());
 

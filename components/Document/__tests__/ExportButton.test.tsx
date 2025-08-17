@@ -5,9 +5,6 @@ import { DeltaStatic } from 'react-quill-new';
 
 import ExportButton from '../ExportButton';
 
-/* ------------------------------------------------------------------ */
-/*               1 — mock external helpers / zustand store             */
-/* ------------------------------------------------------------------ */
 const exportMock = jest.fn();
 
 jest.mock('@/helpers/exportToPdf', () => ({
@@ -20,9 +17,6 @@ jest.mock('@/store/useSnackbarStore', () => () => ({
   setSnackbar: setSnackbarMock,
 }));
 
-/* ------------------------------------------------------------------ */
-/*                                 tests                              */
-/* ------------------------------------------------------------------ */
 describe('ExportButton', () => {
   const title = 'My Awesome Doc';
   const delta: DeltaStatic = { ops: [{ insert: 'hello' }] } as any;

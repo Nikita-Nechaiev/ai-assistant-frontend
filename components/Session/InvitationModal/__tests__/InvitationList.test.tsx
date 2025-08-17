@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -11,23 +8,17 @@ import { IInvitation } from '@/models/models';
 
 import InvitationList from '../InvitationList';
 
-/* ───────────────────────────────────────────
- * 1 – mock the nested InvitationItem
- * ───────────────────────────────────────── */
 const itemProps: any[] = [];
 
 jest.mock('../InvitationItem', () => ({
   __esModule: true,
   default: (props: any) => {
-    itemProps.push(props); // capture props for later assertions
+    itemProps.push(props);
 
     return <div data-testid='inv-item'>{props.invitation.id}</div>;
   },
 }));
 
-/* ───────────────────────────────────────────
- * 2 – helpers to build fake invitations
- * ───────────────────────────────────────── */
 const mkInvitation = (id: number, role = PermissionEnum.READ): IInvitation =>
   ({
     id,
@@ -41,9 +32,6 @@ const mkInvitation = (id: number, role = PermissionEnum.READ): IInvitation =>
     receiver: { id: 4, email: 'bob@mail.com', name: 'Bob' },
   }) as unknown as IInvitation;
 
-/* ───────────────────────────────────────────
- * 3 – tests
- * ───────────────────────────────────────── */
 describe('InvitationList', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -64,10 +52,8 @@ describe('InvitationList', () => {
 
     render(<InvitationList invitations={invitations} deleteInvitation={deleteSpy} changeInvitationRole={changeSpy} />);
 
-    // correct amount rendered
     expect(screen.getAllByTestId('inv-item')).toHaveLength(invitations.length);
 
-    // every child received the right props
     itemProps.forEach((p: any, idx: number) => {
       expect(p.invitation).toBe(invitations[idx]);
       expect(p.deleteInvitation).toBe(deleteSpy);

@@ -1,4 +1,3 @@
-// hooks/document/__test__/useEditorState.test.tsx
 import { renderHook, act } from '@testing-library/react';
 import type { DeltaStatic } from 'react-quill-new';
 

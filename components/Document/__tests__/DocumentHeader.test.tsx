@@ -5,9 +5,6 @@ import { DeltaStatic } from 'react-quill-new';
 
 import DocumentHeader from '../DocumentHeader';
 
-/* ------------------------------------------------------------------ */
-/*           моки вложенных компонентов / хелперов / стора            */
-/* ------------------------------------------------------------------ */
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -29,9 +26,6 @@ jest.mock('@/components/Document/ExportButton', () => ({
   },
 }));
 
-/* ------------------------------------------------------------------ */
-/*                              helpers                               */
-/* ------------------------------------------------------------------ */
 type Cbs = {
   onSave: jest.Mock;
   onAI: jest.Mock;
@@ -59,9 +53,6 @@ const mount = (title = 'My Doc', delta: DeltaStatic | null = null, cb?: Partial<
   return callbacks;
 };
 
-/* ------------------------------------------------------------------ */
-/*                                tests                               */
-/* ------------------------------------------------------------------ */
 describe('DocumentHeader', () => {
   it('renders title and passes props to ExportButton', () => {
     const delta = {} as unknown as DeltaStatic;
@@ -77,8 +68,7 @@ describe('DocumentHeader', () => {
 
     mount('Start', null, { onSave: save });
 
-    // — первый проход: Enter —
-    fireEvent.click(screen.getByRole('button', { name: '' })); // иконка
+    fireEvent.click(screen.getByRole('button', { name: '' }));
 
     const input = screen.getByDisplayValue('Start');
 
@@ -86,10 +76,9 @@ describe('DocumentHeader', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(save).toHaveBeenCalledWith('Updated');
 
-    // — второй проход: blur —
-    fireEvent.click(screen.getByRole('button', { name: '' })); // открыть снова
+    fireEvent.click(screen.getByRole('button', { name: '' }));
 
-    const input2 = screen.getByDisplayValue('Start'); // снова "Start", т.к. prop не менялся
+    const input2 = screen.getByDisplayValue('Start');
 
     fireEvent.change(input2, { target: { value: 'BlurSave' } });
     fireEvent.blur(input2);

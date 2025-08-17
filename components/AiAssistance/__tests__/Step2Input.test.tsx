@@ -6,9 +6,6 @@ import { AITool } from '@/models/models';
 
 import Step2Input from '../Step2Input';
 
-/* ------------------------------------------------------------------ */
-/*                          Helper factory                            */
-/* ------------------------------------------------------------------ */
 const mkTool = (opts?: Partial<AITool>): AITool => ({
   id: 't1',
   name: 'Translator',
@@ -27,9 +24,6 @@ const baseHandlers = () => ({
   handleActivateTextSelection: jest.fn(),
 });
 
-/* ------------------------------------------------------------------ */
-/*                               Tests                                */
-/* ------------------------------------------------------------------ */
 describe('Step2Input', () => {
   it('renders textarea and passes text to onInputChange', () => {
     const handlers = baseHandlers();
@@ -54,7 +48,6 @@ describe('Step2Input', () => {
   it('shows target-language input only when tool.requiresTargetLanguage', () => {
     const handlers = baseHandlers();
 
-    // tool WITHOUT target language
     const { rerender } = render(
       <Step2Input
         selectedTool={mkTool({ requiresTargetLanguage: false })}
@@ -68,7 +61,6 @@ describe('Step2Input', () => {
 
     expect(screen.queryByPlaceholderText(/enter target language/i)).toBeNull();
 
-    // tool WITH target language
     rerender(
       <Step2Input
         selectedTool={mkTool({ requiresTargetLanguage: true })}
@@ -157,7 +149,6 @@ describe('Step2Input', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(handlers.onSubmit).toHaveBeenCalled();
 
-    // loading state
     rerender(
       <Step2Input
         selectedTool={mkTool()}

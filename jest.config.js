@@ -9,7 +9,8 @@ module.exports = {
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
   },
-  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/e2e/'],
+  watchPathIgnorePatterns: ['/e2e/', '/playwright-report/', '/test-results/'],
   collectCoverageFrom: [
     'components/**/*.{ts,tsx}',
     'ui/**/*.{ts,tsx}',
@@ -20,4 +21,5 @@ module.exports = {
     '!**/*.stories.*',
     '!**/types.ts',
   ],
+  coveragePathIgnorePatterns: ['/e2e/'],
 };

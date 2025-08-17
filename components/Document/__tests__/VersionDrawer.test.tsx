@@ -119,7 +119,7 @@ describe('VersionDrawer', () => {
       />,
     );
 
-    const row = screen.getAllByRole('row')[2]; // version id 3
+    const row = screen.getAllByRole('row')[2];
 
     fireEvent.mouseEnter(row);
     expect(setPreview).toHaveBeenCalledWith(versions[2]);

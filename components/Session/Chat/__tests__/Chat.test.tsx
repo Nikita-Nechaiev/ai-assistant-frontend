@@ -4,41 +4,25 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import Chat from '../Chat';
 
-/* ------------------------------------------------------------------ */
-/*                   1 – mocks for child deps / hooks                 */
-/* ------------------------------------------------------------------ */
-
-// Drawer – just a passthrough container
 jest.mock('@/ui/Drawer', () => ({
   __esModule: true,
   default: ({ children }: any) => <div data-testid='drawer'>{children}</div>,
 }));
 
-// InputField – plain <input>
 jest.mock('@/ui/InputField', () => ({
   __esModule: true,
-  default: (props: any) => (
-    <input
-      data-testid='chat-input'
-      {...props}
-      // Preserve value so we can read it after updates
-      value={props.value}
-    />
-  ),
+  default: (props: any) => <input data-testid='chat-input' {...props} value={props.value} />,
 }));
 
-// ChatMessage – show the text so we can assert it rendered
 jest.mock('../ChatMessage', () => ({
   __esModule: true,
   default: ({ text }: { text: string }) => <p data-testid='chat-msg'>{text}</p>,
 }));
 
-// useUserStore – current user
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({ user: { id: 2, email: 'me@mail.com', name: 'Me' } }),
 }));
 
-// useChatSocket – stub messages + spyable sendMessage
 const sendMessageMock = jest.fn();
 const mockMessages = [
   {
@@ -59,9 +43,6 @@ jest.mock('@/hooks/sockets/useChatSocket', () => ({
   useChatSocket: () => ({ messages: mockMessages, sendMessage: sendMessageMock }),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                       2 – global DOM helpers                       */
-/* ------------------------------------------------------------------ */
 const scrollMock = jest.fn();
 
 Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
@@ -69,11 +50,8 @@ Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
   value: scrollMock,
 });
 
-/* ------------------------------------------------------------------ */
-/*                               tests                                */
-/* ------------------------------------------------------------------ */
 describe('Chat drawer', () => {
-  const fakeSocket = {} as any; // we never touch it in tests
+  const fakeSocket = {} as any;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -93,15 +71,13 @@ describe('Chat drawer', () => {
 
     const input = screen.getByTestId<HTMLInputElement>('chat-input');
 
-    // type a message
     fireEvent.change(input, { target: { value: 'New message' } });
     expect(input.value).toBe('New message');
 
-    // click Send
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
     expect(sendMessageMock).toHaveBeenCalledWith('New message');
-    expect(input.value).toBe(''); // cleared after sending
+    expect(input.value).toBe('');
   });
 
   it('sends message on Enter key press', () => {
@@ -118,7 +94,6 @@ describe('Chat drawer', () => {
   it('scrolls to newest message when opened / updated', () => {
     render(<Chat isOpen socket={fakeSocket} handleClose={jest.fn()} />);
 
-    // Called at least once (on mount with isOpen=true)
     expect(scrollMock).toHaveBeenCalled();
   });
 });

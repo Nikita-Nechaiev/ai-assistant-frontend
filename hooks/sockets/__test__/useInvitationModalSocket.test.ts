@@ -43,14 +43,12 @@ describe('useInvitationModalSocket', () => {
 
     act(() => socket.trigger('invitations', [makeInv(1)]));
     act(() => socket.trigger('newInvitation', makeInv(2)));
-    act(() => socket.trigger('newInvitation', makeInv(2))); // duplicate
+    act(() => socket.trigger('newInvitation', makeInv(2)));
     expect(result.current.invitations.map((i) => i.id)).toEqual([1, 2]);
 
-    // update role of id 2
     act(() => socket.trigger('invitationUpdated', makeInv(2, PermissionEnum.EDIT)));
     expect(result.current.invitations.find((i) => i.id === 2)?.role).toBe(PermissionEnum.EDIT);
 
-    // delete id 1
     act(() => socket.trigger('notificationDeleted', { invitationId: 1 }));
     expect(result.current.invitations.map((i) => i.id)).toEqual([2]);
   });

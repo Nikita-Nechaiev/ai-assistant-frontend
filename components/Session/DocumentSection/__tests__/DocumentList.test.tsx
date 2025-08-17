@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import React from 'react';
 
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -10,18 +6,11 @@ import { IDocument } from '@/models/models';
 
 import DocumentList from '../DocumentList';
 
-/* ------------------------------------------------------------------ */
-/*                     1 — external mocks & stubs                     */
-/* ------------------------------------------------------------------ */
-
-// 🔧  Keep references so we can assert on them later
 const createDocMock = jest.fn();
 const changeTitleMock = jest.fn();
 
-// a mutable “store” the hook will return – tests mutate it between renders
 let docs: IDocument[] = [];
 
-// socket-hook → stub implementation
 jest.mock('@/hooks/sockets/useDocumentListSocket', () => ({
   useDocumentListSocket: () => ({
     documents: docs,
@@ -30,13 +19,11 @@ jest.mock('@/hooks/sockets/useDocumentListSocket', () => ({
   }),
 }));
 
-// strip the permission-wrapper for tests
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Modal – simple container with two buttons for submit / cancel
 jest.mock('@/ui/Modal', () => ({
   __esModule: true,
   default: ({ isOpen, title, submitText, onSubmit, onClose, children }: any) =>
@@ -50,13 +37,11 @@ jest.mock('@/ui/Modal', () => ({
     ) : null,
 }));
 
-// InputField – plain <input>
 jest.mock('@/ui/InputField', () => ({
   __esModule: true,
   default: ({ id, value, onChange }: any) => <input data-testid={id} value={value} onChange={onChange} />,
 }));
 
-// DocumentItem – clickable div that calls onEditTitle when clicked
 jest.mock('../DocumentItem', () => ({
   __esModule: true,
   default: ({ document, onEditTitle }: { document: IDocument; onEditTitle: () => void }) => (
@@ -66,24 +51,18 @@ jest.mock('../DocumentItem', () => ({
   ),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                              helpers                               */
-/* ------------------------------------------------------------------ */
 const renderList = () => render(<DocumentList sessionId={777} socket={null} />);
 
 const openCreateModal = () => fireEvent.click(screen.getByRole('button', { name: '' }));
 
-/* ------------------------------------------------------------------ */
-/*                                 tests                              */
-/* ------------------------------------------------------------------ */
 describe('DocumentList', () => {
   afterEach(() => {
     jest.clearAllMocks();
-    docs = []; // reset between tests
+    docs = [];
   });
 
   it('shows “No documents” placeholder when list empty', () => {
-    docs = []; // no documents
+    docs = [];
     renderList();
 
     expect(screen.getByText('No documents found')).toBeInTheDocument();
@@ -93,17 +72,15 @@ describe('DocumentList', () => {
     docs = [];
     renderList();
 
-    // open ➕  button
     openCreateModal();
     expect(screen.getByTestId('modal')).toBeInTheDocument();
 
-    // type new title and submit
     fireEvent.change(screen.getByTestId('documentTitle'), {
-      target: { value: '   New Doc   ' }, // note the extra spaces
+      target: { value: '   New Doc   ' },
     });
     fireEvent.click(screen.getByText('Create'));
 
-    expect(createDocMock).toHaveBeenCalledWith('New Doc'); // trimmed
+    expect(createDocMock).toHaveBeenCalledWith('New Doc');
   });
 
   it('opens “edit title” modal from DocumentItem and calls changeDocumentTitle', () => {
@@ -111,15 +88,12 @@ describe('DocumentList', () => {
 
     renderList();
 
-    // click the DocumentItem to trigger edit
     fireEvent.click(screen.getByTestId('doc-11'));
 
-    // modal should pre-fill with existing title
     const input = screen.getByTestId('documentTitle');
 
     expect(input).toHaveValue('Old title');
 
-    // change title & save
     fireEvent.change(input, { target: { value: 'New title' } });
     fireEvent.click(screen.getByText('Save'));
 

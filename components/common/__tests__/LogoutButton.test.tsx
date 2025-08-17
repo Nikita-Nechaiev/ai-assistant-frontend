@@ -5,39 +5,29 @@ import axios from 'axios';
 
 import LogoutButton from '../LogoutButton';
 
-/* ------------------------------------------------------------------ */
-/*                       Mock external dependencies                    */
-/* ------------------------------------------------------------------ */
-
-// 1) axios.post → подменяем
 jest.mock('axios');
 
 const mockedPost = axios.post as jest.Mock;
 
-// 2) next/navigation router
 const replaceMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ replace: replaceMock }),
 }));
 
-// 3) Zustand user-store
 const clearUserMock = jest.fn();
 
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: (sel: any) => sel({ clearUser: clearUserMock }),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                               Tests                                */
-/* ------------------------------------------------------------------ */
 describe('LogoutButton', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   it('calls API, clears user and redirects on successful logout', async () => {
-    mockedPost.mockResolvedValue({ status: 200 }); // успех
+    mockedPost.mockResolvedValue({ status: 200 });
 
     render(<LogoutButton />);
 

@@ -4,7 +4,6 @@ import { PermissionEnum, SnackbarStatusEnum } from '@/models/enums';
 
 import { useSessionHeaderSocket } from '../useSessionHeaderSocket';
 
-/* ─────────── light fake Socket ─────────── */
 class MockSocket {
   emit = jest.fn();
 
@@ -21,7 +20,6 @@ class MockSocket {
   }
 }
 
-/* ─────────── external module mocks ─────────── */
 const pushMock = jest.fn();
 
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: pushMock }) }));
@@ -37,7 +35,6 @@ jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({ user: { id: 1 } }),
 }));
 
-/* spies so we can assert updates */
 const updateSessionSpy = jest.fn();
 const setSessionSpy = jest.fn();
 
@@ -49,7 +46,6 @@ jest.mock('@/store/useSessionStore', () => ({
   }),
 }));
 
-/* ─────────── minimal helpers for data stubs ─────────── */
 const collaborator = (id: number, p = [PermissionEnum.READ]) => ({ id, permissions: p }) as any;
 
 const sessionPayload = {
@@ -58,7 +54,6 @@ const sessionPayload = {
   userCollaborationSessions: [{ user: { id: 1 }, permissions: [PermissionEnum.READ] }],
 } as any;
 
-/* ─────────── tests ─────────── */
 describe('useSessionHeaderSocket', () => {
   let socket: MockSocket;
   const sessionId = 99;
@@ -90,7 +85,6 @@ describe('useSessionHeaderSocket', () => {
     expect(result.current.onlineUsers.length).toBe(1);
     expect(result.current.timeSpentMs).toBe(5 * 1000);
 
-    // advance 2 s → timeSpentMs should grow
     act(() => jest.advanceTimersByTime(2000));
     expect(result.current.timeSpentMs).toBe(5 * 1000 + 2000);
   });

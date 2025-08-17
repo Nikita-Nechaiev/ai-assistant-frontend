@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -11,9 +8,6 @@ import { IInvitation } from '@/models/models';
 
 import InvitationItem from '../InvitationItem';
 
-/* ──────────────────────────────────────────────────────────
- * 1 – mocks for nested / permission components
- * ───────────────────────────────────────────────────────── */
 const dropdownProps: any[] = [];
 
 jest.mock('../RoleDropdown', () => ({
@@ -25,15 +19,11 @@ jest.mock('../RoleDropdown', () => ({
   },
 }));
 
-// bypass permission check
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-/* ──────────────────────────────────────────────────────────
- * 2 – helpers
- * ───────────────────────────────────────────────────────── */
 const mkInvitation = (id: number, role: PermissionEnum): IInvitation =>
   ({
     id,
@@ -41,9 +31,6 @@ const mkInvitation = (id: number, role: PermissionEnum): IInvitation =>
     receiver: { email: `user${id}@mail.com`, id: 9, name: 'User' },
   }) as unknown as IInvitation;
 
-/* ──────────────────────────────────────────────────────────
- * 3 – tests
- * ───────────────────────────────────────────────────────── */
 describe('InvitationItem', () => {
   const changeSpy = jest.fn();
   const deleteSpy = jest.fn();
@@ -70,22 +57,18 @@ describe('InvitationItem', () => {
 
     renderItem(inv);
 
-    // initially closed
     expect(screen.queryByTestId('dropdown')).not.toBeInTheDocument();
 
-    // open
     fireEvent.click(screen.getByRole('button'));
 
     const menu = screen.getByTestId('dropdown');
 
     expect(menu).toBeInTheDocument();
 
-    // correct props forwarded
     expect(dropdownProps[0].invitation).toBe(inv);
     expect(dropdownProps[0].changeInvitationRole).toBe(changeSpy);
     expect(dropdownProps[0].deleteInvitation).toBe(deleteSpy);
 
-    // call closeMenu & wait for disappearance
     await act(async () => dropdownProps[0].closeMenu());
     await waitFor(() => {
       expect(screen.queryByTestId('dropdown')).not.toBeInTheDocument();

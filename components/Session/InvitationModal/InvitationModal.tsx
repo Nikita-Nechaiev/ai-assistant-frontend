@@ -45,6 +45,7 @@ const InvitationModal: React.FC<InvitationModalProps> = ({ isOpen, onClose, sock
 
   const onSubmit = (form: FormInputs) => {
     createInvitation(form);
+    setSnackbar(`Invitation has been sent to ${form.email}`, SnackbarStatusEnum.SUCCESS);
     reset();
     onClose();
   };

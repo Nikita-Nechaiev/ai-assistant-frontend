@@ -78,7 +78,6 @@ describe('AiAssistanceStepper', () => {
 
     ctx.render();
 
-    // Step 1 button present
     const btn = screen.getByText('mock-select-tool');
 
     fireEvent.click(btn);

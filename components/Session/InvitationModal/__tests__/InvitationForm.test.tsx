@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -11,9 +8,6 @@ import { PermissionEnum } from '@/models/enums';
 
 import InvitationForm from '../InvitationForm';
 
-/* ------------------------------------------------------------------ */
-/*                    helper: render form with react-hook-form         */
-/* ------------------------------------------------------------------ */
 type FormInputs = { email: string; role: PermissionEnum };
 
 const renderForm = (errors: FieldErrors<FormInputs> = {}) => {
@@ -28,20 +22,15 @@ const renderForm = (errors: FieldErrors<FormInputs> = {}) => {
   return render(<Wrapper />);
 };
 
-/* ------------------------------------------------------------------ */
-/*                               tests                                */
-/* ------------------------------------------------------------------ */
 describe('InvitationForm', () => {
   it('renders email input and role select with READ & EDIT options (no ADMIN)', () => {
     renderForm();
 
-    // email field
     const emailInput = screen.getByLabelText(/collaborator email/i);
 
     expect(emailInput).toBeInTheDocument();
     expect(emailInput).toHaveAttribute('type', 'email');
 
-    // select contains READ and EDIT, but not ADMIN
     const select = screen.getByLabelText(/select role/i) as HTMLSelectElement;
     const options = Array.from(select.options).map((o) => o.value);
 
@@ -54,10 +43,8 @@ describe('InvitationForm', () => {
 
     const select = screen.getByLabelText(/select role/i) as HTMLSelectElement;
 
-    // default is READ
     expect(select.value).toBe(PermissionEnum.READ);
 
-    // change to EDIT
     fireEvent.change(select, { target: { value: PermissionEnum.EDIT } });
     expect(select.value).toBe(PermissionEnum.EDIT);
   });

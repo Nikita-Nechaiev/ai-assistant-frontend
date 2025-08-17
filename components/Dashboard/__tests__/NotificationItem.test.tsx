@@ -3,14 +3,11 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import { InvitationStatusEnum, NotificationStatusEnum, PermissionEnum } from '@/models/enums';
-import { getReceivedMessage, getExpirationMessage, isInvitationExpired } from '@/helpers/notificationHelpers';
+import { getExpirationMessage, isInvitationExpired } from '@/helpers/notificationHelpers';
 import { ICollaborationSession, IInvitation, IUser } from '@/models/models';
 
 import NotificationItem from '../NotificationItem';
 
-/* ------------------------------------------------------------------ */
-/*                1 – Mock helpers to simplify assertions              */
-/* ------------------------------------------------------------------ */
 jest.mock('@/helpers/notificationHelpers', () => ({
   getReceivedMessage: jest.fn(() => 'Received 1h ago'),
   getExpirationMessage: jest.fn(() => 'Expires in 1h'),
@@ -20,9 +17,6 @@ jest.mock('@/helpers/notificationHelpers', () => ({
 const mockIsExpired = isInvitationExpired as jest.Mock;
 const mockExpireMsg = getExpirationMessage as jest.Mock;
 
-/* ------------------------------------------------------------------ */
-/*                   2 – Sample invitation object                      */
-/* ------------------------------------------------------------------ */
 const baseInvitation: IInvitation = {
   id: 1,
   inviterEmail: 'alice@mail.com',
@@ -39,9 +33,6 @@ const baseInvitation: IInvitation = {
   } as IUser,
 };
 
-/* ------------------------------------------------------------------ */
-/*                              Tests                                  */
-/* ------------------------------------------------------------------ */
 describe('NotificationItem', () => {
   const onAccept = jest.fn();
   const onRead = jest.fn();
@@ -60,7 +51,6 @@ describe('NotificationItem', () => {
     expect(screen.getByText(baseInvitation.inviterEmail)).toBeInTheDocument();
     expect(screen.getByText(baseInvitation.session.name)).toBeInTheDocument();
 
-    // первый <li> — корневой элемент уведомления
     const rootItem = screen.getAllByRole('listitem')[0];
 
     expect(rootItem.querySelector('div.bg-red-500')).toBeInTheDocument();
@@ -97,7 +87,7 @@ describe('NotificationItem', () => {
   });
 
   it('disables “Accept” when invitation expired', () => {
-    mockIsExpired.mockReturnValueOnce(true); // treat as expired
+    mockIsExpired.mockReturnValueOnce(true);
     mockExpireMsg.mockReturnValueOnce('Expired');
 
     render(
@@ -110,7 +100,6 @@ describe('NotificationItem', () => {
     );
 
     expect(screen.queryByRole('button', { name: /accept/i })).toBeNull();
-    // как минимум один элемент содержит слово «Expired»
     expect(screen.getAllByText(/expired/i).length).toBeGreaterThan(0);
   });
 });

@@ -4,14 +4,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { SnackbarStatusEnum } from '@/models/enums';
 
-import Snackbar from '../Snackbar'; // поправь путь, если отличается
+import Snackbar from '../Snackbar';
 
-/* ------------------------------------------------------------------ */
-/*                     mock Zustand-хука useSnackbarStore              */
-/* ------------------------------------------------------------------ */
 const closeSnackbarMock = jest.fn();
 
-// переменная-хранилище, чтобы из теста “подменять” состояние стора
 let snackbarState: {
   message: string | null;
   status: SnackbarStatusEnum | null;
@@ -26,7 +22,6 @@ jest.mock('@/store/useSnackbarStore', () => () => snackbarState);
 
 describe('Snackbar', () => {
   beforeEach(() => {
-    // очищаем вызовы и сбрасываем состояние перед каждым тестом
     closeSnackbarMock.mockClear();
     snackbarState = { message: null, status: null, closeSnackbar: closeSnackbarMock };
   });
@@ -56,7 +51,6 @@ describe('Snackbar', () => {
 
     render(<Snackbar />);
 
-    // таймер ещё не прошёл
     expect(closeSnackbarMock).not.toHaveBeenCalled();
 
     jest.advanceTimersByTime(4000);

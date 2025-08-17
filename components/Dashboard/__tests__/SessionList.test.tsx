@@ -3,24 +3,17 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useInfiniteQuery as _useInfiniteQuery, useMutation as _useMutation } from '@tanstack/react-query';
 
-/* ------------------------------------------------------------------ */
-/*                1 — Global mocks for external deps                   */
-/* ------------------------------------------------------------------ */
-
-// ⬛ react-query
 jest.mock('@tanstack/react-query');
 
 const useInfiniteQuery = _useInfiniteQuery as jest.Mock;
 const useMutation = _useMutation as jest.Mock;
 
-// ⬛ next/navigation router
 const pushMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock }),
 }));
 
-// ⬛ SessionApi (чтобы не делать реальный вызов)
 jest.mock('@/services/SessionApi', () => ({
   SessionApi: {
     fetchUserSessions: jest.fn(),
@@ -69,9 +62,6 @@ jest.mock('../SessionItem', () => ({
   default: ({ session }: any) => <li data-testid='session-item'>{session.name}</li>,
 }));
 
-/* ------------------------------------------------------------------ */
-/*                    2 — Reusable helpers for tests                   */
-/* ------------------------------------------------------------------ */
 const mkPage = (count: number, start = 0) =>
   Array.from({ length: count }, (_, i) => ({
     id: i + start,
@@ -99,9 +89,6 @@ const setupMutation = () => {
   return mutate;
 };
 
-/* ------------------------------------------------------------------ */
-/*                               Tests                                */
-/* ------------------------------------------------------------------ */
 describe('SessionList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -144,26 +131,22 @@ describe('SessionList', () => {
 
     render(<SessionList />);
 
-    // Открываем поп-ап “Create Session”
     fireEvent.click(screen.getByText(/create session/i));
 
     const modal = screen.getByTestId('modal');
 
     expect(modal).toBeInTheDocument();
 
-    // имя уже проставлено (Alice's session)
     const nameInput = screen.getByLabelText('Session Name') as HTMLInputElement;
 
     expect(nameInput.value).toMatch(/Alice/);
 
-    // кликаем submit
     fireEvent.click(screen.getByText('submit'));
     expect(mutateMock).toHaveBeenCalledWith(nameInput.value);
 
-    // имитируем onSuccess
     const onSuccess = useMutation.mock.calls[0][0].onSuccess;
 
-    onSuccess({ id: 77 }); // fake session
+    onSuccess({ id: 77 });
     await waitFor(() => expect(snackbarMock).toHaveBeenCalled());
     expect(pushMock).toHaveBeenCalledWith('/session/77');
   });

@@ -1,18 +1,11 @@
-// components/Session/DocumentSection/__tests__/PopupMenu.test.tsx
 import React from 'react';
 
 import { render, screen, fireEvent } from '@testing-library/react';
 
-////////////////////////////////////////////////////////////////////////////////
-// 1 — mock ESM-only dependency *before* PopupMenu gets imported              //
-////////////////////////////////////////////////////////////////////////////////
 jest.mock('react-quill-new', () => ({
-  Quill: {}, // minimal stub – just needs to exist
+  Quill: {},
 }));
 
-////////////////////////////////////////////////////////////////////////////////
-// 2 — external mocks & spies                                                  //
-////////////////////////////////////////////////////////////////////////////////
 const onClose = jest.fn();
 const onEditTitle = jest.fn();
 const duplicateSpy = jest.fn();
@@ -50,15 +43,9 @@ jest.mock('@/store/useSnackbarStore', () => () => ({
   setSnackbar: setSnackbarSpy,
 }));
 
-////////////////////////////////////////////////////////////////////////////////
-// 3 — component under test                                                    //
-////////////////////////////////////////////////////////////////////////////////
 import PopupMenu from '../PopupMenu';
 import { SessionContext } from '../../SessionLayout/SessionLayout';
 
-////////////////////////////////////////////////////////////////////////////////
-// 4 — helper to render with SessionContext                                    //
-////////////////////////////////////////////////////////////////////////////////
 const renderMenu = (extraProps = {}) =>
   render(
     <SessionContext.Provider value={{ socket: undefined, sessionId: 123 } as any}>
@@ -75,9 +62,6 @@ const renderMenu = (extraProps = {}) =>
     </SessionContext.Provider>,
   );
 
-////////////////////////////////////////////////////////////////////////////////
-// 5 — tests                                                                   //
-////////////////////////////////////////////////////////////////////////////////
 describe('PopupMenu', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -116,7 +100,7 @@ describe('PopupMenu', () => {
 
   it('closes on outside click', () => {
     renderMenu();
-    fireEvent.mouseDown(screen.getByTestId('outside')); // click outside
+    fireEvent.mouseDown(screen.getByTestId('outside'));
     expect(onClose).toHaveBeenCalled();
   });
 });

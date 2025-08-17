@@ -6,22 +6,16 @@ import { NotificationStatusEnum } from '@/models/enums';
 
 import MainLayout from '../Layout';
 
-/* ------------------------------------------------------------------ */
-/*                1 — моки стора, сокетов и дочерних компонентов       */
-/* ------------------------------------------------------------------ */
-//  user store
 const userState = { user: { id: 7, name: 'Alice', email: 'a@mail.com', avatar: 'ava.png' } };
 
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => userState,
 }));
 
-//  socket-хуки (пустой socket)
 jest.mock('@/hooks/sockets/useCollaborationSocket', () => ({
   useCollaborationSocket: () => ({ socket: {} }),
 }));
 
-//  dashboard-socket: даём заглушки и массив инвайтов
 const fetchNotifications = jest.fn();
 const acceptInvitation = jest.fn();
 const updateNotificationStatus = jest.fn();
@@ -38,7 +32,6 @@ jest.mock('@/hooks/sockets/useDashboardSocket', () => ({
   }),
 }));
 
-//  UI-компоненты
 jest.mock('@/ui/LargeLoader', () => () => <div data-testid='loader'>loader</div>);
 jest.mock('@/ui/Snackbar', () => () => <div data-testid='snackbar'>snackbar</div>);
 jest.mock('../Sidebar', () => () => <aside data-testid='sidebar'>sidebar</aside>);
@@ -46,7 +39,6 @@ jest.mock('../MainContent', () => ({ children }: { children: React.ReactNode }) 
   <main data-testid='content'>{children}</main>
 ));
 
-// Header: отдаём кнопку, чтобы вызывать handleToggleDrawwer
 jest.mock('../Header', () => ({
   __esModule: true,
   default: ({ handleToggleDrawwer }: { handleToggleDrawwer: () => void }) => (
@@ -56,7 +48,6 @@ jest.mock('../Header', () => ({
   ),
 }));
 
-// NotificationsDrawer: показываем isOpen и отдаём test-кнопки
 jest.mock('@/components/Dashboard/NotificationsDrawer', () => ({
   __esModule: true,
   default: ({ isOpen, onAccept, onMarkAsRead, onDelete, handleClose }: any) => (
@@ -69,16 +60,12 @@ jest.mock('@/components/Dashboard/NotificationsDrawer', () => ({
   ),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                                 Tests                              */
-/* ------------------------------------------------------------------ */
 describe('MainLayout', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('shows loader while user undefined', () => {
-    // временно «обнуляем» пользователя
     userState.user = undefined as any;
     render(
       <MainLayout>
@@ -86,7 +73,6 @@ describe('MainLayout', () => {
       </MainLayout>,
     );
     expect(screen.getByTestId('loader')).toBeInTheDocument();
-    // вернём пользователя для следующих тестов
     userState.user = { id: 7 } as any;
   });
 
@@ -100,12 +86,10 @@ describe('MainLayout', () => {
     expect(screen.getByText('child')).toBeInTheDocument();
     expect(screen.getByTestId('drawer-closed')).toBeInTheDocument();
 
-    // открываем через Header-кнопку
     fireEvent.click(screen.getByTestId('hdr-btn'));
     expect(screen.getByTestId('drawer-open')).toBeInTheDocument();
     expect(fetchNotifications).toHaveBeenCalledTimes(1);
 
-    // закрываем
     fireEvent.click(screen.getByText('close'));
     expect(screen.getByTestId('drawer-closed')).toBeInTheDocument();
   });
@@ -113,7 +97,6 @@ describe('MainLayout', () => {
   it('delegates accept / read / delete actions', () => {
     render(<MainLayout> x </MainLayout>);
 
-    // открываем
     fireEvent.click(screen.getByTestId('hdr-btn'));
 
     fireEvent.click(screen.getByText('acc'));

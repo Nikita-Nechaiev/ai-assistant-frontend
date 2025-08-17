@@ -15,7 +15,6 @@ interface Params {
   sessionId: number;
   socket: Socket;
 }
-
 export function useSessionHeaderSocket({ sessionId, socket }: Params) {
   const { setSnackbar } = useSnackbarStore();
   const { user: currentUser } = useUserStore();

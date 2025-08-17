@@ -7,17 +7,11 @@ import { ICollaborator } from '@/models/models';
 
 import ChatMessage from '../ChatMessage';
 
-/* ------------------------------------------------------------------ */
-/*               1 – mock avatar component for easy lookup            */
-/* ------------------------------------------------------------------ */
 jest.mock('@/components/common/UserAvatarCircle', () => ({
   __esModule: true,
   default: ({ avatar }: { avatar: string }) => <span data-testid='avatar'>{avatar}</span>,
 }));
 
-/* ------------------------------------------------------------------ */
-/*                         helper to build sender                      */
-/* ------------------------------------------------------------------ */
 const mkSender = (idx = 1): ICollaborator => ({
   id: idx,
   name: `User${idx}`,
@@ -26,24 +20,17 @@ const mkSender = (idx = 1): ICollaborator => ({
   permissions: [PermissionEnum.READ],
 });
 
-/* ------------------------------------------------------------------ */
-/*                               tests                                */
-/* ------------------------------------------------------------------ */
 describe('ChatMessage', () => {
   it('renders sender name, text and avatar for other user (left-aligned)', () => {
     const sender = mkSender(5);
 
     render(<ChatMessage sender={sender} text='Hello world' isCurrentUser={false} />);
 
-    // content
     expect(screen.getByText('Hello world')).toBeInTheDocument();
     expect(screen.getByText(sender.name)).toBeInTheDocument();
 
-    // avatar
     expect(screen.getByTestId('avatar').textContent).toBe(sender.avatar);
 
-    // wrapper should have justify-start
-    // traverse: <div class='text-sm'>Hello…</div> → bubble → wrapper
     const bubble = screen.getByText('Hello world').closest('div')!.parentElement!;
     const wrapper = bubble.parentElement!;
 

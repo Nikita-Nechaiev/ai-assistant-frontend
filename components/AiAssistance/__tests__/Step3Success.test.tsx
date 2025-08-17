@@ -15,10 +15,8 @@ describe('Step3Success', () => {
   it('renders result text and handles copy', () => {
     render(<Step3Success result='Hello AI!' onCopyResult={onCopyMock} onRestart={onRestartMock} />);
 
-    // текст результата
     expect(screen.getByText('Hello AI!')).toBeInTheDocument();
 
-    // кнопка копирования активна
     const copyBtn = screen.getByRole('button', { name: /copy/i });
 
     expect(copyBtn).not.toBeDisabled();
@@ -41,7 +39,7 @@ describe('Step3Success', () => {
   });
 
   it('adds scroll class when result is very long', () => {
-    const longText = 'x'.repeat(1500); // > 1300 chars
+    const longText = 'x'.repeat(1500);
     const { container } = render(
       <Step3Success result={longText} onCopyResult={onCopyMock} onRestart={onRestartMock} />,
     );

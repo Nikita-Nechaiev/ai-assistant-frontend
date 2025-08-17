@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => 
 
         <div className='flex items-center space-x-4 relative'>
           <button
-            aria-label='Настройки профиля'
+            aria-label='Profile settings'
             onClick={openProfileModal}
             className='h-10 w-10 hover:bg-gray-700 rounded-full flex items-center justify-center'
           >
@@ -47,6 +47,7 @@ const Header: React.FC<HeaderProps> = ({ handleToggleDrawwer, invitations }) => 
           </button>
 
           <button
+            data-testid='open-notifications-drawer'
             onClick={handleToggleDrawwer}
             className='h-10 w-10 hover:bg-gray-700 rounded-full flex items-center justify-center relative'
           >

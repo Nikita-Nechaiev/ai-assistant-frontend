@@ -47,7 +47,7 @@ describe('useUserStore', () => {
     const user = useUserStore.getState().user!;
 
     expect(user.email).toBe('john.doe@example.com');
-    expect(user.name).toBe('John'); // unchanged
+    expect(user.name).toBe('John');
   });
 
   it('updateUser patches an existing user', () => {

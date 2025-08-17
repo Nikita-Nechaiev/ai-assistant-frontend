@@ -112,6 +112,7 @@ export default function SessionHeader({ sessionId, socket, handleOpenInviteModal
 
         <RequirePermission permission={PermissionEnum.EDIT}>
           <button
+            data-testid='open-invite-modal'
             onClick={handleOpenInviteModal}
             className='h-10 w-10 bg-mainLight text-mainDark rounded-full flex items-center justify-center hover:bg-gray-200 transition'
           >

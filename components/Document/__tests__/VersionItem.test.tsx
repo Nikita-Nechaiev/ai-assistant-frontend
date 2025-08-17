@@ -29,14 +29,12 @@ describe('VersionItem', () => {
       />,
     );
 
-    // текст
     expect(screen.getByText(`Changed by: ${version.userEmail}`)).toBeInTheDocument();
 
     const formatted = new Date(version.createdAt).toLocaleDateString();
 
     expect(screen.getByText(`At: ${formatted}`)).toBeInTheDocument();
 
-    // дефолтные классы (нет bg-mainLightGray)
     const card = screen.getByText(/changed by/i).parentElement as HTMLElement;
 
     expect(card).toHaveClass('border-mainLightGray');

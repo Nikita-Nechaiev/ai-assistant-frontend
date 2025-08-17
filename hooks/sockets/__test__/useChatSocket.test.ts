@@ -17,7 +17,6 @@ class MockSocket {
 
   emit = jest.fn();
 
-  /** helper to fire events */
   trigger(ev: string, ...args: any[]) {
     this.listeners[ev]?.forEach((cb) => cb(...args));
   }
@@ -87,6 +86,6 @@ describe('useChatSocket', () => {
     expect(socket.emit).toHaveBeenCalledWith('sendMessage', { message: 'hello' });
 
     act(() => result.current.sendMessage('   '));
-    expect(socket.emit).toHaveBeenCalledTimes(1); // no extra call for blanks
+    expect(socket.emit).toHaveBeenCalledTimes(1);
   });
 });

@@ -4,7 +4,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import FileButton from '../FileButton';
 
-// mock global URL.createObjectURL
 global.URL.createObjectURL = jest.fn(() => 'mock-preview-url');
 
 describe('FileButton', () => {

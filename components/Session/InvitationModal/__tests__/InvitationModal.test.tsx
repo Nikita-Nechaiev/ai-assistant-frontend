@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -10,10 +7,6 @@ import { PermissionEnum, SnackbarStatusEnum } from '@/models/enums';
 
 import InvitationModal from '../InvitationModal';
 
-/* ────────────────────────────────────────────────────────────
- * 1. external mocks & spies
- * ────────────────────────────────────────────────────────── */
-
 const fetchNotifications = jest.fn();
 const createInvitation = jest.fn();
 const changeRoleSpy = jest.fn();
@@ -21,7 +14,6 @@ const deleteInvSpy = jest.fn();
 
 let capturedErrorCb: (msg: string) => void = () => {};
 
-/* mock socket-hook */
 jest.mock('@/hooks/sockets/useInvitationModalSocket', () => ({
   useInvitationModalSocket: (_socket: any, errCb: (m: string) => void) => {
     capturedErrorCb = errCb;
@@ -36,15 +28,12 @@ jest.mock('@/hooks/sockets/useInvitationModalSocket', () => ({
   },
 }));
 
-/* snackbar store */
 const setSnackbar = jest.fn();
 
 jest.mock('@/store/useSnackbarStore', () => () => ({ setSnackbar }));
 
-/* Modal – simple shell with two buttons */
 jest.mock('@/ui/Modal', () => ({
   __esModule: true,
-  /* eslint-disable react/prop-types */
   default: ({ isOpen, onClose, onSubmit, children, title }: any) =>
     isOpen ? (
       <div data-testid='modal'>
@@ -56,7 +45,6 @@ jest.mock('@/ui/Modal', () => ({
     ) : null,
 }));
 
-/* ── replace InvitationForm by trivial inputs that mutate our fake RHF state */
 let formState = { email: '', role: PermissionEnum.READ };
 
 jest.mock('../InvitationForm', () => ({
@@ -72,7 +60,6 @@ jest.mock('../InvitationForm', () => ({
   ),
 }));
 
-/* ── InvitationList mock – just validate props are forwarded */
 const listProps: any[] = [];
 
 jest.mock('../InvitationList', () => ({
@@ -84,17 +71,14 @@ jest.mock('../InvitationList', () => ({
   },
 }));
 
-/* ────────────────────────────────────────────────────────────
- * 2. mock react-hook-form so we fully control the submit data
- * ────────────────────────────────────────────────────────── */
 jest.mock('react-hook-form', () => {
   const actual = jest.requireActual('react-hook-form');
 
   return {
     ...actual,
     useForm: () => ({
-      control: {}, // passed to InvitationForm (not used)
-      handleSubmit: (cb: any) => () => cb({ ...formState }), // returns current formState
+      control: {},
+      handleSubmit: (cb: any) => () => cb({ ...formState }),
       reset: () => {
         formState = { email: '', role: PermissionEnum.READ };
       },
@@ -103,15 +87,9 @@ jest.mock('react-hook-form', () => {
   };
 });
 
-/* ────────────────────────────────────────────────────────────
- * 3. helpers
- * ────────────────────────────────────────────────────────── */
 const renderModal = (extra = {}) =>
   render(<InvitationModal isOpen socket={{} as any} onClose={jest.fn()} {...extra} />);
 
-/* ────────────────────────────────────────────────────────────
- * 4. tests
- * ────────────────────────────────────────────────────────── */
 describe('InvitationModal', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -129,7 +107,6 @@ describe('InvitationModal', () => {
 
     renderModal({ onClose });
 
-    /* fill the mocked inputs */
     fireEvent.change(screen.getByTestId('email'), {
       target: { value: 'bob@mail.com' },
     });
@@ -137,7 +114,6 @@ describe('InvitationModal', () => {
       target: { value: PermissionEnum.EDIT },
     });
 
-    /* submit – wrap in act to silence warnings */
     await act(async () => {
       fireEvent.click(screen.getByText('Send Invitation'));
     });

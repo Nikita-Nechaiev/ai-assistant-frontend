@@ -6,7 +6,6 @@ import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout
 
 import useDocumentData from '../useDocumentData';
 
-/* ─────────── fake Socket impl ─────────── */
 class MockSocket {
   emit = jest.fn();
 
@@ -23,19 +22,16 @@ class MockSocket {
   }
 }
 
-/* ─────────── lockBodyScroll spy ─────────── */
 const lockSpy = jest.fn();
 
 jest.mock('@/helpers/scrollLock', () => ({
   lockBodyScroll: (...a: any[]) => lockSpy(...a),
 }));
 
-/* ─────────── minimal stubs ─────────── */
 const doc = (id = 1) => ({ id, name: `Doc${id}` }) as any;
 const ver = (id: number, dId: number) => ({ id, document: { id: dId } }) as any;
 const usage = (dId: number) => ({ id: 99, document: { id: dId }, result: 'ok', user: { id: 1 } }) as any;
 
-/* ─────────── wrapper providing SessionContext ─────────── */
 const withCtx = (socket: MockSocket, children: React.ReactNode) => (
   <SessionContext.Provider value={{ socket: socket as any, sessionId: 123 }}>{children}</SessionContext.Provider>
 );

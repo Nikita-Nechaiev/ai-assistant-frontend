@@ -11,7 +11,6 @@ describe('Modal', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-    // на случай, если тест упал и класс остался
     document.body.classList.remove('overflow-hidden');
   });
 
@@ -33,10 +32,8 @@ describe('Modal', () => {
   it('triggers onClose on background click and on close-button click', () => {
     const { container } = render(<Modal isOpen onClose={onClose} />);
 
-    // клик по тёмному фону (самый внешний div)
     fireEvent.click(container.firstChild as HTMLElement);
 
-    // клик по кнопке-крестику
     const closeBtn = container.querySelector('button') as HTMLButtonElement;
 
     fireEvent.click(closeBtn);
@@ -65,7 +62,6 @@ describe('Modal', () => {
   it('triggers onSubmit when Enter key pressed inside modal', () => {
     render(<Modal isOpen onClose={onClose} onSubmit={onSubmit} />);
 
-    // контент-блок модалки имеет tabIndex=0
     const modalBox = document.querySelector('div[tabindex="0"]') as HTMLElement;
 
     fireEvent.keyDown(modalBox, { key: 'Enter' });

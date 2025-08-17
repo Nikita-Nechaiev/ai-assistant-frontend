@@ -7,11 +7,6 @@ import { IInvitation } from '@/models/models';
 
 import NotificationsDrawer from '../NotificationsDrawer';
 
-/* ------------------------------------------------------------------ */
-/*                      1 — Mock nested components                     */
-/* ------------------------------------------------------------------ */
-
-// Drawer → просто рендер children, если isOpen
 jest.mock('@/ui/Drawer', () => ({
   __esModule: true,
   default: ({ isOpen, children, handleClose }: any) =>
@@ -23,7 +18,6 @@ jest.mock('@/ui/Drawer', () => ({
     ) : null,
 }));
 
-// ⚠️ ВАЖНО — путь на уровень выше!
 jest.mock('../NotificationItem', () => ({
   __esModule: true,
   default: ({ invitation, onAccept, onMarkAsRead, onDelete }: any) => (
@@ -36,9 +30,6 @@ jest.mock('../NotificationItem', () => ({
   ),
 }));
 
-/* ------------------------------------------------------------------ */
-/*                         2 — Test data helper                        */
-/* ------------------------------------------------------------------ */
 const mkInvitation = (id: number): IInvitation => ({
   id,
   inviterEmail: `user${id}@mail.com`,
@@ -51,9 +42,6 @@ const mkInvitation = (id: number): IInvitation => ({
   receiver: { id: 99, email: 'me@mail.com', name: 'Me' } as any,
 });
 
-/* ------------------------------------------------------------------ */
-/*                                 Tests                              */
-/* ------------------------------------------------------------------ */
 describe('NotificationsDrawer', () => {
   const handleClose = jest.fn();
   const onAccept = jest.fn();

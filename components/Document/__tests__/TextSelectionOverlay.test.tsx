@@ -4,12 +4,9 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 
 import TextSelectionOverlay from '../TextSelectionOverlay';
 
-/* helper rect */
 const rect = new DOMRect(100, 100, 300, 50);
 
-/* utils */
 const findMask = () =>
-  // берём первый div-“маску” с нужным фоном
   Array.from(document.body.querySelectorAll('div')).find(
     (el) => (el as HTMLElement).style.backgroundColor === 'rgba(0, 0, 0, 0.6)',
   ) as HTMLElement;
@@ -42,9 +39,9 @@ describe('TextSelectionOverlay', () => {
     const mask = findMask();
 
     expect(mask).toBeTruthy();
-    expect(mask.style.opacity).toBe('0'); // до тайм-аута
+    expect(mask.style.opacity).toBe('0');
 
-    act(() => jest.advanceTimersByTime(20)); // >10 мс
+    act(() => jest.advanceTimersByTime(20));
     expect(mask.style.opacity).toBe('1');
   });
 

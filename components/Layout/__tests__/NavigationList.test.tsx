@@ -4,9 +4,6 @@ import { render, screen } from '@testing-library/react';
 
 import NavigationList from '../NavigationList';
 
-/* ------------------------------------------------------------------ */
-/* 1 — mock helpers/navigation                                        */
-/* ------------------------------------------------------------------ */
 jest.mock('@/helpers/navigation', () => {
   const mockNav = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -17,10 +14,6 @@ jest.mock('@/helpers/navigation', () => {
   return { navigation: mockNav };
 });
 
-/* ------------------------------------------------------------------ */
-/* 2 — other external mocks                                           */
-/* ------------------------------------------------------------------ */
-// simple <a> instead of next/link that keeps ALL props (incl. className)
 jest.mock('next/link', () => ({ href, children, ...props }: any) => (
   <a href={href} data-testid='link' {...props}>
     {children}
@@ -33,11 +26,9 @@ jest.mock('next/navigation', () => ({
   usePathname: () => currentPath,
 }));
 
-/* ------------------------------------------------------------------ */
 const { navigation: navMock } = require('@/helpers/navigation') as {
   navigation: { href: string; label: string }[];
 };
-/* ------------------------------------------------------------------ */
 
 describe('NavigationList', () => {
   it('renders a link for every item in navigation helper', () => {
@@ -55,11 +46,9 @@ describe('NavigationList', () => {
   it('adds the “active” class only for the current pathname', () => {
     const { rerender } = render(<NavigationList />);
 
-    // initially /dashboard is active
     expect(screen.getByText('Dashboard')).toHaveClass('bg-gray-700');
     expect(screen.getByText('Sessions')).not.toHaveClass('bg-gray-700');
 
-    // switch current path -> /sessions
     currentPath = '/sessions';
     rerender(<NavigationList />);
 

@@ -107,8 +107,7 @@ describe('AiUsageTable', () => {
 
     const modal = screen.getByTestId('modal');
 
-    // копируем результат
-    fireEvent.click(within(modal).getAllByRole('button')[0]); // первая иконка copy
+    fireEvent.click(within(modal).getAllByRole('button')[0]);
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(usage.sentText);
     expect(setSnackbarMock).toHaveBeenCalledWith('Text copied to clipboard!', SnackbarStatusEnum.SUCCESS);
   });

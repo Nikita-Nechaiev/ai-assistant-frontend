@@ -1,6 +1,3 @@
-/**
- * @jest-environment jsdom
- */
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -10,11 +7,6 @@ import { PermissionEnum } from '@/models/enums';
 
 import SessionHeader from '../SessionHeader';
 
-/* ------------------------------------------------------------------ */
-/*                 1 – external mocks/stubs                           */
-/* ------------------------------------------------------------------ */
-
-// next/navigation
 const pushMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
@@ -22,19 +14,16 @@ jest.mock('next/navigation', () => ({
   useParams: () => ({ id: '777', documentId: undefined }),
 }));
 
-// User avatars → simple span
 jest.mock('@/components/common/UserAvatarCircle', () => ({
   __esModule: true,
   default: ({ email }: { email: string }) => <span data-testid='avatar'>{email}</span>,
 }));
 
-// bypass permission check
 jest.mock('@/helpers/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// hook providing data + emitters
 const emitName = jest.fn();
 const emitDel = jest.fn();
 const emitPerms = jest.fn();
@@ -48,7 +37,7 @@ const hookMock = {
     avatar: `a${i + 1}.png`,
     permissions: [PermissionEnum.READ],
   })),
-  timeSpentMs: 65_000, // 1 min 5 s
+  timeSpentMs: 65_000,
   emitChangeSessionName: emitName,
   emitDeleteSession: emitDel,
   emitChangeUserPermissions: emitPerms,
@@ -58,18 +47,11 @@ jest.mock('@/hooks/sockets/useSessionHeaderSocket', () => ({
   useSessionHeaderSocket: () => hookMock,
 }));
 
-/* ------------------------------------------------------------------ */
-/*                           helpers                                  */
-/* ------------------------------------------------------------------ */
 const renderHeader = () =>
   render(<SessionHeader sessionId={777} socket={null as any} handleOpenInviteModal={jest.fn()} />);
 
-// Quickly grab icon-only buttons by position:
-const getIconButtons = () => screen.getAllByRole('button'); // order: back ▸ edit ▸ delete ▸ invite
+const getIconButtons = () => screen.getAllByRole('button');
 
-/* ------------------------------------------------------------------ */
-/*                               tests                                */
-/* ------------------------------------------------------------------ */
 describe('SessionHeader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -79,14 +61,14 @@ describe('SessionHeader', () => {
     renderHeader();
 
     expect(screen.getByText(hookMock.sessionName)).toBeInTheDocument();
-    expect(screen.getByText('1:05')).toBeInTheDocument(); // timer
+    expect(screen.getByText('1:05')).toBeInTheDocument();
     expect(screen.getAllByTestId('avatar')).toHaveLength(3);
   });
 
   it('enters edit mode, saves on Enter and emits change', () => {
     renderHeader();
 
-    const [, editBtn] = getIconButtons(); // second button → ✏️
+    const [, editBtn] = getIconButtons();
 
     fireEvent.click(editBtn);
 
@@ -101,14 +83,12 @@ describe('SessionHeader', () => {
   it('opens delete confirmation and emits delete on confirm', () => {
     renderHeader();
 
-    const [, , deleteBtn] = getIconButtons(); // third button → 🗑️
+    const [, , deleteBtn] = getIconButtons();
 
     fireEvent.click(deleteBtn);
 
-    // modal text present
     expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
 
-    // modal’s “Delete” button (it’s the first with that label inside the DOM now)
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
 
     expect(emitDel).toHaveBeenCalled();
@@ -127,7 +107,6 @@ describe('SessionHeader', () => {
   it('changes user permissions through avatar callback', () => {
     renderHeader();
 
-    // simulate avatar hook call
     hookMock.emitChangeUserPermissions(2, PermissionEnum.EDIT);
     expect(emitPerms).toHaveBeenCalledWith(2, PermissionEnum.EDIT);
   });

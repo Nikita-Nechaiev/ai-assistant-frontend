@@ -1,11 +1,9 @@
-// hooks/sockets/__test__/useCollaborationSocket.test.ts
 import { renderHook, act } from '@testing-library/react';
 
 import { SnackbarStatusEnum } from '@/models/enums';
 
 import { useCollaborationSocket } from '../useCollaborationSocket';
 
-/* ─────────── Fake socket impl ─────────── */
 class MockSocket {
   private listeners: Record<string, ((...a: any[]) => void)[]> = {};
 
@@ -22,7 +20,6 @@ class MockSocket {
   }
 }
 
-/* ─────────── Module mocks ─────────── */
 jest.mock('socket.io-client', () => ({ io: jest.fn(() => new MockSocket()) }));
 
 const replaceMock = jest.fn();
@@ -57,11 +54,9 @@ jest.mock('@/store/useSessionStore', () => ({
   }),
 }));
 
-/* ─────────── helpers ─────────── */
 const { io } = jest.requireMock('socket.io-client') as { io: jest.Mock };
 const latestSocket = (): MockSocket => io.mock.results[io.mock.results.length - 1].value as unknown as MockSocket;
 
-/* ─────────── Tests ─────────── */
 describe('useCollaborationSocket', () => {
   beforeEach(() => jest.clearAllMocks());
 
@@ -106,9 +101,7 @@ describe('useCollaborationSocket', () => {
 
     const s = latestSocket();
 
-    act(
-      () => s.trigger('sessionDeleted', { message: 'kicked', userId: 99 }), // not current user
-    );
+    act(() => s.trigger('sessionDeleted', { message: 'kicked', userId: 99 }));
     expect(s.emit).toHaveBeenCalledWith('leaveSession');
     expect(s.disconnect).toHaveBeenCalled();
     expect(setSnackbarMock).toHaveBeenCalledWith('kicked', SnackbarStatusEnum.WARNING);
@@ -121,7 +114,7 @@ describe('useCollaborationSocket', () => {
 
     const s = latestSocket();
 
-    act(() => s.trigger('sessionDeleted', { message: 'bye', userId: 1 })); // current user id = 1
+    act(() => s.trigger('sessionDeleted', { message: 'bye', userId: 1 }));
     expect(setSnackbarMock).toHaveBeenCalledWith('Session has been deleted', SnackbarStatusEnum.SUCCESS);
   });
 

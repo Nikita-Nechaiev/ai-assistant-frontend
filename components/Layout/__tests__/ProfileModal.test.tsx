@@ -1,14 +1,11 @@
-// components/Layout/__tests__/ProfileModal.test.tsx
 import React from 'react';
 
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event'; // ⬅️ новый импорт
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 import { SnackbarStatusEnum } from '@/models/enums';
 
 import ProfileModal from '../ProfileModal';
 
-/* ---------------------- mocks (без изменений) --------------------- */
 const updateUserMock = jest.fn();
 const setSnackbarMock = jest.fn();
 const invalidateMock = jest.fn();
@@ -47,7 +44,6 @@ jest.mock('@/ui/InputField', () => ({
   default: (props: any) => <input {...props} />,
 }));
 
-/* ------- react-hook-form stub (как и раньше) ------- */
 let currentValue = 'Alice';
 const resetMock = jest.fn((v) => (currentValue = v?.name ?? ''));
 const registerMock = jest.fn((name: string) => ({
@@ -70,12 +66,10 @@ jest.mock('react-hook-form', () => {
   };
 });
 
-/* ------------------- helpers ------------------- */
 global.URL.createObjectURL = jest.fn(() => 'blob://preview') as unknown as typeof URL.createObjectURL;
 
 const renderModal = (extra = {}) => render(<ProfileModal isOpen onClose={jest.fn()} {...extra} />);
 
-/* --------------------- tests -------------------- */
 describe('ProfileModal', () => {
   afterEach(() => jest.clearAllMocks());
 

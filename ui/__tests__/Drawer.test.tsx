@@ -50,14 +50,11 @@ describe('Drawer', () => {
 
     const resizeDiv = screen.getByTitle('Drag to resize');
 
-    // Simulate mouse down to start dragging
     fireEvent.mouseDown(resizeDiv);
 
-    // Simulate mouse move to a position causing width below minWidth
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1000 });
-    fireEvent.mouseMove(document, { clientX: 999 }); // width = (1000-999)/1000*100 = ~0.1% < 20% -> triggers close
+    fireEvent.mouseMove(document, { clientX: 999 });
 
-    // Simulate mouse up
     fireEvent.mouseUp(document);
 
     expect(handleCloseMock).toHaveBeenCalled();
@@ -75,7 +72,7 @@ describe('Drawer', () => {
     fireEvent.mouseDown(resizeDiv);
 
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 1000 });
-    fireEvent.mouseMove(document, { clientX: 700 }); // width = (1000-700)/1000*100 = 30%
+    fireEvent.mouseMove(document, { clientX: 700 });
 
     fireEvent.mouseUp(document);
 

@@ -7,23 +7,17 @@ import { NotificationStatusEnum } from '@/models/enums';
 
 import Header from '../Header';
 
-/* ------------------------------------------------------------------ */
-/*                     1 — Mocks для вложенных зависимостей            */
-/* ------------------------------------------------------------------ */
-// Zustand-store текущего пользователя
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({
     user: { id: 1, name: 'Alice', email: 'alice@mail.com', avatar: 'alice.png' },
   }),
 }));
 
-// Аватар — рисуем простой span, чтобы видеть проп
 jest.mock('../../common/UserAvatarCircle', () => ({
   __esModule: true,
   default: ({ avatar }: { avatar: string }) => <span data-testid='avatar'>{avatar}</span>,
 }));
 
-// Модалка профиля — отслеживаем флаг isOpen
 const modalSpy = jest.fn();
 
 jest.mock('../ProfileModal', () => ({
@@ -35,20 +29,13 @@ jest.mock('../ProfileModal', () => ({
   },
 }));
 
-/* ------------------------------------------------------------------ */
-/*                        2 — Хелп для инвайтов                        */
-/* ------------------------------------------------------------------ */
 const dummyInvitation = (status: NotificationStatusEnum = NotificationStatusEnum.UNREAD): IInvitation =>
   ({
     id: Math.random(),
     notificationStatus: status,
   }) as unknown as IInvitation;
 
-/* ------------------------------------------------------------------ */
-/*                                Tests                               */
-/* ------------------------------------------------------------------ */
 describe('Header component', () => {
-  // утилита для удобного рендера
   const renderHeader = (invs: IInvitation[] = [], onToggle: jest.Mock = jest.fn()) =>
     render(<Header handleToggleDrawwer={onToggle} invitations={invs} />);
 
@@ -81,9 +68,9 @@ describe('Header component', () => {
 
   it('opens profile modal on settings click', () => {
     renderHeader();
-    expect(modalSpy).toHaveBeenCalledWith(false); // закрыта по умолчанию
+    expect(modalSpy).toHaveBeenCalledWith(false);
 
-    fireEvent.click(screen.getByRole('button', { name: /настройки профиля/i }));
+    fireEvent.click(screen.getByRole('button', { name: /profile settings/i }));
     expect(modalSpy).toHaveBeenLastCalledWith(true);
     expect(screen.getByTestId('modal')).toBeInTheDocument();
   });
@@ -93,7 +80,6 @@ describe('Header component', () => {
 
     renderHeader([], toggleMock);
 
-    // Кнопка без aria-label → берём первую без атрибута
     const notifBtn = screen.getAllByRole('button').find((btn) => !btn.getAttribute('aria-label')) as HTMLButtonElement;
 
     fireEvent.click(notifBtn);

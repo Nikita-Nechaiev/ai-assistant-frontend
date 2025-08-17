@@ -13,6 +13,12 @@ module.exports = {
       files: ['**/*.tsx'],
       rules: {},
     },
+    {
+      files: ['e2e/**/*.{ts,tsx}', '**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+      rules: {
+        'import/no-extraneous-dependencies': 'off',
+      },
+    },
   ],
 
   settings: {
@@ -77,8 +83,12 @@ module.exports = {
       },
     ],
 
-    'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: ['**/*.test.ts', '**/*.spec.ts', '**/playwright.config.ts'],
+      },
+    ],
     'padding-line-between-statements': [
       'warn',
       { blankLine: 'always', prev: 'import', next: '*' },

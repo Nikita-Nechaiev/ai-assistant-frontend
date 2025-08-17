@@ -6,9 +6,6 @@ import { aiToolList } from '@/helpers/aiToolsList';
 
 import Step1SelectTool from '../Step1SelectTool';
 
-/* ------------------------------------------------------------------ */
-/*                     Mock next/navigation router                     */
-/* ------------------------------------------------------------------ */
 const backMock = jest.fn();
 
 jest.mock('next/navigation', () => ({
@@ -41,12 +38,10 @@ describe('Step1SelectTool', () => {
 
     render(<Step1SelectTool onToolSelect={selectMock} isOnDocumentPage={false} />);
 
-    // рендерится столько кнопок, сколько элементов в aiToolList
     const buttons = screen.getAllByRole('button').filter((b) => b.textContent && !/Go Back/i.test(b.textContent));
 
     expect(buttons.length).toBe(aiToolList.length);
 
-    // кликаем по первой
     fireEvent.click(buttons[0]);
     expect(selectMock).toHaveBeenCalledWith(aiToolList[0]);
   });

@@ -1,4 +1,3 @@
-// components/Session/InvitationModal/__tests__/RoleDropdown.test.tsx
 import React from 'react';
 
 import '@testing-library/jest-dom';
@@ -32,7 +31,7 @@ const renderMenu = (invitation = mkInvitation(PermissionEnum.READ)) => {
 
 afterEach(() => {
   jest.clearAllMocks();
-  cleanup(); // ensure DOM reset between tests
+  cleanup();
 });
 
 describe('RoleDropdown', () => {

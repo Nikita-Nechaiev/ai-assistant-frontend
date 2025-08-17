@@ -1,11 +1,9 @@
-// hooks/document/__test__/useAiModal.test.tsx
 import { renderHook, act } from '@testing-library/react';
 
 import type { AITool } from '@/models/models';
 
 import useAiModal from '../useAiModal';
 
-/* ─────────── Correct way: define spies inside mock and export ─────────── */
 const lockSpy = jest.fn();
 const unlockSpy = jest.fn();
 
