@@ -36,8 +36,6 @@ export default function useDocumentData(documentId: number) {
     const onDocData = (doc: IDocument) => {
       if (doc.id !== documentId) return;
 
-      console.log(doc);
-
       setCurrentDocument(doc);
     };
     const onDocUpdated = onDocData;

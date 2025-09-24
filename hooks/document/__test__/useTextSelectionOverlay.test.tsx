@@ -21,6 +21,13 @@ qlDiv.getBoundingClientRect = () => new DOMRect(0, 0, 100, 50);
 document.body.appendChild(qlDiv);
 
 describe('useTextSelectionOverlay', () => {
+  beforeAll(() => {
+    Object.defineProperty(window, 'scrollTo', {
+      value: jest.fn(),
+      writable: true,
+    });
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
