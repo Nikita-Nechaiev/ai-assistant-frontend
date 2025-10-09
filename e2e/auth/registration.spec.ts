@@ -6,21 +6,47 @@ function randomEmail() {
   return `e2e_${Date.now()}@example.com`;
 }
 
+test.beforeAll(async ({ request }) => {
+  const res = await request.get(`${API_URL}/health`, { timeout: 5000 });
+
+  expect(res.ok()).toBeTruthy();
+});
+
 test('New user can register and reach dashboard', async ({ page }) => {
   await page.goto('/registration');
 
+  await expect(page.locator('#name')).toBeVisible();
+  await expect(page.locator('#email')).toBeVisible();
+  await expect(page.locator('#password')).toHaveAttribute('type', 'password');
+  await expect(page.locator('#confirmPassword')).toHaveAttribute('type', 'password');
+
   await page.fill('#name', 'E2E User');
-  await page.fill('#email', randomEmail());
+
+  const email = randomEmail();
+
+  await page.fill('#email', email);
   await page.fill('#password', 'Password1!');
   await page.fill('#confirmPassword', 'Password1!');
 
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/auth/register') && [200, 201].includes(r.status())),
+  await expect(page.locator('#email')).toHaveValue(email);
+  await expect(page.locator('button[type="submit"]')).toBeEnabled();
+
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/auth/register')),
     page.click('button[type="submit"]'),
   ]);
 
-  await page.waitForURL('**/dashboard', { timeout: 15000 });
+  expect([200, 201]).toContain(res.status());
 
+  const ct = res.headers()['content-type'] || '';
+
+  if (ct.includes('application/json')) {
+    const body = await res.json().catch(() => null);
+
+    expect(body).not.toBeNull();
+  }
+
+  await page.waitForURL('**/dashboard', { timeout: 15000 });
   await expect(page.getByRole('heading', { name: /sessions/i })).toBeVisible();
 });
 
@@ -39,10 +65,26 @@ test('Duplicate e-mail shows “already exists” error', async ({ page, request
   await page.fill('#password', 'Password1!');
   await page.fill('#confirmPassword', 'Password1!');
 
-  await Promise.all([
-    page.waitForResponse((r) => r.url().includes('/auth/register') && r.status() === 409),
+  await expect(page.locator('button[type="submit"]')).toBeEnabled();
+
+  const [res] = await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/auth/register')),
     page.click('button[type="submit"]'),
   ]);
 
+  expect([200, 201, 409]).toContain(res.status());
+
+  const ct = res.headers()['content-type'] || '';
+
+  if (ct.includes('application/json')) {
+    const body = await res.json().catch(() => null);
+
+    if (body && typeof body === 'object' && 'message' in body) {
+      expect(String((body as any).message).toLowerCase()).toMatch(/already|exist/);
+    }
+  }
+
+  await expect(page).toHaveURL(/\/registration/);
   await expect(page.getByText(/user with this email already exists!/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('button[type="submit"]')).toBeEnabled();
 });

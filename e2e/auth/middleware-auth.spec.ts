@@ -2,14 +2,27 @@ import { test, expect, APIRequestContext } from '@playwright/test';
 
 const ORIGIN = 'http://localhost:3000';
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const E2E_EMAIL = process.env.E2E_EMAIL!;
+const E2E_PASSWORD = process.env.E2E_PASSWORD!;
+
+async function ensureUser(request: APIRequestContext) {
+  const login = () => request.post(`${API_URL}/auth/login`, { data: { email: E2E_EMAIL, password: E2E_PASSWORD } });
+  let resp = await login();
+
+  if (resp.status() === 401) {
+    const reg = await request.post(`${API_URL}/auth/register`, {
+      multipart: { name: 'E2E Bot', email: E2E_EMAIL, password: E2E_PASSWORD },
+    });
+
+    expect([200, 201, 409]).toContain(reg.status());
+    resp = await login();
+  }
+
+  return resp;
+}
 
 async function getFreshRefreshToken(request: APIRequestContext): Promise<string> {
-  const resp = await request.post(`${API_URL}/auth/login`, {
-    data: {
-      email: process.env.E2E_EMAIL!,
-      password: process.env.E2E_PASSWORD!,
-    },
-  });
+  const resp = await ensureUser(request);
 
   expect([200, 201]).toContain(resp.status());
 
@@ -17,14 +30,11 @@ async function getFreshRefreshToken(request: APIRequestContext): Promise<string>
     .headersArray()
     .filter((h) => h.name.toLowerCase() === 'set-cookie')
     .map((h) => h.value);
-
   const rtPair = setCookies.map((c) => c.split(';')[0]).find((p) => p.trim().startsWith('refreshToken='));
 
   expect(rtPair, 'refreshToken cookie should be present on login response').toBeTruthy();
 
-  const refreshToken = rtPair!.split('=').slice(1).join('=');
-
-  return refreshToken;
+  return rtPair!.split('=').slice(1).join('=');
 }
 
 test('anonymous user is redirected to /login', async ({ page }) => {
