@@ -1,23 +1,31 @@
 import path from 'path';
 
 import { defineConfig, devices } from '@playwright/test';
-/* eslint-disable import/no-extraneous-dependencies */
 import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 
+const IS_CI = !!process.env.CI;
+const BASE_URL = process.env.PW_BASE_URL || 'http://localhost:3000';
+
 export default defineConfig({
   testDir: './e2e',
   timeout: 30 * 1000,
-  expect: {
-    timeout: 5000,
-  },
+  expect: { timeout: 5 * 1000 },
   fullyParallel: true,
-  retries: 0,
-  reporter: 'html',
+  retries: IS_CI ? 1 : 0,
+  reporter: IS_CI ? [['github'], ['html', { open: 'never' }]] : 'html',
   use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    baseURL: BASE_URL,
+    trace: IS_CI ? 'retain-on-failure' : 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: IS_CI ? 'retain-on-failure' : 'off',
+  },
+  webServer: {
+    command: 'npx next start -p 3000',
+    url: BASE_URL,
+    timeout: 120 * 1000,
+    reuseExistingServer: !IS_CI,
   },
   projects: [
     {
