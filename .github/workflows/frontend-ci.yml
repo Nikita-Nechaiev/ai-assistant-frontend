@@ -2,7 +2,7 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, feature__github_actions] # temporary branch kept for testing
+    branches: [main, feature__github_actions]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,24 +14,34 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
-    # Postgres runs as a job-level service for the backend
     services:
       postgres:
-        image: postgres:15
-        ports: ['5432:5432']
+        image: postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd="pg_isready -U postgres"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
+      mailhog:
+        image: mailhog/mailhog
+        ports:
+          - 1025:1025
+          - 8025:8025
+
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
 
     steps:
+      # ---------- FRONTEND ----------
       - name: Checkout frontend
         uses: actions/checkout@v4
 
@@ -40,47 +50,115 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
 
       # ---------- BACKEND ----------
-      # If your backend is in a separate repo, adjust the repository value below.
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
-          repository: Nikita-Nechaiev/ai-assistant-backend # ← change if needed
+          repository: Nikita-Nechaiev/ai-assistant-backend
+          token: ${{ secrets.BACKEND_PAT }}
           path: backend
 
       - name: Install backend deps
         working-directory: backend
         run: npm ci
 
-      # Build and start backend on :3002 and wait for /health
-      - name: Build & start backend (port 3002)
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: DB migrate (skip if none)
+        working-directory: backend
+        run: echo "No migration script – skipping"
+
+      - name: Start backend (port 3002)
+        id: start_backend
         working-directory: backend
         env:
-          # IMPORTANT: development → cookies are NOT "Secure", so they work over http://localhost
           NODE_ENV: development
           PORT: 3002
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+
+          # DB
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_PORT: '5432'
+
+          # Dummy Google OAuth to avoid crash
+          GOOGLE_CLIENT_ID: 'ci-dummy-client-id'
+          GOOGLE_CLIENT_SECRET: 'ci-dummy-secret'
+          GOOGLE_CALLBACK_URL: 'http://localhost:3002/auth/google/callback'
+
+          # Safe test values
           JWT_ACCESS_SECRET: test-access
           JWT_REFRESH_SECRET: test-refresh
           SMTP_HOST: localhost
-          SMTP_PORT: 1025
+          SMTP_PORT: '1025'
+          SMTP_USER: test@example.com
+          SMTP_PASSWORD: test
+          SMTP_FROM: '"Your App" <no-reply@yourapp.com>'
+          FRONTEND_URL: http://localhost:3000
           OPENAI_API_KEY: test
         run: |
-          npm run build
-          # start prod build (adjust to your script if different)
           nohup npm run start:prod > ../backend.log 2>&1 &
-          npx --yes wait-on http://localhost:3002/health
+          npx --yes wait-on --timeout 120000 http://localhost:3002/health || \
+          npx --yes wait-on --timeout 120000 tcp:3002
+          echo "Backend is up"
+
+      - name: Print backend log on failure
+        if: failure() || cancelled()
+        run: |
+          echo "==== backend.log (tail) ===="
+          tail -n 200 backend.log || true
+
+      # ---------- USERS FOR E2E ----------
+      - name: Ensure inviter & invitee users exist
+        env:
+          INVITER_EMAIL: ${{ secrets.E2E_INVITER_EMAIL || 'test1@example.com' }}
+          INVITER_PASSWORD: ${{ secrets.E2E_INVITER_PASSWORD || 'Password1!' }}
+          INVITEE_EMAIL: ${{ secrets.E2E_INVITEE_EMAIL || 'test@example.com' }}
+          INVITEE_PASSWORD: ${{ secrets.E2E_INVITEE_PASSWORD || 'Password1!' }}
+        run: |
+          set -e
+          ensure_user () {
+            local email="$1"; local password="$2"; local name="$3"
+            local code
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+              http://localhost:3002/auth/login || true)
+            if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+              curl -s -o /dev/null \
+                -H "Content-Type: application/json" \
+                -d "{\"email\":\"$email\",\"password\":\"$password\",\"name\":\"$name\"}" \
+                http://localhost:3002/auth/register || true
+            fi
+          }
+          ensure_user "$INVITER_EMAIL" "$INVITER_PASSWORD" "E2E Inviter"
+          ensure_user "$INVITEE_EMAIL" "$INVITEE_PASSWORD" "E2E Invitee"
 
       # ---------- FRONTEND ----------
       - name: Install frontend deps (with dev)
         run: npm ci --include=dev
 
+      # ESLint только по фронтовым папкам (без backend/**)
       - name: Lint
-        run: npm run lint
+        run: |
+          npx eslint \
+            "components/**/*.{ts,tsx,js,jsx}" \
+            "ui/**/*.{ts,tsx,js,jsx}" \
+            "hooks/**/*.{ts,tsx,js,jsx}" \
+            "store/**/*.{ts,tsx,js,jsx}" \
+            "services/**/*.{ts,tsx,js,jsx}" \
+            --no-error-on-unmatched-pattern \
+            --max-warnings 0
 
       - name: Unit tests (Jest) with coverage
-        run: npm run test:cov
+        run: npm run test:cov -- --testPathIgnorePatterns="[\\\\/]backend[\\\\/]" --coveragePathIgnorePatterns="[\\\\/]backend[\\\\/]"
 
       - name: Upload Jest coverage
         if: always()
@@ -89,39 +167,57 @@ jobs:
           name: jest-coverage
           path: coverage/
 
-      # Create .env.test.local for Playwright pointing to LOCAL backend
+      # Next читает .env.local
+      - name: Create .env.local for Next dev (API/Socket → localhost:3002)
+        run: |
+          cat > .env.local <<EOF
+          NEXT_PUBLIC_API_URL=http://localhost:3002
+          NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
+          NODE_ENV=development
+          EOF
+
+      # Переменные для Playwright/фикстур
       - name: Create .env.test.local for Playwright
         env:
-          E2E_EMAIL: ${{ vars.E2E_EMAIL || 'test@example.com' }}
-          E2E_PASSWORD: ${{ vars.E2E_PASSWORD || 'Password1!' }}
-          E2E_REFRESH: ${{ secrets.E2E_REFRESH || 'yourTestRefreshToken' }}
+          INVITER_EMAIL: ${{ secrets.E2E_INVITER_EMAIL || 'test1@example.com' }}
+          INVITER_PASSWORD: ${{ secrets.E2E_INVITER_PASSWORD || 'Password1!' }}
+          INVITEE_EMAIL: ${{ secrets.E2E_INVITEE_EMAIL || 'test@example.com' }}
+          INVITEE_PASSWORD: ${{ secrets.E2E_INVITEE_PASSWORD || 'Password1!' }}
         run: |
           cat > .env.test.local <<EOF
-          E2E_EMAIL=$E2E_EMAIL
-          E2E_PASSWORD=$E2E_PASSWORD
-          E2E_REFRESH=$E2E_REFRESH
+          # Логин по умолчанию (фикстура login может использовать это)
+          E2E_EMAIL=$INVITER_EMAIL
+          E2E_PASSWORD=$INVITER_PASSWORD
+          E2E_REFRESH=yourTestRefreshToken
+
+          # Для сценариев инвайтов
+          E2E_INVITER_EMAIL=$INVITER_EMAIL
+          E2E_INVITER_PASSWORD=$INVITER_PASSWORD
+          E2E_INVITEE_EMAIL=$INVITEE_EMAIL
+          E2E_INVITEE_PASSWORD=$INVITEE_PASSWORD
 
           NEXT_PUBLIC_API_URL=http://localhost:3002
-          NEXT_PUBLIC_SOCKET_URL=ws://localhost:3002/ws
-
-          E2E_SESSION_ID=1
-          E2E_INVITE_TRIGGER='[data-testid="open-invite-modal"]'
-          E2E_INVITE_DRAWER_TRIGGER='[data-testid="open-notifications-drawer"]'
-          E2E_INVITEE_EMAIL=test@example.com
-          E2E_INVITER_EMAIL=test1@example.com
-          E2E_INVITER_PASSWORD=Password1!
+          NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
           EOF
+
+      - name: Start Next.js (dev) on :3000
+        env:
+          PORT: 3000
+          NEXT_PUBLIC_API_URL: http://localhost:3002
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:3002
+        run: |
+          nohup npm run dev > web.log 2>&1 &
+          npx --yes wait-on --timeout 120000 http://localhost:3000
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      # We run Next in dev for maximum SSR tolerance; switch to `next start`
-      # once all server-rendered pages are hardened against `document/window`.
       - name: Run Playwright e2e
         env:
           PW_BASE_URL: http://localhost:3000
         run: npm run test:e2e
 
+      # ---------- Артефакты ----------
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -129,9 +225,16 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
-      - name: Upload backend log (for debugging)
-        if: failure()
+      - name: Upload backend log
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-log
           path: backend.log
+
+      - name: Upload frontend log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-log
+          path: web.log

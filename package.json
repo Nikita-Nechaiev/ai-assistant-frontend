@@ -5,14 +5,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "build:ci": "next build",
     "start": "next start",
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --max-warnings 0",
     "lint:fix": "npm run lint -- --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "prebuild": "npm run test",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

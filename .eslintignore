@@ -1,2 +1,6 @@
 jest.config.js
 playwright.config.ts
+backend/
+backend/**
+coverage/
+playwright-report/

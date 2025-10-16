@@ -7,8 +7,6 @@ dotenv.config({ path: path.resolve(__dirname, '.env.test.local') });
 const IS_CI = !!process.env.CI;
 const BASE_URL = process.env.PW_BASE_URL || 'http://localhost:3000';
 
-// While hardening SSR (avoiding `document`/`window` on the server), run dev.
-// Later, flip to: command: 'npx next start -p 3000'
 const serverCommand = 'npx next dev -p 3000';
 
 export default defineConfig({
@@ -28,7 +26,7 @@ export default defineConfig({
     command: serverCommand,
     url: BASE_URL,
     timeout: 120_000,
-    reuseExistingServer: !IS_CI,
+    reuseExistingServer: true,
   },
   projects: [
     {
@@ -36,4 +34,5 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  testIgnore: ['**/backend/**'],
 });

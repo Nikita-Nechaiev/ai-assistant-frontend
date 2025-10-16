@@ -19,7 +19,9 @@ jest.mock('@/ui/Modal', () => ({
 
 jest.mock('@/ui/InputField', () => ({
   __esModule: true,
-  default: ({ _marginBottom, ...rest }: any) => (
+  // вынимаем marginBottom (и старый _marginBottom на всякий случай),
+  // чтобы они не попали в {...rest} и далее в <input>
+  default: ({ marginBottom: _marginBottom, ...rest }: any) => (
     <label>
       Input mock
       <input {...rest} aria-label='search-input' />
