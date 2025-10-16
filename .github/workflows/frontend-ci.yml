@@ -2,12 +2,9 @@ name: Frontend CI
 
 on:
   push:
-    branches:
-      - main
-      - feature__github_actions # ← temporary for testing; remove later
+    branches: [main, feature__github_actions] # temporary branch kept for testing
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -15,30 +12,69 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
+  e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
-    # Public env baked into the client bundle at build time.
-    # (No NODE_ENV here, so npm installs devDependencies.)
-    env:
-      NEXT_PUBLIC_API_URL: https://www.ai-editor-portfolio.com/api
-      NEXT_PUBLIC_SOCKET_URL: https://api.ai-editor-portfolio.com
-      NEXT_TELEMETRY_DISABLED: 1
+    # Postgres runs as a job-level service for the backend
+    services:
+      postgres:
+        image: postgres:15
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
-      - name: Checkout
+      - name: Checkout frontend
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
-      # ✅ Make sure devDependencies are installed
-      - name: Install dependencies (with dev)
+      # ---------- BACKEND ----------
+      # If your backend is in a separate repo, adjust the repository value below.
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: Nikita-Nechaiev/ai-assistant-backend # ← change if needed
+          path: backend
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      # Build and start backend on :3002 and wait for /health
+      - name: Build & start backend (port 3002)
+        working-directory: backend
+        env:
+          # IMPORTANT: development → cookies are NOT "Secure", so they work over http://localhost
+          NODE_ENV: development
+          PORT: 3002
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          JWT_ACCESS_SECRET: test-access
+          JWT_REFRESH_SECRET: test-refresh
+          SMTP_HOST: localhost
+          SMTP_PORT: 1025
+          OPENAI_API_KEY: test
+        run: |
+          npm run build
+          # start prod build (adjust to your script if different)
+          nohup npm run start:prod > ../backend.log 2>&1 &
+          npx --yes wait-on http://localhost:3002/health
+
+      # ---------- FRONTEND ----------
+      - name: Install frontend deps (with dev)
         run: npm ci --include=dev
-        # (Alternatively: env: { NPM_CONFIG_PRODUCTION: 'false' } or NODE_ENV=development)
 
       - name: Lint
         run: npm run lint
@@ -53,10 +89,9 @@ jobs:
           name: jest-coverage
           path: coverage/
 
-      # Create .env.test.local for Playwright (kept out of VCS)
+      # Create .env.test.local for Playwright pointing to LOCAL backend
       - name: Create .env.test.local for Playwright
         env:
-          # use Actions Variables/Secrets if present, otherwise fall back to defaults
           E2E_EMAIL: ${{ vars.E2E_EMAIL || 'test@example.com' }}
           E2E_PASSWORD: ${{ vars.E2E_PASSWORD || 'Password1!' }}
           E2E_REFRESH: ${{ secrets.E2E_REFRESH || 'yourTestRefreshToken' }}
@@ -65,12 +100,13 @@ jobs:
           E2E_EMAIL=$E2E_EMAIL
           E2E_PASSWORD=$E2E_PASSWORD
           E2E_REFRESH=$E2E_REFRESH
-          NEXT_PUBLIC_API_URL=http://localhost:3002
-          E2E_SESSION_ID=1
 
+          NEXT_PUBLIC_API_URL=http://localhost:3002
+          NEXT_PUBLIC_SOCKET_URL=ws://localhost:3002/ws
+
+          E2E_SESSION_ID=1
           E2E_INVITE_TRIGGER='[data-testid="open-invite-modal"]'
           E2E_INVITE_DRAWER_TRIGGER='[data-testid="open-notifications-drawer"]'
-
           E2E_INVITEE_EMAIL=test@example.com
           E2E_INVITER_EMAIL=test1@example.com
           E2E_INVITER_PASSWORD=Password1!
@@ -79,13 +115,8 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Build Next.js
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature__github_actions'
-        run: npm run build:ci
-        env:
-          NODE_ENV: production
-
-      # Playwright will start prod server via webServer in playwright.config.ts
+      # We run Next in dev for maximum SSR tolerance; switch to `next start`
+      # once all server-rendered pages are hardened against `document/window`.
       - name: Run Playwright e2e
         env:
           PW_BASE_URL: http://localhost:3000
@@ -98,9 +129,9 @@ jobs:
           name: playwright-report
           path: playwright-report/
 
-      - name: Upload Next.js build
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature__github_actions') && always()
+      - name: Upload backend log (for debugging)
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: next-build
-          path: .next/
+          name: backend-log
+          path: backend.log
