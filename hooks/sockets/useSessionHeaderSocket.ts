@@ -15,6 +15,7 @@ interface Params {
   sessionId: number;
   socket: Socket;
 }
+
 export function useSessionHeaderSocket({ sessionId, socket }: Params) {
   const { setSnackbar } = useSnackbarStore();
   const { user: currentUser } = useUserStore();
@@ -127,6 +128,7 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
     }, 1000);
 
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startTimeRef.current]);
 
   return {

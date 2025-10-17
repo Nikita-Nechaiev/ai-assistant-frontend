@@ -47,7 +47,7 @@ test('New user can register and reach dashboard', async ({ page }) => {
   }
 
   await page.waitForURL('**/dashboard', { timeout: 15000 });
-  await expect(page.getByRole('heading', { name: /sessions/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Sessions' })).toBeVisible();
 });
 
 test('Duplicate e-mail shows “already exists” error', async ({ page, request }) => {

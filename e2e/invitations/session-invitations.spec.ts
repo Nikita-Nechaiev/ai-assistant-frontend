@@ -146,7 +146,13 @@ test.describe('Session invitations', () => {
 
     await openInviteModal(page);
     await expect(page.locator(SEL.existingListHeader)).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(invitee!, { exact: false })).toBeVisible({ timeout: 10_000 });
+
+    const existingList = page
+      .locator(SEL.existingListHeader)
+      .locator('xpath=ancestor::*[self::section or self::div][1]');
+
+    await expect(existingList).toBeVisible({ timeout: 10_000 });
+    await expect(existingList.getByText(invitee!, { exact: true })).toBeVisible({ timeout: 10_000 });
 
     await page.fill(SEL.emailInput, invitee!);
     await page.selectOption(SEL.roleSelect, 'EDIT');
