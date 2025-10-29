@@ -48,14 +48,14 @@ export default function FAQPage() {
           <ul className='list-disc pl-5 mt-2 space-y-2 text-black text-lg'>
             <li>
               <strong>Backend & Database:</strong> Hosted on{' '}
-              <a href='https://render.com/' target='_blank' className='text-blue-500 underline'>
+              <a href='https://render.com/' target='_blank' className='text-blue-500 underline' rel='noreferrer'>
                 Render
               </a>{' '}
               using <strong>Nest.js</strong> and <strong>PostgreSQL</strong>.
             </li>
             <li>
               <strong>Frontend:</strong> Deployed on{' '}
-              <a href='https://vercel.com/' target='_blank' className='text-blue-500 underline'>
+              <a href='https://vercel.com/' target='_blank' className='text-blue-500 underline' rel='noreferrer'>
                 Vercel
               </a>{' '}
               with <strong>Next.js</strong>.
@@ -157,6 +157,20 @@ export default function FAQPage() {
               <li>
                 Each version stores <strong>content, timestamp, and metadata.</strong>
               </li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className='text-xl font-semibold'>8. Profile Settings</h2>
+            <p className='text-gray-600'>Personalize your account directly from the dashboard.</p>
+            <ul className='list-disc pl-5 mt-2 space-y-1 text-gray-700'>
+              <li>
+                Open the profile modal by clicking the <strong>settings icon</strong> on the dashboard.
+              </li>
+              <li>
+                Update your <strong>name</strong> and <strong>profile avatar</strong>.
+              </li>
+              <li>Changes are saved instantly and reflected across your sessions.</li>
             </ul>
           </section>
         </div>
