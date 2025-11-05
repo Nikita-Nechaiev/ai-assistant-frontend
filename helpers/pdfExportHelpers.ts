@@ -56,7 +56,7 @@ export const groupOpsByLine = (ops: any[]): any[][] => {
   let currentLine: any[] = [];
 
   const pushLine = (lineAttrs?: any) => {
-    if (lineAttrs) currentLine.push({ insert: '', attributes: lineAttrs });
+    if (lineAttrs) currentLine.push({ insert: '', attributes: lineAttrs }); // line-level attrs (header/align/list/indent)
 
     lines.push(currentLine);
     currentLine = [];
@@ -64,26 +64,42 @@ export const groupOpsByLine = (ops: any[]): any[][] => {
 
   for (const op of ops) {
     if (typeof op.insert === 'string') {
-      if (op.insert === '\n') {
+      const text = op.insert as string;
+
+      // отдельный перенос строки
+      if (text === '\n') {
         pushLine(op.attributes || {});
         continue;
       }
 
-      if (op.insert.includes('\n')) {
-        const parts = op.insert.split('\n');
+      // текст с \n внутри
+      if (text.includes('\n')) {
+        const parts = text.split('\n');
+        const doesEndsWithNewline = parts[parts.length - 1] === '';
 
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
           const isLast = i === parts.length - 1;
 
-          if (part !== '' || isLast) currentLine.push({ ...op, insert: part });
+          // не добавляем пустой хвост
+          if (part !== '') currentLine.push({ ...op, insert: part });
 
-          if (!isLast) pushLine(op.attributes || {});
+          // закрываем строку на каждом фактическом \n
+          if (!isLast || doesEndsWithNewline) {
+            pushLine(op.attributes || {});
+          }
         }
-      } else {
-        currentLine.push(op);
+
+        continue;
       }
-    } else if (op.insert?.image) {
+
+      // обычный текст без переносов
+      currentLine.push(op);
+      continue;
+    }
+
+    // картинки — отдельные строки
+    if (op.insert?.image) {
       if (currentLine.length) pushLine();
 
       lines.push([op]);

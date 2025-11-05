@@ -2,9 +2,13 @@
 
 import { useCallback, useContext, useEffect, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { IDocument, IVersion, IAiToolUsage } from '@/models/models';
 import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
 import { lockBodyScroll } from '@/helpers/scrollLock';
+import useSnackbarStore from '@/store/useSnackbarStore';
+import { SnackbarStatusEnum } from '@/models/enums';
 
 interface DocumentAiUsageParams {
   toolName: string;
@@ -18,13 +22,16 @@ export default function useDocumentData(documentId: number) {
 
   if (!ctx) throw new Error('useDocumentData must be used inside <SessionLayout>');
 
-  const { socket } = ctx;
+  const { socket, sessionId } = ctx;
 
   const [currentDocument, setCurrentDocument] = useState<IDocument | null>(null);
   const [versions, setVersions] = useState<IVersion[]>([]);
   const [aiUsageList, setAiUsageList] = useState<IAiToolUsage[]>([]);
   const [isFetchingAI, setFetchingAI] = useState(false);
   const [newAiUsage, setNewAiUsage] = useState<IAiToolUsage | null>(null);
+
+  const { setSnackbar } = useSnackbarStore();
+  const router = useRouter();
 
   useEffect(() => {
     if (!socket || !documentId) return;
@@ -61,6 +68,14 @@ export default function useDocumentData(documentId: number) {
 
     const onError = () => setFetchingAI(false);
 
+    const onDocumentDeleted = ({ documentId: id }: { documentId: number }) => {
+      if (documentId === id) {
+        setSnackbar('Editor has deleted this document.', SnackbarStatusEnum.WARNING);
+
+        router.replace(`/session/${sessionId}`);
+      }
+    };
+
     socket.on('documentData', onDocData);
     socket.on('documentUpdated', onDocUpdated);
     socket.on('lastEditedDocument', onDocUpdated);
@@ -70,6 +85,8 @@ export default function useDocumentData(documentId: number) {
 
     socket.on('documentAiUsage', onAiUsage);
     socket.on('documentAiUsageCreated', onAiCreated);
+
+    socket.on('documentDeleted', onDocumentDeleted);
 
     socket.on('error', onError);
 
@@ -86,7 +103,7 @@ export default function useDocumentData(documentId: number) {
 
       socket.off('error', onError);
     };
-  }, [socket, documentId]);
+  }, [socket, documentId, setSnackbar, router, sessionId]);
 
   const changeDocumentTitle = useCallback(
     (newTitle: string) =>
