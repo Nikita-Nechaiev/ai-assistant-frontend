@@ -43,11 +43,16 @@ const InvitationModal: React.FC<InvitationModalProps> = ({ isOpen, onClose, sock
     if (isOpen) fetchNotifications();
   }, [isOpen, fetchNotifications]);
 
-  const onSubmit = (form: FormInputs) => {
-    createInvitation(form);
-    setSnackbar(`Invitation has been sent to ${form.email}`, SnackbarStatusEnum.SUCCESS);
-    reset();
-    onClose();
+  const onSubmit = async (form: FormInputs) => {
+    try {
+      await createInvitation(form);
+      await fetchNotifications();
+      setSnackbar(`Invitation has been sent to ${form.email}`, SnackbarStatusEnum.SUCCESS);
+      reset();
+      onClose();
+    } catch (e: any) {
+      setSnackbar(e?.message || 'Failed to send invitation', SnackbarStatusEnum.ERROR);
+    }
   };
 
   return (

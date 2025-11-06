@@ -8,7 +8,6 @@ module.exports = {
     sourceType: 'module',
   },
 
-  // ignore generated stuff (fixes coverage/*.js parsing errors)
   ignorePatterns: [
     '.eslintrc.js',
     'node_modules/',
@@ -72,7 +71,6 @@ module.exports = {
 
     'import/extensions': ['error', 'ignorePackages', { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' }],
 
-    // keep, but setup file is excluded above
     'import/no-extraneous-dependencies': [
       'error',
       {
@@ -108,7 +106,7 @@ module.exports = {
         selector: 'variable',
         format: ['PascalCase', 'UPPER_CASE'],
         types: ['boolean'],
-        prefix: ['is', 'are', 'was', 'were', 'has', 'have', 'had', 'do', 'does', 'did', 'can', 'should', 'will'],
+        prefix: ['is', 'are', 'was', 'were', 'has', 'have', 'had', 'does', 'do', 'did', 'can', 'should', 'will'],
       },
       { selector: 'variableLike', format: ['camelCase', 'snake_case', 'UPPER_CASE', 'PascalCase'] },
       { selector: 'parameter', format: ['camelCase'], leadingUnderscore: 'allow' },

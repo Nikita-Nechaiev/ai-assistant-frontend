@@ -91,6 +91,11 @@ const renderModal = (extra = {}) =>
   render(<InvitationModal isOpen socket={{} as any} onClose={jest.fn()} {...extra} />);
 
 describe('InvitationModal', () => {
+  beforeEach(() => {
+    createInvitation.mockResolvedValue(undefined);
+    fetchNotifications.mockResolvedValue(undefined);
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
     formState = { email: '', role: PermissionEnum.READ };
@@ -102,27 +107,42 @@ describe('InvitationModal', () => {
     expect(fetchNotifications).toHaveBeenCalled();
   });
 
-  it('submits form → createInvitation, then closes', async () => {
+  it('submits form → success: calls createInvitation, fetches, toasts success, resets & closes', async () => {
     const onClose = jest.fn();
 
     renderModal({ onClose });
 
-    fireEvent.change(screen.getByTestId('email'), {
-      target: { value: 'bob@mail.com' },
-    });
-    fireEvent.change(screen.getByTestId('role'), {
-      target: { value: PermissionEnum.EDIT },
-    });
+    fireEvent.change(screen.getByTestId('email'), { target: { value: 'bob@mail.com' } });
+    fireEvent.change(screen.getByTestId('role'), { target: { value: PermissionEnum.EDIT } });
 
     await act(async () => {
       fireEvent.click(screen.getByText('Send Invitation'));
     });
 
-    expect(createInvitation).toHaveBeenCalledWith({
-      email: 'bob@mail.com',
-      role: PermissionEnum.EDIT,
-    });
+    expect(createInvitation).toHaveBeenCalledWith({ email: 'bob@mail.com', role: PermissionEnum.EDIT });
+    expect(fetchNotifications).toHaveBeenCalledTimes(2);
+    expect(setSnackbar).toHaveBeenCalledWith('Invitation has been sent to bob@mail.com', SnackbarStatusEnum.SUCCESS);
+    expect(formState).toEqual({ email: '', role: PermissionEnum.READ });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('submits form → error: shows error toast and does NOT close', async () => {
+    const onClose = jest.fn();
+
+    createInvitation.mockRejectedValueOnce(new Error('Server down'));
+
+    renderModal({ onClose });
+
+    fireEvent.change(screen.getByTestId('email'), { target: { value: 'err@mail.com' } });
+    fireEvent.change(screen.getByTestId('role'), { target: { value: PermissionEnum.EDIT } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Send Invitation'));
+    });
+
+    expect(createInvitation).toHaveBeenCalled();
+    expect(setSnackbar).toHaveBeenCalledWith('Server down', SnackbarStatusEnum.ERROR);
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('passes delete / changeRole callbacks to InvitationList', () => {
@@ -134,8 +154,22 @@ describe('InvitationModal', () => {
     expect(props.changeInvitationRole).toBe(changeRoleSpy);
   });
 
-  it('shows snackbar when error callback is invoked', () => {
+  it('shows snackbar when socket onError callback is invoked', () => {
     capturedErrorCb('E-mail invalid');
     expect(setSnackbar).toHaveBeenCalledWith('E-mail invalid', SnackbarStatusEnum.ERROR);
+  });
+
+  it('Cancel button closes and resets', () => {
+    const onClose = jest.fn();
+
+    renderModal({ onClose });
+
+    fireEvent.change(screen.getByTestId('email'), { target: { value: 'temp@mail.com' } });
+    expect(formState.email).toBe('temp@mail.com');
+
+    fireEvent.click(screen.getByText('Cancel'));
+
+    expect(onClose).toHaveBeenCalled();
+    expect(formState).toEqual({ email: '', role: PermissionEnum.READ });
   });
 });

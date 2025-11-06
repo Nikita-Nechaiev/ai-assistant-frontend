@@ -182,7 +182,7 @@ jobs:
         env:
           INVITER_EMAIL: ${{ secrets.E2E_INVITER_EMAIL || 'test1@example.com' }}
           INVITER_PASSWORD: ${{ secrets.E2E_INVITER_PASSWORD || 'Password1!' }}
-          INVITEE_EMAIL: ${{ secrets.E2E_INVITEE_EMAIL || 'test@example.com' }}
+          INVITEE_EMAIL: ${{ secrets.E2E_INVITEE_EMAIL || 'invitee@example.com' }}
           INVITEE_PASSWORD: ${{ secrets.E2E_INVITEE_PASSWORD || 'Password1!' }}
         run: |
           cat > .env.test.local <<EOF

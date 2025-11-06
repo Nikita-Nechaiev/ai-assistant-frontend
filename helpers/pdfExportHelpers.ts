@@ -64,26 +64,36 @@ export const groupOpsByLine = (ops: any[]): any[][] => {
 
   for (const op of ops) {
     if (typeof op.insert === 'string') {
-      if (op.insert === '\n') {
+      const text = op.insert as string;
+
+      if (text === '\n') {
         pushLine(op.attributes || {});
         continue;
       }
 
-      if (op.insert.includes('\n')) {
-        const parts = op.insert.split('\n');
+      if (text.includes('\n')) {
+        const parts = text.split('\n');
+        const doesEndsWithNewline = parts[parts.length - 1] === '';
 
         for (let i = 0; i < parts.length; i++) {
           const part = parts[i];
           const isLast = i === parts.length - 1;
 
-          if (part !== '' || isLast) currentLine.push({ ...op, insert: part });
+          if (part !== '') currentLine.push({ ...op, insert: part });
 
-          if (!isLast) pushLine(op.attributes || {});
+          if (!isLast || doesEndsWithNewline) {
+            pushLine(op.attributes || {});
+          }
         }
-      } else {
-        currentLine.push(op);
+
+        continue;
       }
-    } else if (op.insert?.image) {
+
+      currentLine.push(op);
+      continue;
+    }
+
+    if (op.insert?.image) {
       if (currentLine.length) pushLine();
 
       lines.push([op]);

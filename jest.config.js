@@ -17,7 +17,6 @@ module.exports = {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.jest.json' }],
   },
 
-  // ВАЖНО: игнорим e2e и backend (кроссплатформенный регэксп)
   testPathIgnorePatterns: [
     '[\\\\/]e2e[\\\\/]',
     '[\\\\/]backend[\\\\/]',
