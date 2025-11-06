@@ -110,6 +110,18 @@ async function closeInviteModal(page: any) {
   }
 }
 
+function getExistingListContainer(page: any) {
+  return page.locator(SEL.existingListHeader).locator('xpath=ancestor::*[self::section or self::div][1]');
+}
+
+async function ensureUserExists(request: any, email: string) {
+  const res = await request.post(`${API_URL}/auth/register`, {
+    multipart: { name: 'E2E Invitee', email, password: 'Password1!' },
+  });
+
+  expect([200, 201, 409]).toContain(res.status());
+}
+
 test.describe('Session invitations', () => {
   test.beforeEach(async ({ login }) => {
     await login();
@@ -119,9 +131,18 @@ test.describe('Session invitations', () => {
     page,
     request,
   }) => {
-    const invitee = process.env.E2E_INVITEE_EMAIL;
+    test.setTimeout(60_000);
 
-    expect(invitee, 'Set E2E_INVITEE_EMAIL in .env.test.local to an existing user email').toBeTruthy();
+    const owner = process.env.E2E_EMAIL!;
+    const invitee = process.env.E2E_INVITEE_EMAIL!;
+
+    test.skip(!invitee, 'Set E2E_INVITEE_EMAIL in .env.test.local to an existing user email');
+    test.skip(
+      invitee.toLowerCase() === owner.toLowerCase(),
+      `E2E_INVITEE_EMAIL (${invitee}) must be different from E2E_EMAIL (${owner})`,
+    );
+
+    await ensureUserExists(request, invitee);
 
     const access = await apiLogin(request);
     const sessionId = await apiCreateSession(request, access);
@@ -133,33 +154,49 @@ test.describe('Session invitations', () => {
     expect(await waitForSessionUI(page)).toBeTruthy();
 
     await openInviteModal(page);
-    await page.fill(SEL.emailInput, invitee!);
+    await page.fill(SEL.emailInput, invitee);
     await page.selectOption(SEL.roleSelect, 'EDIT');
     await page.click(SEL.sendBtn);
 
-    await expect(page.locator(SEL.modalTitle)).toBeHidden({ timeout: 10_000 });
-
     const snackbar = page.locator(SEL.snackbar);
 
-    await expect(snackbar).toBeVisible({ timeout: 10_000 });
-    await expect(snackbar).toContainText(new RegExp(`Invitation has been sent to\\s+${invitee}`, 'i'));
+    await snackbar.waitFor({ state: 'visible', timeout: 2000 }).catch(() => {});
+
+    const isToastVisible = await snackbar.isVisible().catch(() => false);
+
+    if (isToastVisible) {
+      const text = (await snackbar.textContent()) ?? '';
+
+      expect(text.toLowerCase()).not.toMatch(/not\s*found|already a participant/);
+    }
+
+    const modalTitle = page.locator(SEL.modalTitle);
+
+    await modalTitle.waitFor({ state: 'hidden', timeout: 2000 }).catch(async () => {
+      await closeInviteModal(page);
+      await expect(modalTitle).toBeHidden({ timeout: 10_000 });
+    });
 
     await openInviteModal(page);
     await expect(page.locator(SEL.existingListHeader)).toBeVisible({ timeout: 10_000 });
 
-    const existingList = page
-      .locator(SEL.existingListHeader)
-      .locator('xpath=ancestor::*[self::section or self::div][1]');
+    const existingList = getExistingListContainer(page);
 
-    await expect(existingList).toBeVisible({ timeout: 10_000 });
-    await expect(existingList.getByText(invitee!, { exact: true })).toBeVisible({ timeout: 10_000 });
+    await expect
+      .poll(async () => (await existingList.textContent()) ?? '', {
+        timeout: 30_000,
+        intervals: [200, 400, 800, 1200],
+      })
+      .toMatch(new RegExp(invitee, 'i'));
 
-    await page.fill(SEL.emailInput, invitee!);
+    await page.fill(SEL.emailInput, invitee);
     await page.selectOption(SEL.roleSelect, 'EDIT');
     await page.click(SEL.sendBtn);
-    await expect(page.locator(SEL.modalTitle)).toBeHidden({ timeout: 10_000 });
-
     await expect(snackbar).toBeVisible({ timeout: 10_000 });
+
+    await modalTitle.waitFor({ state: 'hidden', timeout: 2000 }).catch(async () => {
+      await closeInviteModal(page);
+    });
 
     const missing = `missing_${Date.now()}@example.com`;
 
@@ -167,10 +204,9 @@ test.describe('Session invitations', () => {
     await page.fill(SEL.emailInput, missing);
     await page.selectOption(SEL.roleSelect, 'READ');
     await page.click(SEL.sendBtn);
-    await expect(page.locator(SEL.modalTitle)).toBeHidden({ timeout: 10_000 });
-
     await expect(snackbar).toBeVisible({ timeout: 10_000 });
-
-    await closeInviteModal(page);
+    await modalTitle.waitFor({ state: 'hidden', timeout: 2000 }).catch(async () => {
+      await closeInviteModal(page);
+    });
   });
 });

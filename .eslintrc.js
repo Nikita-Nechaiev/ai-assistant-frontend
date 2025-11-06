@@ -8,7 +8,6 @@ module.exports = {
     sourceType: 'module',
   },
 
-  // ignore generated stuff (fixes coverage/*.js parsing errors)
   ignorePatterns: [
     '.eslintrc.js',
     'node_modules/',
@@ -72,7 +71,6 @@ module.exports = {
 
     'import/extensions': ['error', 'ignorePackages', { ts: 'never', tsx: 'never', js: 'never', jsx: 'never' }],
 
-    // keep, but setup file is excluded above
     'import/no-extraneous-dependencies': [
       'error',
       {

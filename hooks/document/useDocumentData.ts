@@ -101,6 +101,8 @@ export default function useDocumentData(documentId: number) {
       socket.off('documentAiUsage', onAiUsage);
       socket.off('documentAiUsageCreated', onAiCreated);
 
+      socket.off('documentDeleted', onDocumentDeleted);
+
       socket.off('error', onError);
     };
   }, [socket, documentId, setSnackbar, router, sessionId]);

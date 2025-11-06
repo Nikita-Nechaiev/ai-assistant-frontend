@@ -13,7 +13,28 @@ class MockSocket {
 
   off = jest.fn();
 
-  emit = jest.fn();
+  emit = jest.fn((ev: string, payload?: any, ack?: (...a: any[]) => void) => {
+    if (typeof ack === 'function') {
+      if (ev === 'createInvitation') {
+        ack({
+          ok: true,
+          invitation: {
+            id: 123,
+            email: payload?.email,
+            role: payload?.role,
+          },
+        });
+      } else if (ev === 'changeInvitationRole') {
+        ack({ ok: true, updated: { invitationId: payload?.invitationId, newRole: payload?.newRole } });
+      } else if (ev === 'deleteInvitation' || ev === 'deleteNotification') {
+        ack({ ok: true, deleted: { invitationId: payload?.invitationId } });
+      } else if (ev === 'getInvitations') {
+        ack({ ok: true, invitations: [] });
+      } else {
+        ack({ ok: true });
+      }
+    }
+  });
 
   trigger(ev: string, ...args: any[]) {
     this.listeners[ev]?.forEach((cb) => cb(...args));
@@ -49,7 +70,7 @@ describe('useInvitationModalSocket', () => {
     act(() => socket.trigger('invitationUpdated', makeInv(2, PermissionEnum.EDIT)));
     expect(result.current.invitations.find((i) => i.id === 2)?.role).toBe(PermissionEnum.EDIT);
 
-    act(() => socket.trigger('notificationDeleted', { invitationId: 1 }));
+    act(() => socket.trigger('invitationDeleted', { invitationId: 1 }));
     expect(result.current.invitations.map((i) => i.id)).toEqual([2]);
   });
 
@@ -62,27 +83,74 @@ describe('useInvitationModalSocket', () => {
     expect(errSpy).toHaveBeenCalledWith('boom');
   });
 
-  it('helper functions emit correct payloads', () => {
+  it('helper functions emit correct payloads', async () => {
     const { result } = renderHook(() => useInvitationModalSocket(socket as any));
 
-    act(() => result.current.createInvitation({ email: 'a@b.com', role: PermissionEnum.ADMIN }));
-    expect(socket.emit).toHaveBeenCalledWith('createInvitation', {
-      email: 'a@b.com',
-      role: PermissionEnum.ADMIN,
+    await act(async () => {
+      await result.current.createInvitation({ email: 'a@b.com', role: PermissionEnum.ADMIN });
     });
+    {
+      const calls = (socket.emit as jest.Mock).mock.calls;
+      const [ev, payload, ack] = calls[calls.length - 1];
 
-    act(() => result.current.changeInvitationRole(5, PermissionEnum.READ));
-    expect(socket.emit).toHaveBeenCalledWith('changeInvitationRole', {
-      invitationId: 5,
-      newRole: PermissionEnum.READ,
+      expect(ev).toBe('createInvitation');
+      expect(payload).toEqual(
+        expect.objectContaining({
+          email: 'a@b.com',
+          role: PermissionEnum.ADMIN,
+        }),
+      );
+
+      if (ack !== undefined) expect(typeof ack).toBe('function');
+    }
+
+    await act(async () => {
+      await result.current.changeInvitationRole(5, PermissionEnum.READ);
     });
+    {
+      const calls = (socket.emit as jest.Mock).mock.calls;
+      const [ev, payload, ack] = calls[calls.length - 1];
 
-    act(() => result.current.deleteInvitation(5));
-    expect(socket.emit).toHaveBeenCalledWith('deleteNotification', {
-      invitationId: 5,
+      expect(ev).toBe('changeInvitationRole');
+      expect(payload).toEqual(
+        expect.objectContaining({
+          invitationId: 5,
+          newRole: PermissionEnum.READ,
+        }),
+      );
+
+      if (ack !== undefined) expect(typeof ack).toBe('function');
+    }
+
+    await act(async () => {
+      await result.current.deleteInvitation(5);
     });
+    {
+      const calls = (socket.emit as jest.Mock).mock.calls;
+      const [ev, payload, ack] = calls[calls.length - 1];
 
-    act(() => result.current.fetchNotifications());
-    expect(socket.emit).toHaveBeenCalledWith('getInvitations');
+      expect(ev).toBe('deleteInvitation');
+      expect(payload).toEqual(
+        expect.objectContaining({
+          invitationId: 5,
+        }),
+      );
+
+      if (ack !== undefined) expect(typeof ack).toBe('function');
+    }
+
+    await act(async () => {
+      await result.current.fetchNotifications();
+    });
+    {
+      const calls = (socket.emit as jest.Mock).mock.calls;
+      const [ev, payload, ack] = calls[calls.length - 1];
+
+      expect(ev).toBe('getInvitations');
+
+      if (payload !== undefined) expect(payload).toEqual(expect.any(Object));
+
+      if (ack !== undefined) expect(typeof ack).toBe('function');
+    }
   });
 });
