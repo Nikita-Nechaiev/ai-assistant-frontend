@@ -14,9 +14,8 @@ Next.js + React + WebSocket. Live collaboration, roles & permissions, document v
 - **Live App:** https://www.ai-editor-portfolio.com
 - **Backend API:** https://ai-assistant-backend-fsdp.onrender.com
 - **WebSocket:** `wss://ai-assistant-backend-fsdp.onrender.com/ws`
-- **Demo (Loom):** <add URL>
-- **Backend repo:** <add URL>
-- **This repository:** <add URL>
+- **Backend repo:** https://github.com/Nikita-Nechaiev/ai-assistant-backend.git
+- **This repository:** https://github.com/Nikita-Nechaiev/ai-assistant-frontend.git
 
 ## 3) For Recruiters & CTO (30 seconds)
 
