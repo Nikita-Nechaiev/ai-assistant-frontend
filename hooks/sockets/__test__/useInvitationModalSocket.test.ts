@@ -11,7 +11,22 @@ class MockSocket {
     (this.listeners[ev] ??= []).push(cb);
   });
 
-  off = jest.fn();
+  off = jest.fn((ev: string, cb?: (...a: any[]) => void) => {
+    const arr = this.listeners[ev];
+
+    if (!arr) return;
+
+    // socket.io allows off(event) to remove all listeners for event
+    if (!cb) {
+      delete this.listeners[ev];
+
+      return;
+    }
+
+    this.listeners[ev] = arr.filter((fn) => fn !== cb);
+
+    if (this.listeners[ev].length === 0) delete this.listeners[ev];
+  });
 
   emit = jest.fn((ev: string, payload?: any, ack?: (...a: any[]) => void) => {
     if (typeof ack === 'function') {
@@ -26,7 +41,7 @@ class MockSocket {
         });
       } else if (ev === 'changeInvitationRole') {
         ack({ ok: true, updated: { invitationId: payload?.invitationId, newRole: payload?.newRole } });
-      } else if (ev === 'deleteInvitation' || ev === 'deleteNotification') {
+      } else if (ev === 'deleteNotification') {
         ack({ ok: true, deleted: { invitationId: payload?.invitationId } });
       } else if (ev === 'getInvitations') {
         ack({ ok: true, invitations: [] });
@@ -38,6 +53,11 @@ class MockSocket {
 
   trigger(ev: string, ...args: any[]) {
     this.listeners[ev]?.forEach((cb) => cb(...args));
+  }
+
+  // Optional helper for debugging / cleanup
+  reset() {
+    this.listeners = {};
   }
 }
 
@@ -70,7 +90,7 @@ describe('useInvitationModalSocket', () => {
     act(() => socket.trigger('invitationUpdated', makeInv(2, PermissionEnum.EDIT)));
     expect(result.current.invitations.find((i) => i.id === 2)?.role).toBe(PermissionEnum.EDIT);
 
-    act(() => socket.trigger('invitationDeleted', { invitationId: 1 }));
+    act(() => socket.trigger('notificationDeleted', { invitationId: 1 }));
     expect(result.current.invitations.map((i) => i.id)).toEqual([2]);
   });
 
@@ -129,7 +149,7 @@ describe('useInvitationModalSocket', () => {
       const calls = (socket.emit as jest.Mock).mock.calls;
       const [ev, payload, ack] = calls[calls.length - 1];
 
-      expect(ev).toBe('deleteInvitation');
+      expect(ev).toBe('deleteNotification');
       expect(payload).toEqual(
         expect.objectContaining({
           invitationId: 5,

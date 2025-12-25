@@ -29,14 +29,14 @@ export function useInvitationModalSocket(socket: Socket | null, onError?: (msg: 
     socket.on('invitations', onInvitations);
     socket.on('newInvitation', onNewInvitation);
     socket.on('invitationUpdated', onInvitationUpdated);
-    socket.on('invitationDeleted', onInvitationDeleted);
+    socket.on('notificationDeleted', onInvitationDeleted);
     socket.on('error', onErr);
 
     return () => {
       socket.off('invitations', onInvitations);
       socket.off('newInvitation', onNewInvitation);
       socket.off('invitationUpdated', onInvitationUpdated);
-      socket.off('invitationDeleted', onInvitationDeleted);
+      socket.off('notificationDeleted', onInvitationDeleted);
       socket.off('error', onErr);
     };
   }, [socket, sessionId, onError]);
@@ -48,7 +48,7 @@ export function useInvitationModalSocket(socket: Socket | null, onError?: (msg: 
   );
 
   const deleteInvitation = useCallback(
-    (invitationId: number) => socket?.emit('deleteInvitation', { invitationId, sessionId }),
+    (invitationId: number) => socket?.emit('deleteNotification', { invitationId, sessionId }),
     [socket, sessionId],
   );
 
