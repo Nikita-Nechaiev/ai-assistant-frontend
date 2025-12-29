@@ -152,7 +152,7 @@ E2E_INVITER_PASSWORD=Password1!
 
 ## 15) Contacts
 
-- **Name:** Nikita Nechayev
+- **Name:** Mykyta Nechaiev
 - **Email:** mykyta.nechaiev.dev@gmail.com
 - **Telegram:** @nechaiev_mykyta
 - **LinkedIn:** https://www.linkedin.com/in/mykyta-nechaiev-48b776358/
