@@ -42,7 +42,6 @@ jobs:
       NEXT_TELEMETRY_DISABLED: 1
 
     steps:
-      # ---------- FRONTEND ----------
       - name: Checkout frontend
         uses: actions/checkout@v4
 
@@ -55,7 +54,6 @@ jobs:
             package-lock.json
             backend/package-lock.json
 
-      # ---------- BACKEND ----------
       - name: Checkout backend
         uses: actions/checkout@v4
         with:
@@ -82,19 +80,16 @@ jobs:
           NODE_ENV: development
           PORT: 3002
 
-          # DB
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_db
           POSTGRES_PORT: '5432'
 
-          # Dummy Google OAuth to avoid crash
           GOOGLE_CLIENT_ID: 'ci-dummy-client-id'
           GOOGLE_CLIENT_SECRET: 'ci-dummy-secret'
           GOOGLE_CALLBACK_URL: 'http://localhost:3002/auth/google/callback'
 
-          # Safe test values
           JWT_ACCESS_SECRET: test-access
           JWT_REFRESH_SECRET: test-refresh
           SMTP_HOST: localhost
@@ -116,7 +111,6 @@ jobs:
           echo "==== backend.log (tail) ===="
           tail -n 200 backend.log || true
 
-      # ---------- USERS FOR E2E ----------
       - name: Ensure inviter & invitee users exist
         env:
           INVITER_EMAIL: ${{ secrets.E2E_INVITER_EMAIL || 'test1@example.com' }}
@@ -142,11 +136,9 @@ jobs:
           ensure_user "$INVITER_EMAIL" "$INVITER_PASSWORD" "E2E Inviter"
           ensure_user "$INVITEE_EMAIL" "$INVITEE_PASSWORD" "E2E Invitee"
 
-      # ---------- FRONTEND ----------
       - name: Install frontend deps (with dev)
         run: npm ci --include=dev
 
-      # ESLint только по фронтовым папкам (без backend/**)
       - name: Lint
         run: |
           npx eslint \
@@ -168,7 +160,6 @@ jobs:
           name: jest-coverage
           path: coverage/
 
-      # Next читает .env.local
       - name: Create .env.local for Next dev (API/Socket → localhost:3002)
         run: |
           cat > .env.local <<EOF
@@ -177,7 +168,6 @@ jobs:
           NODE_ENV=development
           EOF
 
-      # Переменные для Playwright/фикстур
       - name: Create .env.test.local for Playwright
         env:
           INVITER_EMAIL: ${{ secrets.E2E_INVITER_EMAIL || 'test1@example.com' }}
@@ -186,12 +176,10 @@ jobs:
           INVITEE_PASSWORD: ${{ secrets.E2E_INVITEE_PASSWORD || 'Password1!' }}
         run: |
           cat > .env.test.local <<EOF
-          # Логин по умолчанию (фикстура login может использовать это)
           E2E_EMAIL=$INVITER_EMAIL
           E2E_PASSWORD=$INVITER_PASSWORD
           E2E_REFRESH=yourTestRefreshToken
 
-          # Для сценариев инвайтов
           E2E_INVITER_EMAIL=$INVITER_EMAIL
           E2E_INVITER_PASSWORD=$INVITER_PASSWORD
           E2E_INVITEE_EMAIL=$INVITEE_EMAIL
@@ -218,7 +206,6 @@ jobs:
           PW_BASE_URL: http://localhost:3000
         run: npm run test:e2e
 
-      # ---------- Артефакты ----------
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

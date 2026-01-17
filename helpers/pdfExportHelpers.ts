@@ -14,15 +14,13 @@ export interface PhysicalLine {
   totalWidth: number;
 }
 
-export const getSpaceWidth = (doc: jsPDF) => doc.getTextWidth(' ');
-
 export const getFontProps = (op: any): { fontSize: number; lineHeight: number } => {
   const baseFontSize = 12;
   const baseLineHeight = 5;
 
-  if (op.attributes?.header) {
-    const headerLevel = op.attributes.header;
+  const headerLevel = op.attributes?.header;
 
+  if (headerLevel) {
     switch (headerLevel) {
       case 1:
         return { fontSize: baseFontSize * 2.1, lineHeight: baseLineHeight * 2.1 };
@@ -51,6 +49,9 @@ export const setFontStyle = (op: any, doc: jsPDF) => {
   else doc.setFont('helvetica', 'normal');
 };
 
+export const getLineAttrs = (lineOps: any[]): any | undefined =>
+  lineOps.find((o) => o?.insert === '' && o?.attributes)?.attributes;
+
 export const groupOpsByLine = (ops: any[]): any[][] => {
   const lines: any[][] = [];
   let currentLine: any[] = [];
@@ -73,18 +74,18 @@ export const groupOpsByLine = (ops: any[]): any[][] => {
 
       if (text.includes('\n')) {
         const parts = text.split('\n');
-        const doesEndsWithNewline = parts[parts.length - 1] === '';
 
-        for (let i = 0; i < parts.length; i++) {
+        for (let i = 0; i < parts.length - 1; i++) {
           const part = parts[i];
-          const isLast = i === parts.length - 1;
 
           if (part !== '') currentLine.push({ ...op, insert: part });
 
-          if (!isLast || doesEndsWithNewline) {
-            pushLine(op.attributes || {});
-          }
+          pushLine(op.attributes || {});
         }
+
+        const lastPart = parts[parts.length - 1];
+
+        if (lastPart !== '') currentLine.push({ ...op, insert: lastPart });
 
         continue;
       }
@@ -113,37 +114,42 @@ export const getListType = (ops: any[]): 'ordered' | 'bullet' | null => {
 
 export const isValidColor = (value?: string): value is string => typeof value === 'string' && value !== 'initial';
 
-export const getHdrLevel = (ops: any[] | undefined) => {
-  if (!ops || !ops.length) return 0;
+export const getExtraSpacing = (
+  ops: any[],
+  prevLineHeight?: number | null,
+  isFirstOnPage?: boolean,
+): { topAdd: number; bottomAdd: number; curLineHeight: number } => {
+  const lineAttrs = getLineAttrs(ops);
+  const lvl = lineAttrs?.header ? (lineAttrs.header as number) : 0;
 
-  const h = ops.find((o) => o.attributes?.header);
+  const { lineHeight: curLineHeight } = lvl ? getFontProps({ attributes: { header: lvl } }) : getFontProps({});
 
-  return h ? (h.attributes.header as number) : 0;
-};
+  if (!lvl || lvl === 4) {
+    return { topAdd: 0, bottomAdd: 0, curLineHeight };
+  }
 
-export const LH: { [key: number]: number } = {
-  0: 0,
-  1: 10.5,
-  2: 7.4,
-  3: 5.9,
-  4: 5,
-  5: 4.35,
-  6: 3.5,
-};
+  const topK: Record<number, number> = { 1: 0.6, 2: 0.55, 3: 0.5, 5: 0.45, 6: 0.4 };
+  const bottomK: Record<number, number> = { 1: 0.28, 2: 0.26, 3: 0.24, 5: 0.22, 6: 0.2 };
 
-export const getBottomFix = (curLvl: number) => (curLvl > 0 ? LH[curLvl] : 0);
+  const bottomAdd = Math.max(0.9, curLineHeight * (bottomK[lvl] ?? 0.24));
 
-export const getExtraSpacing = (ops: any[]): { topAdd: number } => {
-  const hdrOp = ops.find((o) => o.attributes?.header);
+  let topAdd = 0;
 
-  if (!hdrOp) return { topAdd: 2 };
+  const hasPrev = typeof prevLineHeight === 'number';
+  const isPrevSmaller = hasPrev && (prevLineHeight as number) < curLineHeight;
 
-  return { topAdd: LH[hdrOp.attributes.header] };
+  if (!isFirstOnPage && isPrevSmaller) {
+    topAdd = Math.max(1.2, curLineHeight * (topK[lvl] ?? 0.5));
+  }
+
+  return { topAdd, bottomAdd, curLineHeight };
 };
 
 export const processTextGroup = (lineOps: any[], doc: jsPDF, availableWidthTotal: number): PhysicalLine[] => {
   const physicalLines: PhysicalLine[] = [];
   let currentLine: PhysicalLine = { segments: [], maxLineHeight: 0, totalWidth: 0 };
+
+  const lineAttrs = getLineAttrs(lineOps);
 
   const pushCurrentLine = () => {
     if (currentLine.segments.length > 0) {
@@ -155,20 +161,25 @@ export const processTextGroup = (lineOps: any[], doc: jsPDF, availableWidthTotal
   for (const op of lineOps) {
     if (op.insert === '') continue;
 
-    const { fontSize, lineHeight: opLineHeight } = getFontProps(op);
+    const effectiveOp =
+      lineAttrs?.header && !op.attributes?.header
+        ? { ...op, attributes: { ...(op.attributes || {}), header: lineAttrs.header } }
+        : op;
+
+    const { fontSize, lineHeight: opLineHeight } = getFontProps(effectiveOp);
 
     doc.setFontSize(fontSize);
-    setFontStyle(op, doc);
+    setFontStyle(effectiveOp, doc);
 
-    let textRemaining = op.insert as string;
+    let textRemaining = effectiveOp.insert as string;
 
     while (textRemaining.length > 0) {
       const availableSpace = availableWidthTotal - currentLine.totalWidth;
+
       let fitText = '';
       let fitWidth = 0;
+
       let lastSpaceIndex = -1;
-      let lastSpaceFitText = '';
-      let lastSpaceFitWidth = 0;
 
       for (let i = 0; i < textRemaining.length; i++) {
         const char = textRemaining[i];
@@ -179,36 +190,43 @@ export const processTextGroup = (lineOps: any[], doc: jsPDF, availableWidthTotal
         fitText += char;
         fitWidth += charWidth;
 
-        if (char === ' ') {
-          lastSpaceIndex = i;
-          lastSpaceFitText = fitText;
-          lastSpaceFitWidth = fitWidth;
-        }
+        if (char === ' ') lastSpaceIndex = i;
       }
 
-      if (lastSpaceIndex !== -1 && fitText.trim().length !== textRemaining.trim().length) {
-        fitText = lastSpaceFitText.trimEnd();
-        fitWidth = lastSpaceFitWidth;
+      const didOverflow = fitText.length < textRemaining.length;
+
+      let displayText = fitText;
+      let consumedLen = fitText.length;
+
+      if (didOverflow && lastSpaceIndex !== -1) {
+        displayText = textRemaining.slice(0, lastSpaceIndex).trimEnd();
+        consumedLen = lastSpaceIndex + 1;
+        fitWidth = doc.getTextWidth(displayText);
       }
 
-      if (fitText === '') {
-        fitText = textRemaining[0];
-        fitWidth = doc.getTextWidth(fitText);
+      if (displayText === '') {
+        displayText = textRemaining[0];
+        consumedLen = 1;
+        fitWidth = doc.getTextWidth(displayText);
       }
 
       const segment: Segment = {
-        text: fitText,
+        text: displayText,
         fontSize,
         lineHeight: opLineHeight,
         width: fitWidth,
-        op,
+        op: effectiveOp,
       };
 
       currentLine.segments.push(segment);
       currentLine.totalWidth += fitWidth;
       currentLine.maxLineHeight = Math.max(currentLine.maxLineHeight, opLineHeight);
 
-      textRemaining = textRemaining.substring(fitText.length);
+      textRemaining = textRemaining.substring(consumedLen);
+
+      if (didOverflow && lastSpaceIndex !== -1) {
+        textRemaining = textRemaining.replace(/^ +/, '');
+      }
 
       if (textRemaining.length > 0) pushCurrentLine();
     }

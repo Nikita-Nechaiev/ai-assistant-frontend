@@ -5,15 +5,13 @@ import { SnackbarStatusEnum } from '@/models/enums';
 
 import type { PhysicalLine } from './pdfExportHelpers';
 import {
-  getSpaceWidth,
   setFontStyle,
   groupOpsByLine,
   getListType,
   isValidColor,
-  getHdrLevel,
-  getBottomFix,
   getExtraSpacing,
   processTextGroup,
+  getLineAttrs,
 } from './pdfExportHelpers';
 
 export const exportToPDF = async (
@@ -29,39 +27,48 @@ export const exportToPDF = async (
     }
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
     const pageWidth = doc.internal.pageSize.width;
     const leftMargin = 10;
     const rightMargin = 10;
-    const availableWidthTotal = pageWidth - leftMargin - rightMargin;
+
+    const textPad = 0.6;
+
+    const contentLeft = leftMargin + textPad;
+    const contentRight = rightMargin + textPad;
+
+    const availableWidthTotal = pageWidth - contentLeft - contentRight;
+
     let y = 20;
 
-    const SPACE_W = getSpaceWidth(doc);
+    let prevLineHeight: number | null = null;
+    let isFirstOnPage = true;
 
     let orderedListCounter = 1;
     let lastListType: 'ordered' | 'bullet' | null = null;
+
+    const addPage = () => {
+      doc.addPage();
+      y = 20;
+      prevLineHeight = null;
+      isFirstOnPage = true;
+    };
 
     const linesGroups = groupOpsByLine(quillDelta.ops);
 
     for (let i = 0; i < linesGroups.length; i++) {
       let lineOps = linesGroups[i];
 
-      const curLvl = getHdrLevel(lineOps);
-      const { topAdd } = getExtraSpacing(lineOps);
-
       const isEmptyLine = lineOps.every((op: any) => op.insert === '');
 
       if (isEmptyLine) {
-        y += 7;
+        y += 6;
 
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
+        if (y > 280) addPage();
 
         continue;
       }
 
-      const firstNonEmptyOp = lineOps.find((op: any) => op.insert !== '');
       const listType = getListType(lineOps);
 
       if (listType === 'ordered') {
@@ -82,21 +89,24 @@ export const exportToPDF = async (
         lastListType = null;
       }
 
+      const lineAttrs = getLineAttrs(lineOps);
+      const alignment = lineAttrs?.align || 'left';
+
+      const { topAdd, bottomAdd, curLineHeight } = getExtraSpacing(lineOps, prevLineHeight, isFirstOnPage);
+
       y += topAdd;
 
-      const alignment = firstNonEmptyOp?.attributes?.align || 'left';
       const physicalLines: PhysicalLine[] = processTextGroup(lineOps, doc, availableWidthTotal);
 
       for (let j = 0; j < physicalLines.length; j++) {
         const physLine = physicalLines[j];
-        const isLast = j === physicalLines.length - 1;
 
-        let offsetX = leftMargin + SPACE_W;
+        let offsetX = contentLeft;
 
         if (alignment === 'center') {
-          offsetX = leftMargin + (availableWidthTotal - physLine.totalWidth) / 2;
+          offsetX = contentLeft + (availableWidthTotal - physLine.totalWidth) / 2;
         } else if (alignment === 'right') {
-          offsetX = leftMargin + (availableWidthTotal - physLine.totalWidth);
+          offsetX = contentLeft + (availableWidthTotal - physLine.totalWidth);
         }
 
         for (const segment of physLine.segments) {
@@ -118,6 +128,7 @@ export const exportToPDF = async (
           if (isValidColor(bgColor)) {
             const padding = segment.lineHeight * 0.12;
             const expand = segment.lineHeight * 0.05;
+
             const top = y - segment.lineHeight * 0.78 - expand + padding;
             const height = segment.lineHeight * 0.96 + expand * 2 - padding * 2;
 
@@ -150,13 +161,14 @@ export const exportToPDF = async (
 
         y += physLine.maxLineHeight;
 
-        if (isLast) y -= getBottomFix(curLvl);
-
-        if (y > 280) {
-          doc.addPage();
-          y = 20;
-        }
+        if (y > 280) addPage();
       }
+
+      y += bottomAdd;
+      prevLineHeight = curLineHeight;
+      isFirstOnPage = false;
+
+      if (y > 280) addPage();
     }
 
     doc.save(`${documentTitle}.pdf`);
