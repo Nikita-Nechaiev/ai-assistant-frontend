@@ -58,7 +58,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Nikita-Nechaiev/ai-assistant-backend
-          token: ${{ secrets.BACKEND_PAT }}
+          ref: b903b40a028b5a3ff7f6b5b07d71c836279c5bb2
           path: backend
 
       - name: Install backend deps

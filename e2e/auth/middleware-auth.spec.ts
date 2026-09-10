@@ -1,6 +1,6 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 
-const ORIGIN = 'http://localhost:3000';
+const ORIGIN = process.env.PW_BASE_URL || 'http://localhost:3000';
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 const E2E_EMAIL = process.env.E2E_EMAIL!;
 const E2E_PASSWORD = process.env.E2E_PASSWORD!;
@@ -42,7 +42,7 @@ test('anonymous user is redirected to /login', async ({ page }) => {
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test('middleware refresh returns 200 and exposes x-user header (API)', async ({ request }) => {
+test('middleware refresh returns 200 and keeps x-user internal', async ({ request }) => {
   const refreshToken = await getFreshRefreshToken(request);
 
   const res = await request.get(`${ORIGIN}/dashboard`, {
@@ -50,10 +50,14 @@ test('middleware refresh returns 200 and exposes x-user header (API)', async ({ 
   });
 
   expect(res.status()).toBe(200);
+  expect(res.headers()['x-user']).toBeUndefined();
 
-  const xUser = res.headers()['x-user'];
+  const cookieNames = res
+    .headersArray()
+    .filter((h) => h.name.toLowerCase() === 'set-cookie')
+    .map((h) => h.value.split(';')[0].split('=')[0]);
 
-  expect(xUser).toBeTruthy();
+  expect(cookieNames).toEqual(expect.arrayContaining(['accessToken']));
 });
 
 test('middleware issues tokens in browser context (end-to-end)', async ({ context, page, request }) => {
@@ -73,6 +77,7 @@ test('middleware issues tokens in browser context (end-to-end)', async ({ contex
 
   await page.goto(`${ORIGIN}/dashboard`);
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole('heading', { name: 'Sessions', level: 1 })).toBeVisible({ timeout: 15_000 });
 
   const cookies = await context.cookies(ORIGIN);
   const names = cookies.map((c) => c.name);
