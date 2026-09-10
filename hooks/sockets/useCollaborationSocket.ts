@@ -18,50 +18,56 @@ export function useCollaborationSocket({ sessionId }: UseCollaborationSocketPara
 
   const { setSnackbar } = useSnackbarStore();
   const { user: currentUser } = useUserStore();
-  const { clearSession, setSession: setUserSessionInStore } = useSessionStore();
+  const { clearSession } = useSessionStore();
 
-  const [_, setSocketReady] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
+  const routerRef = useRef(router);
+  const currentUserId = currentUser?.id;
 
   useEffect(() => {
-    if (!currentUser) {
+    routerRef.current = router;
+  }, [router]);
+
+  useEffect(() => {
+    if (!currentUserId) {
       return;
     }
 
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+    const collaborationSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       path: '/collaboration-session-socket',
       transports: ['websocket'],
       withCredentials: true,
     });
 
-    socketRef.current = socket;
-    setSocketReady(true);
+    socketRef.current = collaborationSocket;
+    setSocket(collaborationSocket);
 
-    socket.on('connect', () => {
+    collaborationSocket.on('connect', () => {
       if (sessionId) {
         if (typeof sessionId === 'string' && !isConvertableToNumber(sessionId)) {
           setSnackbar('Invalid session page', SnackbarStatusEnum.ERROR);
-          router.replace('/dashboard');
+          routerRef.current.replace('/dashboard');
 
           return;
         }
 
-        socket.emit('joinSession', { sessionId: Number(sessionId) });
+        collaborationSocket.emit('joinSession', { sessionId: Number(sessionId) });
       } else {
-        socket.emit('joinDashboard');
+        collaborationSocket.emit('joinDashboard');
       }
     });
 
-    socket.on('connect_error', (err) => {
+    collaborationSocket.on('connect_error', (err) => {
       console.error('Connection error:', err);
     });
 
-    socket.on('error', (errorMessage: string) => {
+    collaborationSocket.on('error', (errorMessage: string) => {
       setSnackbar(errorMessage, SnackbarStatusEnum.ERROR);
     });
 
-    socket.on('sessionDeleted', ({ message, userId }) => {
+    collaborationSocket.on('sessionDeleted', ({ message, userId }) => {
       if (socketRef.current) {
         if (sessionId) {
           socketRef.current.emit('leaveSession');
@@ -70,18 +76,18 @@ export function useCollaborationSocket({ sessionId }: UseCollaborationSocketPara
         socketRef.current.disconnect();
       }
 
-      if (currentUser?.id !== userId) {
+      if (currentUserId !== userId) {
         setSnackbar(message, SnackbarStatusEnum.WARNING);
       } else {
         setSnackbar('Session has been deleted', SnackbarStatusEnum.SUCCESS);
       }
 
-      router.replace('/dashboard');
+      routerRef.current.replace('/dashboard');
     });
 
-    socket.on('invalidSession', ({ message }) => {
+    collaborationSocket.on('invalidSession', ({ message }) => {
       setSnackbar(message, SnackbarStatusEnum.ERROR);
-      router.replace('/dashboard');
+      routerRef.current.replace('/dashboard');
     });
 
     return () => {
@@ -92,15 +98,17 @@ export function useCollaborationSocket({ sessionId }: UseCollaborationSocketPara
 
         socketRef.current.disconnect();
       }
+
+      socketRef.current = null;
+      setSocket(null);
     };
-  }, [currentUser, sessionId, router, setSnackbar, setUserSessionInStore]);
+  }, [currentUserId, sessionId, setSnackbar]);
 
   useEffect(() => {
     return () => {
       clearSession();
-      setSocketReady(false);
     };
   }, [clearSession]);
 
-  return { socket: socketRef.current };
+  return { socket };
 }

@@ -60,13 +60,13 @@ describe('axiosInstance response interceptor', () => {
       config: { url: '/protected', method: 'get' },
     };
 
-    jest.spyOn(axios, 'get').mockResolvedValue({ data: { message: 'refreshed' } });
+    jest.spyOn(axios, 'post').mockResolvedValue({ data: { message: 'refreshed' } });
 
     const retrySpy = jest.spyOn(axiosInstance, 'request').mockResolvedValue({ data: 'retried' });
 
     const result = await rejectedHandler()(mockError);
 
-    expect(axios.get).toHaveBeenCalledWith(`${apiUrl}/auth/refresh-cookies`, { withCredentials: true });
+    expect(axios.post).toHaveBeenCalledWith(`${apiUrl}/auth/refresh-cookies`, {}, { withCredentials: true });
     expect(retrySpy).toHaveBeenCalledWith(mockError.config);
     expect(result).toEqual({ data: 'retried' });
   });
@@ -74,7 +74,7 @@ describe('axiosInstance response interceptor', () => {
   it('on 401 → refresh fails → clears user & redirects to /login', async () => {
     const refreshError = new Error('refresh failed');
 
-    jest.spyOn(axios, 'get').mockRejectedValue(refreshError);
+    jest.spyOn(axios, 'post').mockRejectedValue(refreshError);
 
     const clearUserMock = jest.fn();
 

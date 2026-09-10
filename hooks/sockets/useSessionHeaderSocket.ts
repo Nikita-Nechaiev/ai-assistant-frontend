@@ -19,7 +19,7 @@ interface Params {
 export function useSessionHeaderSocket({ sessionId, socket }: Params) {
   const { setSnackbar } = useSnackbarStore();
   const { user: currentUser } = useUserStore();
-  const { session: userSession, updateSession, setSession: setUserSessionInStore } = useSessionStore();
+  const { updateSession, setSession: setUserSessionInStore } = useSessionStore();
 
   const router = useRouter();
 
@@ -43,10 +43,14 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
     [socket],
   );
 
-  const requestSessionData = useCallback(() => socket.emit('getSessionData', { sessionId }), [socket, sessionId]);
-
   const startTimeRef = useRef<number | null>(null);
   const totalTimeRef = useRef<number>(0);
+  const routerRef = useRef(router);
+  const currentUserId = currentUser?.id;
+
+  useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   useEffect(() => {
     if (!socket) return;
@@ -60,13 +64,13 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
       users: ICollaborator[];
       timeSpent: number;
     }) => {
-      if (!sessionData || !currentUser) return;
+      if (!sessionData || !currentUserId) return;
 
-      const currUserSession = sessionData.userCollaborationSessions.find((el) => el.user.id === currentUser.id);
+      const currUserSession = sessionData.userCollaborationSessions.find((el) => el.user.id === currentUserId);
 
       if (!currUserSession) {
         setSnackbar('You don’t have permissions to access this page', SnackbarStatusEnum.ERROR);
-        router.push('/dashboard');
+        routerRef.current.push('/dashboard');
 
         return;
       }
@@ -74,7 +78,6 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
       setUserSessionInStore(currUserSession);
 
       setSessionName(sessionData.name);
-
       setOnlineUsers(users);
 
       totalTimeRef.current = timeSpent * 1000;
@@ -95,19 +98,21 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
     const onPermissionsChanged = ({ userId, permissions }: { userId: number; permissions: PermissionEnum[] }) => {
       setOnlineUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, permissions } : u)));
 
-      if (userSession?.user.id === userId) {
+      if (currentUserId === userId) {
         updateSession({ permissions });
       }
     };
+
+    const onError = (msg: string) => setSnackbar(msg, SnackbarStatusEnum.ERROR);
 
     socket.on('totalSessionData', onTotalSessionData);
     socket.on('sessionData', onSessionData);
     socket.on('newOnlineUser', onNewOnlineUser);
     socket.on('userLeft', onUserLeft);
     socket.on('permissionsChanged', onPermissionsChanged);
-    socket.on('error', (msg: string) => setSnackbar(msg, SnackbarStatusEnum.ERROR));
+    socket.on('error', onError);
 
-    requestSessionData();
+    socket.emit('getSessionData', { sessionId });
 
     return () => {
       socket.off('totalSessionData', onTotalSessionData);
@@ -115,8 +120,9 @@ export function useSessionHeaderSocket({ sessionId, socket }: Params) {
       socket.off('newOnlineUser', onNewOnlineUser);
       socket.off('userLeft', onUserLeft);
       socket.off('permissionsChanged', onPermissionsChanged);
+      socket.off('error', onError);
     };
-  }, [socket, currentUser, router, setSnackbar, setUserSessionInStore, updateSession, userSession, requestSessionData]);
+  }, [socket, currentUserId, setSnackbar, setUserSessionInStore, updateSession, sessionId]);
 
   useEffect(() => {
     if (startTimeRef.current === null) return;

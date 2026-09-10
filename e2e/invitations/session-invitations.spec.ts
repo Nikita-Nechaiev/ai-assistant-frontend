@@ -4,7 +4,7 @@ import { test } from '../auth/fixtures';
 
 test.describe.configure({ mode: 'serial' });
 
-const ORIGIN = 'http://localhost:3000';
+const ORIGIN = process.env.PW_BASE_URL || 'http://localhost:3000';
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const SEL = {

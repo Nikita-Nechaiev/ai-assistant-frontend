@@ -1,5 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import axios, { AxiosError } from 'axios';
+
+type AuthCookieName = 'accessToken' | 'refreshToken';
+
+type RefreshPayload = {
+  accessToken: string;
+  user: unknown;
+};
+
+function encodeUserHeader(user: unknown) {
+  const bytes = new TextEncoder().encode(JSON.stringify(user));
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+
+  return btoa(binary);
+}
+
+function nextWithUser(req: NextRequest, user: unknown) {
+  const requestHeaders = new Headers(req.headers);
+
+  requestHeaders.set('x-user', encodeUserHeader(user));
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+}
+
+function getAuthCookieOptions() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieDomain = isProduction ? '.ai-editor-portfolio.com' : undefined;
+
+  return {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'strict',
+    domain: cookieDomain,
+    path: '/',
+  } as const;
+}
+
+function setAuthCookie(res: NextResponse, name: AuthCookieName, value: string) {
+  const maxAge = name === 'accessToken' ? 15 * 60 : 30 * 24 * 60 * 60;
+
+  res.cookies.set(name, value, { ...getAuthCookieOptions(), maxAge });
+}
+
+function redirectToLogin(req: NextRequest) {
+  const loginUrl = req.nextUrl.clone();
+
+  loginUrl.pathname = '/login';
+
+  const res = NextResponse.redirect(loginUrl);
+
+  res.cookies.delete('accessToken');
+  res.cookies.delete('refreshToken');
+
+  return res;
+}
+
+async function fetchCurrentUser(accessToken: string) {
+  try {
+    const meResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        Cookie: `accessToken=${accessToken}`,
+      },
+    });
+
+    if (!meResponse.ok) return null;
+
+    return meResponse.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -21,82 +96,50 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  const accessToken = req.cookies.get('accessToken')?.value;
+
+  if (accessToken) {
+    const user = await fetchCurrentUser(accessToken);
+
+    if (user) {
+      return nextWithUser(req, user);
+    }
+  }
+
   const refreshToken = req.cookies.get('refreshToken')?.value;
 
   if (!refreshToken) {
-    const loginUrl = req.nextUrl.clone();
-
-    loginUrl.pathname = '/login';
-
-    const res = NextResponse.redirect(loginUrl);
-
-    res.cookies.delete('accessToken');
-    res.cookies.delete('refreshToken');
-
-    return res;
+    return redirectToLogin(req);
   }
 
-  const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/get-tokens`;
+  const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`;
 
   try {
-    const refreshResponse = await axios.get(refreshUrl, {
-      withCredentials: true,
+    const refreshResponse = await fetch(refreshUrl, {
+      method: 'POST',
+      cache: 'no-store',
       headers: {
         Cookie: `refreshToken=${refreshToken}`,
       },
     });
 
-    if (refreshResponse.status === 200) {
-      const { accessToken, newRefreshToken, user } = refreshResponse.data;
+    if (refreshResponse.ok) {
+      const { accessToken: newAccessToken, user } = (await refreshResponse.json()) as RefreshPayload;
 
-      const encodedUser = Buffer.from(JSON.stringify(user)).toString('base64');
+      const res = nextWithUser(req, user);
 
-      const res = NextResponse.next({
-        headers: new Headers({ 'x-user': encodedUser }),
-      });
-
-      const isProduction = process.env.NODE_ENV === 'production';
-      const cookieDomain = isProduction ? '.ai-editor-portfolio.com' : undefined;
-
-      const common = {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'strict',
-        domain: cookieDomain,
-        path: '/',
-      } as const;
-
-      res.cookies.set('accessToken', accessToken, { ...common, maxAge: 15 * 60 });
-      res.cookies.set('refreshToken', newRefreshToken, { ...common, maxAge: 30 * 24 * 60 * 60 });
+      setAuthCookie(res, 'accessToken', newAccessToken);
 
       return res;
     }
 
-    const failUrl = req.nextUrl.clone();
-
-    failUrl.pathname = '/login';
-
-    const failRes = NextResponse.redirect(failUrl);
-
-    failRes.cookies.delete('accessToken');
-    failRes.cookies.delete('refreshToken');
-
-    return failRes;
+    return redirectToLogin(req);
   } catch (error) {
-    if (error instanceof AxiosError) {
+    if (error instanceof Error) {
       console.log('Error refreshing token:', error.message);
     }
 
-    const errUrl = req.nextUrl.clone();
-
-    errUrl.pathname = '/login';
-
-    const errRes = NextResponse.redirect(errUrl);
-
-    errRes.cookies.delete('accessToken');
-    errRes.cookies.delete('refreshToken');
-
-    return errRes;
+    return redirectToLogin(req);
   }
 }
 
