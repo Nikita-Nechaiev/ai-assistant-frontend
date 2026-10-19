@@ -12,11 +12,6 @@ jest.mock('next/link', () => ({ href, children }: any) => (
   </a>
 ));
 
-jest.mock('@/ui/TruncateText', () => ({
-  __esModule: true,
-  default: ({ text }: any) => <span data-testid='truncated'>{text}</span>,
-}));
-
 jest.mock('../DocumentPreview', () => ({
   __esModule: true,
   default: () => <div data-testid='preview'>preview</div>,
@@ -51,17 +46,17 @@ describe('DocumentItem', () => {
 
     render(<DocumentItem document={doc} sessionId={mkSessionId} onEditTitle={jest.fn()} />);
 
-    expect(screen.getByTestId('link')).toHaveAttribute('href', `/session/${mkSessionId}/document/${doc.id}`);
+    expect(screen.getAllByTestId('link')[0]).toHaveAttribute('href', `/session/${mkSessionId}/document/${doc.id}`);
 
-    expect(screen.getByTestId('truncated')).toHaveTextContent(doc.title);
+    expect(screen.getByText(doc.title)).toHaveTextContent(doc.title);
 
-    const formatted = new Date(doc.createdAt).toLocaleDateString('en-US', {
+    const formatted = new Date(doc.createdAt).toLocaleDateString('en-GB', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
 
-    expect(screen.getByText(formatted)).toBeInTheDocument();
+    expect(screen.getByText(`Created ${formatted}`)).toBeInTheDocument();
 
     expect(screen.getByTestId('preview')).toBeInTheDocument();
   });
@@ -72,7 +67,7 @@ describe('DocumentItem', () => {
 
     render(<DocumentItem document={doc} sessionId={111} onEditTitle={onEdit} />);
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: /Actions for/ }));
 
     expect(screen.getByTestId('popup')).toBeInTheDocument();
 

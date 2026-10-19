@@ -2,26 +2,32 @@
 
 import React from 'react';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { FiArrowLeft, FiFileText } from 'react-icons/fi';
 
-interface DocNotFoundProps {
-  id: number | undefined;
-}
+import { Button } from '@/components/ui/button';
 
-const DocNotFound: React.FC<DocNotFoundProps> = ({ id }) => {
+const DocNotFound = () => {
   const router = useRouter();
+  const { id: sessionId } = useParams<{ id: string }>();
 
   return (
-    <div className='flex items-center justify-center h-[80vh] bg-gray-100'>
-      <div className='text-center'>
-        <h1 className='text-3xl font-bold text-mainDark mb-4'>Document not found</h1>
-        <p className='text-gray-500 mb-6'>The document you are trying to access does not exist or has been deleted.</p>
-        <button
-          onClick={() => router.replace('/session/' + id)}
-          className='bg-mainDark text-white px-6 py-3 rounded hover:bg-mainDarkHover'
+    <div className='mx-auto flex min-h-[65vh] max-w-[600px] items-center justify-center px-8'>
+      <div className='w-full rounded-2xl border border-border bg-white px-10 py-14 text-center shadow-card'>
+        <span className='mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-accent text-primary'>
+          <FiFileText size={25} aria-hidden='true' />
+        </span>
+        <h1 className='text-2xl font-semibold tracking-tight'>Document not found</h1>
+        <p className='mt-3 text-base leading-6 text-muted-foreground'>
+          The document you are trying to access does not exist or has been deleted.
+        </p>
+        <Button
+          onClick={() => router.replace(sessionId ? `/session/${sessionId}` : '/dashboard')}
+          className='mt-7 gap-2 text-sm'
         >
+          <FiArrowLeft size={14} aria-hidden='true' />
           Return to Session
-        </button>
+        </Button>
       </div>
     </div>
   );

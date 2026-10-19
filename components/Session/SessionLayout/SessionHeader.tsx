@@ -1,139 +1,97 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Socket } from 'socket.io-client';
-import { FcInvite } from 'react-icons/fc';
-import { RiArrowGoBackFill } from 'react-icons/ri';
-import { MdDelete, MdEdit } from 'react-icons/md';
+import { FiClock, FiUserPlus } from 'react-icons/fi';
 
-import { PermissionEnum } from '@/models/enums';
+import WorkspaceBreadcrumbs, { WorkspaceBreadcrumbItem } from '@/components/common/WorkspaceBreadcrumbs';
+import AppLogo from '@/components/common/AppLogo';
 import UserAvatarCircle from '@/components/common/UserAvatarCircle';
-import RequirePermission from '@/helpers/RequirePermission';
-import TruncatedText from '@/ui/TruncateText';
-import ConfirmationModal from '@/ui/ConfirmationModal';
+import { Button } from '@/components/ui/button';
+import { PermissionEnum } from '@/models/enums';
+import RequirePermission from '@/components/common/RequirePermission';
 import { formatTimeSpent } from '@/helpers/timeHelpers';
 import { useSessionHeaderSocket } from '@/hooks/sockets/useSessionHeaderSocket';
+
+import SessionActions from './SessionActions';
 
 interface Props {
   sessionId: number;
   socket: Socket;
   handleOpenInviteModal: () => void;
+  documentTitle?: string;
 }
 
-export default function SessionHeader({ sessionId, socket, handleOpenInviteModal }: Props) {
-  const router = useRouter();
-  const params = useParams();
+export default function SessionHeader({ sessionId, socket, handleOpenInviteModal, documentTitle }: Props) {
+  const { documentId } = useParams<{ documentId?: string }>();
+  const session = useSessionHeaderSocket({ sessionId, socket });
+  const { onlineUsers, timeSpentMs, emitChangeUserPermissions } = session;
+  const shownUsers = onlineUsers.slice(0, 5);
+  const items: WorkspaceBreadcrumbItem[] = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: session.sessionName ? `Session (${session.sessionName})` : 'Session', href: `/session/${sessionId}` },
+  ];
 
-  const { sessionName, onlineUsers, timeSpentMs, emitChangeSessionName, emitDeleteSession, emitChangeUserPermissions } =
-    useSessionHeaderSocket({ sessionId, socket });
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempName, setTempName] = useState('');
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isEditing) setTempName(sessionName);
-  }, [sessionName, isEditing]);
-
-  const handleSaveName = () => {
-    if (tempName.trim() && tempName !== sessionName) {
-      emitChangeSessionName(tempName);
-    }
-
-    setIsEditing(false);
-  };
-
-  const handleGoBack = () => {
-    if (params.id && params.documentId) router.push(`/session/${params.id}`);
-    else router.push('/dashboard');
-  };
-
-  const shownUsers = onlineUsers.slice(0, 10);
-  const hasMore = onlineUsers.length > 10;
+  if (documentId)
+    items.push({
+      label: documentTitle !== undefined ? `Document (${documentTitle})` : 'Document',
+      href: `/session/${sessionId}/document/${documentId}`,
+    });
 
   return (
-    <header className='z-50 flex items-center justify-between fixed w-full h-[72px] px-6 bg-mainDark text-mainLight shadow-md'>
-      <div className='flex items-center space-x-4'>
-        <button
-          onClick={handleGoBack}
-          className='flex items-center justify-center h-10 w-10 rounded-full bg-mainLight text-mainDark hover:bg-gray-200 transition'
-        >
-          <RiArrowGoBackFill />
-        </button>
-
-        <div className='flex items-center space-x-5'>
-          {isEditing ? (
-            <input
-              value={tempName}
-              onChange={(e) => setTempName(e.target.value)}
-              onBlur={handleSaveName}
-              onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-              autoFocus
-              className='bg-mainLight text-mainDark px-2 py-1 rounded focus:outline-none'
-            />
-          ) : (
-            <h1 className='text-xl flex items-center'>
-              <TruncatedText text={sessionName} maxLength={55} className='font-semibold' />
-            </h1>
-          )}
-
-          <RequirePermission permission={PermissionEnum.ADMIN}>
-            <div className='flex items-center space-x-4'>
-              <button onClick={() => setIsEditing(true)} className='hover:text-gray-300 transition'>
-                <MdEdit size={25} />
-              </button>
-              <button onClick={() => setDeleteModalOpen(true)} className='hover:text-gray-300 transition'>
-                <MdDelete size={25} />
-              </button>
+    <>
+      <header className='fixed inset-x-0 top-0 z-40 flex h-[72px] items-center justify-between gap-6 border-b border-border bg-white px-8'>
+        <div className='flex min-w-0 flex-1 items-center gap-6'>
+          <div className='shrink-0 border-r border-border pr-6'>
+            <AppLogo variant='workspace' />
+          </div>
+          <WorkspaceBreadcrumbs items={items} />
+        </div>
+        <div className='flex shrink-0 items-center gap-5'>
+          <div className='flex items-center gap-3'>
+            <div className='flex -space-x-2'>
+              {shownUsers.map((user) => (
+                <UserAvatarCircle
+                  key={user.id}
+                  userId={user.id}
+                  name={user.name}
+                  email={user.email}
+                  avatar={user.avatar}
+                  isYellow
+                  isBelowTooltip
+                  currentPermission={user.permissions[user.permissions.length - 1]}
+                  changeUserPermissions={emitChangeUserPermissions}
+                />
+              ))}
+              {onlineUsers.length > 5 && (
+                <span className='flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-accent text-[13px] font-semibold text-primary'>
+                  +{onlineUsers.length - 5}
+                </span>
+              )}
             </div>
+            <span className='text-sm text-muted-foreground'>{onlineUsers.length} online</span>
+          </div>
+          <div
+            title='Your time in this session'
+            className='flex items-center gap-2 border-l border-border pl-5 text-sm tabular-nums text-muted-foreground'
+          >
+            <FiClock size={14} aria-hidden='true' />
+            {formatTimeSpent(Math.floor(timeSpentMs / 1000))}
+          </div>
+          <RequirePermission permission={PermissionEnum.EDIT}>
+            <Button
+              data-testid='open-invite-modal'
+              onClick={handleOpenInviteModal}
+              size='sm'
+              className='h-9 text-sm shadow-blue'
+            >
+              <FiUserPlus aria-hidden='true' />
+              Invite collaborators
+            </Button>
           </RequirePermission>
         </div>
-      </div>
-
-      <div className='flex items-center space-x-4'>
-        <div className='flex -space-x-2'>
-          {shownUsers.map((u) => (
-            <UserAvatarCircle
-              key={u.id}
-              userId={u.id}
-              name={u.name}
-              email={u.email}
-              avatar={u.avatar}
-              isYellow
-              isBelowTooltip
-              currentPermission={u.permissions[u.permissions.length - 1]}
-              changeUserPermissions={emitChangeUserPermissions}
-            />
-          ))}
-          {hasMore && <span className='text-sm font-medium'>…</span>}
-        </div>
-
-        <RequirePermission permission={PermissionEnum.EDIT}>
-          <button
-            data-testid='open-invite-modal'
-            onClick={handleOpenInviteModal}
-            className='h-10 w-10 bg-mainLight text-mainDark rounded-full flex items-center justify-center hover:bg-gray-200 transition'
-          >
-            <FcInvite />
-          </button>
-        </RequirePermission>
-
-        <div className='text-lg font-semibold'>{formatTimeSpent(Math.floor(timeSpentMs / 1000))}</div>
-      </div>
-
-      <ConfirmationModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onSubmit={() => {
-          emitDeleteSession();
-          setDeleteModalOpen(false);
-        }}
-        onCancel={() => setDeleteModalOpen(false)}
-        description='Are you sure you want to delete this session? This action cannot be undone.'
-        submitText='Delete'
-      />
-    </header>
+      </header>
+      <SessionActions session={session} sessionId={sessionId} isDocumentPage={!!documentId} />
+    </>
   );
 }

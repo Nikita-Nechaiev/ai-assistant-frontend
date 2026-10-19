@@ -9,12 +9,6 @@ export enum PermissionEnum {
   ADMIN = 'admin',
 }
 
-export enum ThemeEnum {
-  SYSTEM = 'system',
-  LIGHT = 'light',
-  DARK = 'dark',
-}
-
 export enum SnackbarStatusEnum {
   ERROR = 'error',
   WARNING = 'warning',

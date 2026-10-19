@@ -1,16 +1,13 @@
 'use client';
-import React, { useState, useRef, useEffect } from 'react';
 
-import { AiOutlineCamera } from 'react-icons/ai';
-import { useForm } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
+import React, { useRef } from 'react';
 
-import { useUserStore } from '@/store/useUserStore';
-import useSnackbarStore from '@/store/useSnackbarStore';
-import Modal from '@/ui/Modal';
-import InputField from '@/ui/InputField';
-import { UserApi } from '@/services/UserApi';
-import { SnackbarStatusEnum } from '@/models/enums';
+import { FiCamera, FiUser, FiMail } from 'react-icons/fi';
+
+import useProfileForm from '@/hooks/profile/useProfileForm';
+import WorkspaceModal from '@/components/common/WorkspaceModal';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { isGoogleAvatar } from '@/helpers/isGoogleAvatar';
 
 interface ProfileModalProps {
@@ -18,124 +15,114 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
-interface FormValues {
-  name: string;
-}
-
 const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
-  const { user, updateUser } = useUserStore();
-  const { setSnackbar } = useSnackbarStore();
-  const queryClient = useQueryClient();
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<FormValues>({
-    defaultValues: { name: user?.name ?? '' },
-  });
-
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(user?.avatar);
-
+  const { user, register, errors, isSubmitting, onSubmit, avatarPreview, handleFileChange } = useProfileForm(
+    isOpen,
+    onClose,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      reset({ name: user?.name ?? '' });
-      setAvatarFile(null);
-      setAvatarPreview(user?.avatar);
-    }
-  }, [isOpen, user, reset]);
-
-  const chooseFile = () => fileInputRef.current?.click();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (!file) return;
-
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
-
-  const onSubmit = async (data: FormValues) => {
-    const trimmedName = data.name.trim();
-
-    const isNameChanged = trimmedName !== (user?.name ?? '');
-    const isAvatarChanged = !!avatarFile;
-
-    if (!isNameChanged && !isAvatarChanged) {
-      setSnackbar('No changes to update', SnackbarStatusEnum.ERROR);
-
-      return;
-    }
-
-    const formData = new FormData();
-
-    formData.append('name', trimmedName);
-
-    if (avatarFile) formData.append('avatar', avatarFile);
-
-    try {
-      const updated = await UserApi.updateProfile(formData);
-
-      updateUser(updated);
-
-      queryClient.invalidateQueries({ queryKey: ['userSessions'] });
-
-      setSnackbar('Profile updated successfully', SnackbarStatusEnum.SUCCESS);
-      onClose();
-    } catch (e) {
-      setSnackbar('Failed to update profile', SnackbarStatusEnum.ERROR);
-    }
-  };
-
   return (
-    <Modal
+    <WorkspaceModal
       isOpen={isOpen}
       onClose={onClose}
       onCancel={onClose}
-      onSubmit={handleSubmit(onSubmit)}
-      cancelText='Cancel'
-      submitText='Save'
-      title='Edit profile'
-      width='w-[28rem]'
+      onSubmit={onSubmit}
+      isSubmitting={isSubmitting}
+      title='Profile settings'
+      description='Make yourself at home. Manage how you appear in your workspace.'
+      icon={<FiUser size={21} aria-hidden='true' />}
+      submitText='Save changes'
+      className='max-w-[520px]'
     >
-      <div className='flex flex-col items-center gap-6'>
-        <div className='relative'>
+      <div className='mb-5 flex items-center gap-4 rounded-xl border border-border bg-muted/60 p-4'>
+        <div className='relative shrink-0'>
           {avatarPreview ? (
             <img
               src={isGoogleAvatar(avatarPreview) ? avatarPreview : `${process.env.NEXT_PUBLIC_API_URL}${avatarPreview}`}
               alt='Avatar preview'
-              className='h-28 w-28 rounded-full object-cover'
+              className='h-[72px] w-[72px] rounded-full border-4 border-white object-cover shadow-sm'
             />
           ) : (
-            <div className='h-28 w-28 rounded-full bg-gray-200 flex items-center justify-center'>
-              <AiOutlineCamera size={36} className='text-gray-500' />
-            </div>
+            <span className='flex h-[72px] w-[72px] items-center justify-center rounded-full border-4 border-white bg-accent text-2xl font-semibold text-primary'>
+              {user?.name?.charAt(0).toUpperCase() || <FiUser />}
+            </span>
           )}
-
           <button
             type='button'
-            onClick={chooseFile}
-            className='absolute bottom-0 right-0 bg-mainDark p-2 rounded-full hover:bg-mainDarkHover transition-colors'
+            aria-label='Change profile photo'
+            onClick={() => fileInputRef.current?.click()}
+            className='absolute -bottom-0.5 -right-0.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-primary text-white transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           >
-            <AiOutlineCamera size={18} className='text-white' />
+            <FiCamera size={12} aria-hidden='true' />
           </button>
-
-          <input ref={fileInputRef} type='file' accept='image/*' className='hidden' onChange={handleFileChange} />
         </div>
-
-        <InputField
-          id='name'
-          label='Name'
-          {...register('name', { required: 'Name is required' })}
-          error={errors.name}
+        <div>
+          <p className='text-base font-semibold'>Profile photo</p>
+          <p className='mt-1 text-sm leading-5 text-muted-foreground'>A familiar face for your collaborators.</p>
+          <Button
+            type='button'
+            variant='link'
+            size='sm'
+            onClick={() => fileInputRef.current?.click()}
+            className='mt-1 h-7 px-0 text-sm'
+          >
+            Upload a photo
+          </Button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='image/*'
+          aria-label='Upload profile photo'
+          className='hidden'
+          onChange={handleFileChange}
         />
       </div>
-    </Modal>
+      <div className='space-y-4'>
+        <div>
+          <label htmlFor='name' className='mb-2 block text-sm font-medium'>
+            Display name
+          </label>
+          <Input
+            id='name'
+            {...register('name', {
+              required: 'Name is required',
+              validate: (value) => !!value.trim() || 'Name is required',
+            })}
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'profile-name-error' : undefined}
+          />
+          {errors.name ? (
+            <p id='profile-name-error' role='alert' className='mt-2 text-sm text-destructive'>
+              {errors.name.message}
+            </p>
+          ) : (
+            <p className='mt-2 text-sm text-muted-foreground'>This is the name your collaborators will see.</p>
+          )}
+        </div>
+        <div>
+          <label htmlFor='profile-email' className='mb-2 block text-sm font-medium'>
+            Email address
+          </label>
+          <div className='relative'>
+            <FiMail
+              className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground'
+              size={14}
+              aria-hidden='true'
+            />
+            <Input
+              id='profile-email'
+              type='email'
+              value={user?.email ?? ''}
+              readOnly
+              className='bg-muted/70 pl-9 text-muted-foreground'
+            />
+          </div>
+          <p className='mt-2 text-sm text-muted-foreground'>The email connected to your account.</p>
+        </div>
+      </div>
+    </WorkspaceModal>
   );
 };
 

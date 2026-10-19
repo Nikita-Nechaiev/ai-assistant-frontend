@@ -5,14 +5,9 @@ import { DeltaStatic } from 'react-quill-new';
 
 import DocumentHeader from '../DocumentHeader';
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-jest.mock('@/ui/TruncateText', () => ({
-  __esModule: true,
-  default: ({ text }: any) => <span data-testid='title'>{text}</span>,
 }));
 
 const exportSpy = jest.fn();
@@ -59,7 +54,7 @@ describe('DocumentHeader', () => {
 
     mount('Doc A', delta);
 
-    expect(screen.getByTestId('title')).toHaveTextContent('Doc A');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Doc A');
     expect(exportSpy).toHaveBeenCalledWith('Doc A', delta);
   });
 
@@ -68,7 +63,7 @@ describe('DocumentHeader', () => {
 
     mount('Start', null, { onSave: save });
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename document' }));
 
     const input = screen.getByDisplayValue('Start');
 
@@ -76,7 +71,7 @@ describe('DocumentHeader', () => {
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(save).toHaveBeenCalledWith('Updated');
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename document' }));
 
     const input2 = screen.getByDisplayValue('Start');
 
@@ -90,7 +85,7 @@ describe('DocumentHeader', () => {
 
     mount('Title', null, { onSave: save });
 
-    fireEvent.click(screen.getByRole('button', { name: '' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename document' }));
 
     const input = screen.getByDisplayValue('Title');
 
@@ -106,7 +101,7 @@ describe('DocumentHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: /ai assistance/i }));
     expect(onAI).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /show versions/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Version history/i }));
     expect(onDrawer).toHaveBeenCalled();
   });
 });

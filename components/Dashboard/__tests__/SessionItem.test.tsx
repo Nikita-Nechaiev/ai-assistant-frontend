@@ -1,74 +1,40 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
-
-import { ISessionItem, ICollaborator } from '@/models/models';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import SessionItem from '../SessionItem';
 
-jest.mock('next/link', () => ({ href, children }: any) => (
-  <a href={href} data-testid='link'>
-    {children}
-  </a>
-));
-jest.mock('@/ui/TruncateText', () => ({
-  __esModule: true,
-  default: ({ text }: any) => <span data-testid='truncated'>{text}</span>,
-}));
-jest.mock('../../common/UserAvatarCircle', () => ({
-  __esModule: true,
-  default: ({ email }: any) => <span data-testid='avatar'>{email}</span>,
-}));
-
-const mkSession = (id: number, collaborators: number, lastInteracted: Date, createdAt: Date): ISessionItem => ({
-  id,
-  name: `Super Session ${id}`,
-  collaborators: Array.from(
-    { length: collaborators },
-    (_, i) =>
-      ({
-        id: i,
-        name: `User${i}`,
-        email: `user${i}@mail.com`,
-        avatar: `avatar${i}.png`,
-      }) as ICollaborator,
-  ),
-  lastInteracted,
-  createdAt,
+const session = (n = 3): any => ({
+  id: 1,
+  name: 'Project',
+  lastInteracted: '2026-10-17T12:00:00Z',
+  collaborators: Array.from({ length: n }, (_, id) => ({ id, name: `User ${id}`, avatar: `/uploads/${id}.png` })),
 });
 
-const dateISO = new Date('2025-07-10T00:00:00Z');
+it('links to the session, displays collaborator photos and a readable date', () => {
+  render(<SessionItem session={session()} />);
+  expect(screen.getByRole('link')).toHaveAttribute('href', '/session/1');
+  expect(screen.getByText('Project')).toBeInTheDocument();
+  expect(screen.getAllByRole('img')).toHaveLength(3);
+  expect(screen.getByText('17 Oct 2026')).toBeInTheDocument();
+});
+it('limits avatars to three, shows extra count and falls back to initials on image failure', () => {
+  render(<SessionItem session={session(6)} />);
+  expect(screen.getByText('+3')).toBeInTheDocument();
+  fireEvent.error(screen.getAllByRole('img')[0]);
+  expect(screen.getByLabelText('User 0')).toBeInTheDocument();
+});
+it('handles missing photos, unknown names and missing or invalid dates', () => {
+  const value = session(1);
 
-describe('SessionItem', () => {
-  it('renders main info, link and avatars (≤4)', () => {
-    const item = mkSession(42, 3, dateISO, dateISO);
+  value.collaborators[0] = { id: 1, name: '', avatar: '' };
+  value.lastInteracted = null;
 
-    render(<SessionItem session={item} index={0} />);
+  const { rerender } = render(<SessionItem session={value} />);
 
-    expect(screen.getByTestId('link')).toHaveAttribute('href', '/session/42');
-    expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByTestId('truncated')).toHaveTextContent(item.name);
-
-    expect(screen.getAllByTestId('avatar')).toHaveLength(3);
-    expect(screen.queryByText(/^\+\d+$/)).toBeNull();
-  });
-
-  it('renders extra-count bubble when collaborators > 4', () => {
-    const item = mkSession(55, 6, dateISO, dateISO);
-
-    render(<SessionItem session={item} index={4} />);
-
-    expect(screen.getAllByTestId('avatar')).toHaveLength(4);
-    expect(screen.getByText('+2')).toBeInTheDocument();
-  });
-
-  it('shows formatted last-interacted date', () => {
-    const item = mkSession(77, 2, dateISO, dateISO);
-
-    render(<SessionItem session={item} index={2} />);
-
-    const formatted = dateISO.toLocaleDateString();
-
-    expect(screen.getByText(new RegExp(`Last Interacted: ${formatted}`))).toBeInTheDocument();
-  });
+  expect(screen.getByText('?')).toBeInTheDocument();
+  expect(screen.getByText('1 member')).toBeInTheDocument();
+  expect(screen.getByText('No activity yet')).toBeInTheDocument();
+  rerender(<SessionItem session={{ ...value, lastInteracted: 'bad' }} />);
+  expect(screen.getByText('No activity yet')).toBeInTheDocument();
 });

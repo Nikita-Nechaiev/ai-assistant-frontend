@@ -18,7 +18,7 @@ export default function useDebouncedCallback<T extends (...args: any[]) => void>
         clearTimeout(timer.current);
       }
     };
-  }, []);
+  }, [fn, delay]);
 
   return callback;
 }

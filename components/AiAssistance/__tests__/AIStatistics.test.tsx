@@ -20,11 +20,9 @@ describe('AIStatistics', () => {
       />,
     );
 
-    const dateString = firstDate.toLocaleDateString();
-
-    expect(screen.getByText(dateString)).toBeInTheDocument();
+    expect(screen.getByText('Since 15 Mar 2024')).toBeInTheDocument();
     expect(screen.getByText(String(totalRequests))).toBeInTheDocument();
-    expect(screen.getByText(String(totalWordCount))).toBeInTheDocument();
+    expect(screen.getByText(totalWordCount.toLocaleString('en-US'))).toBeInTheDocument();
     expect(screen.getByText(mostUsedTool)).toBeInTheDocument();
   });
 });

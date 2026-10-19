@@ -1,23 +1,25 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, expect } from '@playwright/test';
 
+import { createAccount, expectDashboard, TestAccount } from '../helpers';
+
 interface AuthFixtures {
+  account: TestAccount;
   login: () => Promise<void>;
 }
 
 export const test = base.extend<AuthFixtures>({
-  login: async ({ page }, use) => {
-    const loginFn = async () => {
+  account: async ({ request }, use) => {
+    await use(await createAccount(request));
+  },
+  login: async ({ page, account }, use) => {
+    await use(async () => {
       await page.goto('/login');
-      await page.fill('input#email', process.env.E2E_EMAIL!);
-      await page.fill('input#password', process.env.E2E_PASSWORD!);
-      await page.click('button[type="submit"]');
-
-      await page.waitForURL('/dashboard');
-      await page.context().storageState({ path: 'e2e/.auth/user.json' });
-    };
-
-    await use(loginFn);
+      await page.getByLabel('Email address', { exact: true }).fill(account.email);
+      await page.getByLabel('Password', { exact: true }).fill(account.password);
+      await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+      await expectDashboard(page);
+    });
   },
 });
 

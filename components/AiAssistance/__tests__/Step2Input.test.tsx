@@ -31,7 +31,7 @@ describe('Step2Input', () => {
     render(
       <Step2Input
         selectedTool={mkTool()}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
@@ -41,8 +41,8 @@ describe('Step2Input', () => {
 
     const textarea = screen.getByPlaceholderText(/enter your text/i);
 
-    fireEvent.change(textarea, { target: { value: 'Hello' } });
-    expect(handlers.onInputChange).toHaveBeenCalledWith('Hello');
+    fireEvent.change(textarea, { target: { value: 'Hello there' } });
+    expect(handlers.onInputChange).toHaveBeenCalledWith('Hello there');
   });
 
   it('shows target-language input only when tool.requiresTargetLanguage', () => {
@@ -51,7 +51,7 @@ describe('Step2Input', () => {
     const { rerender } = render(
       <Step2Input
         selectedTool={mkTool({ requiresTargetLanguage: false })}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
@@ -59,19 +59,19 @@ describe('Step2Input', () => {
       />,
     );
 
-    expect(screen.queryByPlaceholderText(/enter target language/i)).toBeNull();
+    expect(screen.queryByPlaceholderText(/e.g. Spanish/i)).toBeNull();
 
     rerender(
       <Step2Input
         selectedTool={mkTool({ requiresTargetLanguage: true })}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
         {...handlers}
       />,
     );
-    expect(screen.getByPlaceholderText(/enter target language/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e.g. Spanish/i)).toBeInTheDocument();
   });
 
   it('calls onTargetLanguageChange when language input changes', () => {
@@ -80,7 +80,7 @@ describe('Step2Input', () => {
     render(
       <Step2Input
         selectedTool={mkTool({ requiresTargetLanguage: true })}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
@@ -88,7 +88,7 @@ describe('Step2Input', () => {
       />,
     );
 
-    fireEvent.change(screen.getByPlaceholderText(/enter target language/i), {
+    fireEvent.change(screen.getByPlaceholderText(/e.g. Spanish/i), {
       target: { value: 'French' },
     });
     expect(handlers.onTargetLanguageChange).toHaveBeenCalledWith('French');
@@ -100,7 +100,7 @@ describe('Step2Input', () => {
     const { rerender } = render(
       <Step2Input
         selectedTool={mkTool()}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
@@ -113,7 +113,7 @@ describe('Step2Input', () => {
     rerender(
       <Step2Input
         selectedTool={mkTool()}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={true}
@@ -135,7 +135,7 @@ describe('Step2Input', () => {
     const { rerender } = render(
       <Step2Input
         selectedTool={mkTool()}
-        inputValue=''
+        inputValue='Hello'
         targetLanguage=''
         isLoading={false}
         isOnDocumentPage={false}
@@ -143,10 +143,10 @@ describe('Step2Input', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change tool' }));
     expect(handlers.onGoBack).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run tool' }));
     expect(handlers.onSubmit).toHaveBeenCalled();
 
     rerender(
@@ -159,7 +159,7 @@ describe('Step2Input', () => {
         {...handlers}
       />,
     );
-    expect(screen.getByText(/processing the request/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /processing/i })).toBeDisabled();
+    expect(screen.getByText(/Working on your text/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Working on your text/i })).toBeDisabled();
   });
 });

@@ -16,12 +16,12 @@ jest.mock('@/hooks/sockets/useCollaborationSocket', () => ({
   useCollaborationSocket: () => hookReturn,
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/ui/LargeLoader', () => ({
+jest.mock('@/components/common/LargeLoader', () => ({
   __esModule: true,
   default: () => <div data-testid='loader' />,
 }));
@@ -77,12 +77,12 @@ describe('SessionLayout', () => {
     hookReturn = { socket: socketObj };
     renderLayout();
 
-    const fab = screen.getByRole('button', { name: '' });
+    const fab = screen.getByRole('button', { name: 'Session chat' });
 
     fireEvent.click(fab);
 
     expect(screen.getByTestId('chat')).toHaveAttribute('data-open', 'true');
-    expect(screen.queryByRole('button', { name: '' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Session chat' })).not.toBeInTheDocument();
 
     act(() => {
       fireEvent.click(screen.getByTestId('chat'));

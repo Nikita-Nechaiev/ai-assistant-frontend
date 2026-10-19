@@ -11,6 +11,7 @@ export default function useDocumentPage(documentId: number) {
 
   const versionDrawer = useVersionDrawer({
     versions,
+    documentId,
     applyVersion: actions.applyVersion,
   });
 
@@ -39,6 +40,7 @@ export default function useDocumentPage(documentId: number) {
     previewContent: versionDrawer.previewContent,
     isReadOnly: editor.isReadOnly,
     handleEditorChange: editor.handleEditorChange,
+    appendText: editor.appendText,
 
     handleSaveTitle: (title: string) => actions.changeDocumentTitle?.(title),
 

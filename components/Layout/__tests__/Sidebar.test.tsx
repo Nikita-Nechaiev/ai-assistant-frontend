@@ -42,6 +42,6 @@ describe('Sidebar', () => {
     const { container } = render(<Sidebar />);
     const aside = container.querySelector('aside');
 
-    expect(aside).toHaveClass('w-64', 'p-2', 'bg-gray-900', 'text-mainLight', 'flex', 'flex-col', 'fixed', 'h-full');
+    expect(aside).toHaveClass('w-[232px]', 'bg-white', 'flex', 'flex-col', 'fixed', 'inset-y-0');
   });
 });

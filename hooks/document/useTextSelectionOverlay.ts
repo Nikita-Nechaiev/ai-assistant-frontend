@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 
 import { AITool } from '@/models/models';
 import { SnackbarStatusEnum } from '@/models/enums';
@@ -24,36 +24,57 @@ export default function useTextSelectionOverlay({ selectedTool, targetLanguage, 
     }
 
     setModalOpen(false);
+    setSelectedText('');
+    setQlRect(null);
     setIsActive(true);
   }, [selectedTool, targetLanguage, setSnackbar, setModalOpen]);
 
-  const handleCancelTextSelection = useCallback(() => {
+  const clearSelection = useCallback(() => {
     window.getSelection()?.removeAllRanges();
     setIsActive(false);
-    setModalOpen(true);
+    setQlRect(null);
     setSelectedText('');
-  }, [setModalOpen]);
+  }, []);
+  const handleCancelTextSelection = useCallback(() => {
+    clearSelection();
+    setModalOpen(true);
+  }, [clearSelection, setModalOpen]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isActive) return;
 
-    const qlEditor = document.querySelector('.ql-editor') as HTMLElement | null;
+    const qlEditor = document.querySelector('.document-editor .ql-editor') as HTMLElement | null;
 
     if (!qlEditor) return;
 
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    qlEditor.scrollIntoView({ block: 'center', behavior: 'instant' });
 
-    const t = setTimeout(() => {
-      setQlRect(qlEditor.getBoundingClientRect());
-      qlEditor.style.position = 'relative';
-      qlEditor.style.zIndex = '1001';
-      lockBodyScroll();
-    }, 500);
+    const releaseScroll = lockBodyScroll();
+
+    const updateRect = () => {
+      const rect = qlEditor.getBoundingClientRect();
+
+      setQlRect((previous) =>
+        previous?.x === rect.x &&
+        previous.y === rect.y &&
+        previous.width === rect.width &&
+        previous.height === rect.height
+          ? previous
+          : rect,
+      );
+    };
+    const observer = new ResizeObserver(updateRect);
+
+    updateRect();
+    observer.observe(qlEditor);
+    window.addEventListener('resize', updateRect);
+    document.addEventListener('scroll', updateRect, true);
 
     return () => {
-      clearTimeout(t);
-      qlEditor.style.position = '';
-      qlEditor.style.zIndex = '';
+      releaseScroll();
+      observer.disconnect();
+      window.removeEventListener('resize', updateRect);
+      document.removeEventListener('scroll', updateRect, true);
     };
   }, [isActive]);
 
@@ -62,8 +83,11 @@ export default function useTextSelectionOverlay({ selectedTool, targetLanguage, 
 
     const handleSelectionChange = () => {
       const sel = window.getSelection();
+      const editor = document.querySelector('.document-editor .ql-editor');
 
-      setSelectedText(sel ? sel.toString().trim() : '');
+      if (!sel || !editor || !editor.contains(sel.anchorNode) || !editor.contains(sel.focusNode)) return;
+
+      setSelectedText(sel.toString().trim());
     };
 
     document.addEventListener('selectionchange', handleSelectionChange);
@@ -77,5 +101,6 @@ export default function useTextSelectionOverlay({ selectedTool, targetLanguage, 
     selectedText,
     handleActivateTextSelection,
     handleCancelTextSelection,
+    clearSelection,
   };
 }

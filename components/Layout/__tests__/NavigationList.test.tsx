@@ -39,20 +39,20 @@ describe('NavigationList', () => {
     expect(links).toHaveLength(navMock.length);
 
     navMock.forEach((item) => {
-      expect(screen.getByText(item.label)).toHaveAttribute('href', item.href);
+      expect(screen.getByRole('link', { name: item.label })).toHaveAttribute('href', item.href);
     });
   });
 
   it('adds the “active” class only for the current pathname', () => {
     const { rerender } = render(<NavigationList />);
 
-    expect(screen.getByText('Dashboard')).toHaveClass('bg-gray-700');
-    expect(screen.getByText('Sessions')).not.toHaveClass('bg-gray-700');
+    expect(screen.getByRole('link', { name: /Dashboard/ })).toHaveClass('bg-accent');
+    expect(screen.getByRole('link', { name: /Sessions/ })).not.toHaveClass('bg-accent');
 
     currentPath = '/sessions';
     rerender(<NavigationList />);
 
-    expect(screen.getByText('Sessions')).toHaveClass('bg-gray-700');
-    expect(screen.getByText('Dashboard')).not.toHaveClass('bg-gray-700');
+    expect(screen.getByRole('link', { name: /Sessions/ })).toHaveClass('bg-accent');
+    expect(screen.getByRole('link', { name: /Dashboard/ })).not.toHaveClass('bg-accent');
   });
 });

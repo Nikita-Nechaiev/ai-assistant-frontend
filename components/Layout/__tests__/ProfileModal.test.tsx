@@ -27,19 +27,7 @@ jest.mock('@/services/UserApi', () => ({
   UserApi: { updateProfile: (...a: any[]) => updateProfileApi(...a) },
 }));
 jest.mock('@/helpers/isGoogleAvatar', () => ({ isGoogleAvatar: () => true }));
-
-jest.mock('@/ui/Modal', () => ({
-  __esModule: true,
-  default: ({ isOpen, onClose, onSubmit, children }: any) =>
-    isOpen ? (
-      <div data-testid='modal'>
-        {children}
-        <button onClick={onSubmit}>Save</button>
-        <button onClick={onClose}>Cancel</button>
-      </div>
-    ) : null,
-}));
-jest.mock('@/ui/InputField', () => ({
+jest.mock('@/components/common/InputField', () => ({
   __esModule: true,
   default: (props: any) => <input {...props} />,
 }));
@@ -75,7 +63,7 @@ describe('ProfileModal', () => {
 
   it('shows error snackbar when nothing changed', () => {
     renderModal();
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByText('Save changes'));
 
     expect(setSnackbarMock).toHaveBeenCalledWith('No changes to update', SnackbarStatusEnum.ERROR);
     expect(updateProfileApi).not.toHaveBeenCalled();
@@ -89,14 +77,14 @@ describe('ProfileModal', () => {
 
     renderModal({ onClose });
 
-    fireEvent.change(screen.getByRole('textbox'), {
+    fireEvent.change(screen.getByLabelText('Display name'), {
       target: { value: 'Bob' },
     });
-    await act(async () => fireEvent.click(screen.getByText('Save')));
+    await act(async () => fireEvent.click(screen.getByText('Save changes')));
 
     expect(updateProfileApi).toHaveBeenCalled();
     expect(updateUserMock).toHaveBeenCalledWith(updatedUser);
-    expect(invalidateMock).toHaveBeenCalledWith({ queryKey: ['userSessions'] });
+    expect(invalidateMock).toHaveBeenCalledWith({ queryKey: ['user', 1, 'sessions'] });
     expect(setSnackbarMock).toHaveBeenCalledWith('Profile updated successfully', SnackbarStatusEnum.SUCCESS);
     expect(onClose).toHaveBeenCalled();
   });

@@ -1,7 +1,7 @@
 import './globals.css';
 import { headers } from 'next/headers';
 
-import Snackbar from '@/ui/Snackbar';
+import Snackbar from '@/components/common/Snackbar';
 import ReactQueryProvider from '@/providers/ReactQueryProvider';
 import ZustandHydration from '@/hydration/ZustandHydration';
 import { IUser } from '@/models/models';
@@ -64,7 +64,7 @@ export default async function RootLayout({
       <head>
         <link rel='icon' href='/favicon.ico' sizes='any' />
       </head>
-      <body className='h-screen w-screen bg-gray-100 flex justify-center items-center'>
+      <body className='min-h-dvh w-full bg-muted'>
         <ReactQueryProvider>
           <div className='relative h-full w-full'>
             <Snackbar />

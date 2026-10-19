@@ -20,6 +20,7 @@ const overlayMock = {
   isTextSelectionActive: false,
   qlRect: null,
   selectedText: '',
+  clearSelection: jest.fn(),
   handleCancelTextSelection: jest.fn(),
   handleActivateTextSelection: jest.fn(),
 };
@@ -31,16 +32,22 @@ jest.mock('../useTextSelectionOverlay', () => ({
 
 const aiModalMock = {
   isAiModalOpen: false,
+  reset: jest.fn(),
   open: jest.fn(),
   close: jest.fn(),
-  currentStep: 1,
-  setCurrentStep: jest.fn(),
-  nextStep: jest.fn(),
-  reset: jest.fn(),
-  selectedTool: null as any,
-  selectTool: jest.fn(),
-  targetLanguage: '',
-  setTargetLanguage: jest.fn(),
+  flow: {
+    currentStep: 1,
+    setCurrentStep: jest.fn(),
+    nextStep: jest.fn(),
+    reset: jest.fn(),
+    selectedTool: null as any,
+    selectTool: jest.fn(),
+    targetLanguage: '',
+    setTargetLanguage: jest.fn(),
+    inputValue: '',
+    setInputValue: jest.fn(),
+    goBack: jest.fn(),
+  },
   setIsOpen: jest.fn(),
 };
 
@@ -55,6 +62,7 @@ const makeUsage = (userId: number): IAiToolUsage => ({
   sentText: 'x',
   result: 'y',
   user: { id: userId } as any,
+  document: { id: 1 } as any,
   timestamp: new Date('2024-03-15T12:00:00Z'),
 });
 
@@ -62,8 +70,8 @@ describe('useDocumentAI', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     overlayMock.selectedText = '';
-    aiModalMock.selectedTool = null;
-    aiModalMock.targetLanguage = '';
+    aiModalMock.flow.selectedTool = null;
+    aiModalMock.flow.targetLanguage = '';
   });
 
   it('opens AI modal when new usage belongs to current user', async () => {
@@ -78,7 +86,7 @@ describe('useDocumentAI', () => {
     await waitFor(() => {
       expect(overlayMock.handleCancelTextSelection).toHaveBeenCalled();
       expect(aiModalMock.setIsOpen).toHaveBeenCalledWith(true);
-      expect(aiModalMock.setCurrentStep).toHaveBeenCalledWith(3);
+      expect(aiModalMock.flow.setCurrentStep).toHaveBeenCalledWith(3);
     });
   });
 
@@ -91,13 +99,13 @@ describe('useDocumentAI', () => {
       }),
     );
 
-    act(() => result.current.ai.handleCreateUsage(''));
-    expect(setSnackbarMock).toHaveBeenCalledWith('Input cannot be empty', SnackbarStatusEnum.ERROR);
+    act(() => result.current.ai.handleCreateUsage());
+    expect(setSnackbarMock).toHaveBeenCalledWith('Choose an AI tool first.', SnackbarStatusEnum.ERROR);
   });
 
   it('handleCreateUsage validates missing target language', () => {
     overlayMock.selectedText = 'hello';
-    aiModalMock.selectedTool = { endpoint: 'translate', requiresTargetLanguage: true };
+    aiModalMock.flow.selectedTool = { endpoint: 'translate', requiresTargetLanguage: true };
 
     const { result } = renderHook(() =>
       useDocumentAI({
@@ -115,7 +123,7 @@ describe('useDocumentAI', () => {
     const fn = jest.fn();
 
     overlayMock.selectedText = 'hello';
-    aiModalMock.selectedTool = { endpoint: 'rewrite', requiresTargetLanguage: false };
+    aiModalMock.flow.selectedTool = { endpoint: 'rewrite', requiresTargetLanguage: false };
 
     const { result } = renderHook(() =>
       useDocumentAI({
@@ -131,7 +139,7 @@ describe('useDocumentAI', () => {
       toolName: 'rewrite',
       text: 'hello',
       documentId: 5,
-      targetLanguage: '',
+      targetLanguage: undefined,
     });
   });
 });

@@ -32,8 +32,8 @@ jest.mock('@/hooks/sockets/useDashboardSocket', () => ({
   }),
 }));
 
-jest.mock('@/ui/LargeLoader', () => () => <div data-testid='loader'>loader</div>);
-jest.mock('@/ui/Snackbar', () => () => <div data-testid='snackbar'>snackbar</div>);
+jest.mock('@/components/common/LargeLoader', () => () => <div data-testid='loader'>loader</div>);
+jest.mock('@/components/common/Snackbar', () => () => <div data-testid='snackbar'>snackbar</div>);
 jest.mock('../Sidebar', () => () => <aside data-testid='sidebar'>sidebar</aside>);
 jest.mock('../MainContent', () => ({ children }: { children: React.ReactNode }) => (
   <main data-testid='content'>{children}</main>

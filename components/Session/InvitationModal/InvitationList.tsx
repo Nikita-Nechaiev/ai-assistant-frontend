@@ -1,3 +1,7 @@
+import React from 'react';
+
+import { FiMail } from 'react-icons/fi';
+
 import { IInvitation } from '@/models/models';
 import { PermissionEnum } from '@/models/enums';
 
@@ -8,20 +12,28 @@ const InvitationList: React.FC<{
   invitations: IInvitation[];
   changeInvitationRole: (invitationId: number, newRole: PermissionEnum) => void;
 }> = ({ invitations, changeInvitationRole, deleteInvitation }) => (
-  <div className='mt-6'>
-    <h3 className='text-lg font-semibold mb-3'>Existing Invitations</h3>
-    <div className='flex flex-col space-y-2'>
-      {invitations.length > 0 ? (
+  <div className='mt-4 border-t border-border pt-4'>
+    <div className='mb-3 flex items-center justify-between'>
+      <h3 className='text-sm font-semibold'>Existing invitations</h3>
+      <span className='rounded-md bg-secondary px-2 py-0.5 text-[13px] text-muted-foreground'>
+        {invitations.length}
+      </span>
+    </div>
+    <div className='space-y-2'>
+      {invitations.length ? (
         invitations.map((invitation) => (
           <InvitationItem
-            deleteInvitation={deleteInvitation}
             key={invitation.id}
+            deleteInvitation={deleteInvitation}
             invitation={invitation}
             changeInvitationRole={changeInvitationRole}
           />
         ))
       ) : (
-        <p className='text-sm text-gray-500'>No invitations found.</p>
+        <div className='flex items-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground'>
+          <FiMail size={16} aria-hidden='true' />
+          No invitations yet. Start with someone you work with.
+        </div>
       )}
     </div>
   </div>

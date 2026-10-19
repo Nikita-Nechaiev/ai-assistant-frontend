@@ -2,7 +2,7 @@
 
 import { useContext } from 'react';
 
-import LargeLoader from '@/ui/LargeLoader';
+import LargeLoader from '@/components/common/LargeLoader';
 import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
 import DocumentList from '@/components/Session/DocumentSection/DocumentList';
 
@@ -13,9 +13,5 @@ export default function SessionPage() {
     return <LargeLoader />;
   }
 
-  return (
-    <div className='py-4'>
-      <DocumentList socket={sessionContext.socket} sessionId={sessionContext.sessionId} />
-    </div>
-  );
+  return <DocumentList socket={sessionContext.socket} sessionId={sessionContext.sessionId} />;
 }

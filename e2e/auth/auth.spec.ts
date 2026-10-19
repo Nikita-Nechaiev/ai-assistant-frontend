@@ -1,42 +1,45 @@
+import { expectDashboard } from '../helpers';
 import { test, expect } from './fixtures';
 
 test.describe('Auth flow', () => {
-  test('Success login redirects to dashboard', async ({ page }) => {
-    await page.goto('/login');
+  test('Success login redirects to dashboard', async ({ page, account, login }) => {
+    await login();
+    await expectDashboard(page);
+    await expect(page.getByText(account.email, { exact: true })).toBeVisible();
 
-    await page.fill('#email', process.env.E2E_EMAIL!);
-    await page.fill('#password', process.env.E2E_PASSWORD!);
+    const cookies = await page.context().cookies();
 
-    await Promise.all([page.waitForURL('**/dashboard', { timeout: 15_000 }), page.click('button[type="submit"]')]);
-
-    await expect(page.getByRole('heading', { name: 'Sessions', level: 1 })).toBeVisible();
+    expect(cookies.map(({ name }) => name)).toEqual(expect.arrayContaining(['accessToken', 'refreshToken']));
   });
 
-  test('Wrong password shows error toast', async ({ page }) => {
+  test('Wrong password shows error toast', async ({ page, account }) => {
     await page.goto('/login');
+    await page.getByLabel('Email address', { exact: true }).fill(account.email);
+    await page.getByLabel('Password', { exact: true }).fill('Wrong123!');
 
-    await page.fill('#email', process.env.E2E_EMAIL!);
-    await page.fill('#password', 'Wrong123!');
-
-    await Promise.all([
-      page.waitForResponse((r) => r.url().includes('/auth/login') && r.status() === 401),
-      page.click('button[type="submit"]'),
+    const [response] = await Promise.all([
+      page.waitForResponse((res) => res.url().endsWith('/auth/login') && res.request().method() === 'POST'),
+      page.getByRole('button', { name: 'Sign in', exact: true }).click(),
     ]);
 
-    await expect(page.getByText(/invalid email or password!/i)).toBeVisible({ timeout: 15_000 });
+    expect(response.status()).toBe(401);
+    await expect(page.getByTestId('snackbar-root')).toContainText('Invalid email or password!');
     await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeEnabled();
   });
 
-  test('Redirects to /dashboard when accessToken already present', async ({ browser, login }) => {
+  test('Redirects to /dashboard when accessToken already present', async ({ browser, page, login }) => {
     await login();
 
-    const ctx = await browser.newContext({ storageState: 'e2e/.auth/user.json' });
-    const p = await ctx.newPage();
+    const context = await browser.newContext({ storageState: await page.context().storageState() });
 
-    await p.goto('/login');
-    await p.waitForURL('**/dashboard', { timeout: 15_000 });
-    await expect(p.getByRole('heading', { name: 'Sessions', level: 1 })).toBeVisible();
+    try {
+      const authenticatedPage = await context.newPage();
 
-    await ctx.close();
+      await authenticatedPage.goto('/login');
+      await expectDashboard(authenticatedPage);
+    } finally {
+      await context.close();
+    }
   });
 });

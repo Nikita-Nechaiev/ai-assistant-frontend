@@ -6,43 +6,21 @@ import { aiToolList } from '@/helpers/aiToolsList';
 
 import Step1SelectTool from '../Step1SelectTool';
 
-const backMock = jest.fn();
+it('shows available tools and lets the user select a tool', () => {
+  const select = jest.fn();
 
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({ back: backMock }),
-}));
+  render(<Step1SelectTool onToolSelect={select} isOnDocumentPage={false} />);
 
-describe('Step1SelectTool', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  for (const tool of aiToolList) expect(screen.getByRole('button', { name: tool.name })).toBeInTheDocument();
 
-  it('renders "Go Back" button and calls router.back()', () => {
-    render(<Step1SelectTool onToolSelect={jest.fn()} isOnDocumentPage={false} />);
-
-    const goBackBtn = screen.getByText(/go back/i);
-
-    expect(goBackBtn).toBeInTheDocument();
-
-    fireEvent.click(goBackBtn);
-    expect(backMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('hides "Go Back" button when on document page', () => {
-    render(<Step1SelectTool onToolSelect={jest.fn()} isOnDocumentPage={true} />);
-    expect(screen.queryByText(/go back/i)).toBeNull();
-  });
-
-  it('renders all AI-tool buttons and passes tool to onToolSelect', () => {
-    const selectMock = jest.fn();
-
-    render(<Step1SelectTool onToolSelect={selectMock} isOnDocumentPage={false} />);
-
-    const buttons = screen.getAllByRole('button').filter((b) => b.textContent && !/Go Back/i.test(b.textContent));
-
-    expect(buttons.length).toBe(aiToolList.length);
-
-    fireEvent.click(buttons[0]);
-    expect(selectMock).toHaveBeenCalledWith(aiToolList[0]);
-  });
+  fireEvent.click(screen.getByRole('button', { name: aiToolList[0].name }));
+  expect(select).toHaveBeenCalledWith(aiToolList[0]);
+});
+it('filters tools without navigating away', () => {
+  render(<Step1SelectTool onToolSelect={jest.fn()} isOnDocumentPage />);
+  fireEvent.click(screen.getByRole('button', { name: 'Translation' }));
+  expect(screen.getByRole('button', { name: 'Translation' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.queryByRole('button', { name: aiToolList[0].name })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'All tools' }));
+  expect(screen.getByRole('button', { name: aiToolList[0].name })).toBeInTheDocument();
 });

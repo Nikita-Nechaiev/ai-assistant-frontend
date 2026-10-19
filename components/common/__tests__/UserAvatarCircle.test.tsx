@@ -12,7 +12,7 @@ jest.mock('@/helpers/isGoogleAvatar', () => ({
   isGoogleAvatar: (...args: any) => isGoogleAvatarMock(...args),
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: any) => <>{children}</>,
 }));

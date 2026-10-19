@@ -31,7 +31,7 @@ describe('InvitationForm', () => {
     expect(emailInput).toBeInTheDocument();
     expect(emailInput).toHaveAttribute('type', 'email');
 
-    const select = screen.getByLabelText(/select role/i) as HTMLSelectElement;
+    const select = screen.getByLabelText(/Access level/i) as HTMLSelectElement;
     const options = Array.from(select.options).map((o) => o.value);
 
     expect(options).toEqual(expect.arrayContaining([PermissionEnum.READ, PermissionEnum.EDIT]));
@@ -41,7 +41,7 @@ describe('InvitationForm', () => {
   it('updates role value when user selects another option', () => {
     renderForm();
 
-    const select = screen.getByLabelText(/select role/i) as HTMLSelectElement;
+    const select = screen.getByLabelText(/Access level/i) as HTMLSelectElement;
 
     expect(select.value).toBe(PermissionEnum.READ);
 

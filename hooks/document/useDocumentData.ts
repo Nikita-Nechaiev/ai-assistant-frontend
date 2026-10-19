@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { IDocument, IVersion, IAiToolUsage } from '@/models/models';
 import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
-import { lockBodyScroll } from '@/helpers/scrollLock';
+import { useUserStore } from '@/store/useUserStore';
+import { invalidateAiQueries } from '@/lib/queryInvalidation';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 
@@ -23,10 +25,16 @@ export default function useDocumentData(documentId: number) {
   if (!ctx) throw new Error('useDocumentData must be used inside <SessionLayout>');
 
   const { socket, sessionId } = ctx;
+  const queryClient = useQueryClient();
+  const userId = useUserStore((state) => state.user?.id);
+  const [scopeId, setScopeId] = useState(documentId);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
+  const isValidId = Number.isSafeInteger(documentId) && documentId > 0;
+  const isCurrent = scopeId === documentId;
+  const pendingAi = useRef(false);
 
   const [currentDocument, setCurrentDocument] = useState<IDocument | null>(null);
   const [versions, setVersions] = useState<IVersion[]>([]);
-  const [aiUsageList, setAiUsageList] = useState<IAiToolUsage[]>([]);
   const [isFetchingAI, setFetchingAI] = useState(false);
   const [newAiUsage, setNewAiUsage] = useState<IAiToolUsage | null>(null);
 
@@ -34,48 +42,75 @@ export default function useDocumentData(documentId: number) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!socket || !documentId) return;
+    setScopeId(documentId);
+    setCurrentDocument(null);
+    setVersions([]);
+    setNewAiUsage(null);
+    setFetchingAI(false);
+    pendingAi.current = false;
+    setStatus(isValidId ? 'loading' : 'unavailable');
 
-    socket.emit('getDocument', { documentId });
-    socket.emit('getVersions', { documentId });
-    socket.emit('getDocumentAiUsage', { documentId });
+    if (!socket || !isValidId) return;
+
+    let isActive = true;
 
     const onDocData = (doc: IDocument) => {
-      if (doc.id !== documentId) return;
+      if (!isActive || doc.id !== documentId) return;
 
       setCurrentDocument(doc);
+      setStatus('ready');
     };
     const onDocUpdated = onDocData;
 
-    const onVersions = (list: IVersion[]) => setVersions(list.filter((v) => v.document.id === documentId));
+    const onVersions = (list: IVersion[]) => {
+      if (!isActive) return;
+
+      const matching = list.filter((v) => v.document.id === documentId);
+
+      if (!matching.length) return;
+
+      setVersions(matching);
+    };
 
     const onVersionAdd = (v: IVersion) => {
-      if (v.document.id !== documentId) return;
+      if (!isActive || v.document.id !== documentId) return;
 
       setVersions((prev) => [v, ...prev]);
     };
 
-    const onAiUsage = (list: IAiToolUsage[]) => setAiUsageList(list.filter((u) => u.document?.id === documentId));
-
     const onAiCreated = (usage: IAiToolUsage) => {
-      if (usage.document?.id !== documentId) return;
+      if (!isActive || usage.document?.id !== documentId) return;
 
-      lockBodyScroll();
-      setAiUsageList((prev) => [...prev, usage]);
+      if (usage.user?.id !== userId) return;
+
+      invalidateAiQueries(queryClient, userId);
+      pendingAi.current = false;
       setNewAiUsage(usage);
       setFetchingAI(false);
     };
 
-    const onError = () => setFetchingAI(false);
+    const onError = () => {
+      if (isActive) {
+        pendingAi.current = false;
+        setFetchingAI(false);
+      }
+    };
+    const onInvalidDocument = (payload: { documentId: number }) => {
+      if (!isActive || payload.documentId !== documentId) return;
+
+      setCurrentDocument(null);
+      setStatus('unavailable');
+    };
 
     const onDocumentDeleted = ({ documentId: id }: { documentId: number }) => {
-      if (documentId === id) {
+      if (isActive && documentId === id) {
         setSnackbar('Editor has deleted this document.', SnackbarStatusEnum.WARNING);
 
         router.replace(`/session/${sessionId}`);
       }
     };
 
+    socket.on('invalidDocument', onInvalidDocument);
     socket.on('documentData', onDocData);
     socket.on('documentUpdated', onDocUpdated);
     socket.on('lastEditedDocument', onDocUpdated);
@@ -83,14 +118,18 @@ export default function useDocumentData(documentId: number) {
     socket.on('versionsData', onVersions);
     socket.on('versionCreated', onVersionAdd);
 
-    socket.on('documentAiUsage', onAiUsage);
     socket.on('documentAiUsageCreated', onAiCreated);
 
     socket.on('documentDeleted', onDocumentDeleted);
 
     socket.on('error', onError);
 
+    socket.emit('getDocument', { documentId });
+    socket.emit('getVersions', { documentId });
+
     return () => {
+      isActive = false;
+      socket.off('invalidDocument', onInvalidDocument);
       socket.off('documentData', onDocData);
       socket.off('documentUpdated', onDocUpdated);
       socket.off('lastEditedDocument', onDocUpdated);
@@ -98,14 +137,13 @@ export default function useDocumentData(documentId: number) {
       socket.off('versionsData', onVersions);
       socket.off('versionCreated', onVersionAdd);
 
-      socket.off('documentAiUsage', onAiUsage);
       socket.off('documentAiUsageCreated', onAiCreated);
 
       socket.off('documentDeleted', onDocumentDeleted);
 
       socket.off('error', onError);
     };
-  }, [socket, documentId, setSnackbar, router, sessionId]);
+  }, [socket, documentId, isValidId, setSnackbar, router, sessionId, queryClient, userId]);
 
   const changeDocumentTitle = useCallback(
     (newTitle: string) =>
@@ -138,22 +176,24 @@ export default function useDocumentData(documentId: number) {
 
   const createDocumentAiUsage = useCallback(
     (params: Omit<DocumentAiUsageParams, 'documentId'>) => {
-      if (!socket) return;
+      if (!socket || !isValidId || pendingAi.current) return;
 
+      pendingAi.current = true;
       setFetchingAI(true);
       socket.emit('createDocumentAiUsage', { ...params, documentId });
     },
-    [socket, documentId],
+    [socket, documentId, isValidId],
   );
 
-  const isLoadingPage = !currentDocument;
+  const currentStatus = !isValidId ? 'unavailable' : isCurrent ? status : 'loading';
+  const isLoadingPage = currentStatus === 'loading';
 
   return {
-    currentDocument,
-    versions,
-    aiUsageList,
-    newAiUsage,
-    isFetchingAI,
+    status: currentStatus,
+    currentDocument: isCurrent ? currentDocument : null,
+    versions: isCurrent ? versions : [],
+    newAiUsage: isCurrent ? newAiUsage : null,
+    isFetchingAI: isCurrent && isFetchingAI,
 
     isLoadingPage,
 

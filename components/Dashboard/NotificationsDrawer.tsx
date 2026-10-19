@@ -2,9 +2,10 @@
 
 import React from 'react';
 
-import { IoMdClose } from 'react-icons/io';
+import { FiBell, FiCheckCircle } from 'react-icons/fi';
 
-import Drawer from '@/ui/Drawer';
+import Drawer from '@/components/common/Drawer';
+import PanelHeader from '@/components/common/PanelHeader';
 import { IInvitation } from '@/models/models';
 
 import NotificationItem from './NotificationItem';
@@ -25,37 +26,40 @@ const NotificationsDrawer = ({
   onAccept,
   onMarkAsRead,
   onDelete,
-}: NotificationsDrawerProps) => {
-  return (
-    <Drawer initialWidth={50} minWidth={25} maxWidth={70} isOpen={isOpen} handleClose={handleClose}>
-      <div className='flex flex-col h-full'>
-        <div className='sticky top-0 z-10 p-4 border-b border-gray-200 flex justify-between items-center bg-white'>
-          <button onClick={handleClose} className='text-gray-500 hover:text-gray-700'>
-            <IoMdClose size={30} />
-          </button>
-          <h2 className='text-xl font-semibold'>Notifications</h2>
+}: NotificationsDrawerProps) => (
+  <Drawer initialWidth={34} minWidth={28} maxWidth={65} isOpen={isOpen} handleClose={handleClose} title='Notifications'>
+    <PanelHeader
+      title='Notifications'
+      description='Invitations and updates, all in one place.'
+      icon={<FiBell size={19} aria-hidden='true' />}
+      onClose={handleClose}
+    />
+    <div className='min-h-0 flex-1 overflow-y-auto bg-muted/50 p-5'>
+      {!invitations.length ? (
+        <div className='flex h-full min-h-[200px] flex-col items-center justify-center px-6 text-center'>
+          <span className='mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-white text-primary'>
+            <FiCheckCircle size={24} strokeWidth={1.5} aria-hidden='true' />
+          </span>
+          <h3 className='text-base font-semibold'>You're all caught up.</h3>
+          <p className='mt-2 max-w-[260px] text-sm leading-6 text-muted-foreground'>
+            New session invitations will appear here when someone invites you to collaborate.
+          </p>
         </div>
-
-        <div className='overflow-y-auto p-4 flex-1'>
-          {invitations.length === 0 ? (
-            <p>No new notifications</p>
-          ) : (
-            <ul className='space-y-4'>
-              {invitations.map((invitation) => (
-                <NotificationItem
-                  key={invitation.id}
-                  invitation={invitation}
-                  onAccept={onAccept}
-                  onMarkAsRead={onMarkAsRead}
-                  onDelete={onDelete}
-                />
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </Drawer>
-  );
-};
+      ) : (
+        <ul className='space-y-3'>
+          {invitations.map((invitation) => (
+            <NotificationItem
+              key={invitation.id}
+              invitation={invitation}
+              onAccept={onAccept}
+              onMarkAsRead={onMarkAsRead}
+              onDelete={onDelete}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+  </Drawer>
+);
 
 export default NotificationsDrawer;

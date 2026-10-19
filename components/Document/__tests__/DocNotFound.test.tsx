@@ -5,8 +5,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import DocNotFound from '../DocNotFound';
 
 const replaceMock = jest.fn();
+let sessionId: string | undefined = '777';
 
 jest.mock('next/navigation', () => ({
+  useParams: () => ({ id: sessionId }),
   useRouter: () => ({
     replace: replaceMock,
   }),
@@ -16,7 +18,7 @@ describe('DocNotFound', () => {
   beforeEach(() => replaceMock.mockClear());
 
   it('renders message & button', () => {
-    render(<DocNotFound id={123} />);
+    render(<DocNotFound />);
 
     expect(screen.getByRole('heading', { name: /document not found/i })).toBeInTheDocument();
     expect(
@@ -29,16 +31,17 @@ describe('DocNotFound', () => {
   });
 
   it('navigates to session on click', () => {
-    render(<DocNotFound id={777} />);
+    render(<DocNotFound />);
 
     fireEvent.click(screen.getByRole('button', { name: /return to session/i }));
     expect(replaceMock).toHaveBeenCalledWith('/session/777');
   });
 
   it('works when id is undefined', () => {
-    render(<DocNotFound id={undefined} />);
+    sessionId = undefined;
+    render(<DocNotFound />);
 
     fireEvent.click(screen.getByRole('button', { name: /return to session/i }));
-    expect(replaceMock).toHaveBeenCalledWith('/session/undefined');
+    expect(replaceMock).toHaveBeenCalledWith('/dashboard');
   });
 });

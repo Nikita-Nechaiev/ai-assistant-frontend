@@ -5,10 +5,11 @@ import type { AITool } from '@/models/models';
 
 import useTextSelectionOverlay from '../useTextSelectionOverlay';
 
-const lockSpy = jest.fn();
+const unlockSpy = jest.fn();
+const lockSpy = jest.fn(() => unlockSpy);
 
 jest.mock('@/helpers/scrollLock', () => ({
-  lockBodyScroll: (...a: any[]) => lockSpy(...a),
+  lockBodyScroll: () => lockSpy(),
 }));
 
 const toolNeedsLang = { requiresTargetLanguage: true } as AITool;
@@ -18,7 +19,12 @@ const qlDiv = document.createElement('div');
 
 qlDiv.className = 'ql-editor';
 qlDiv.getBoundingClientRect = () => new DOMRect(0, 0, 100, 50);
-document.body.appendChild(qlDiv);
+
+const editorWrapper = document.createElement('div');
+
+editorWrapper.className = 'document-editor';
+editorWrapper.appendChild(qlDiv);
+document.body.appendChild(editorWrapper);
 
 describe('useTextSelectionOverlay', () => {
   beforeAll(() => {
@@ -112,6 +118,8 @@ describe('useTextSelectionOverlay', () => {
     act(() => result.current.handleActivateTextSelection());
 
     const selSpy = jest.spyOn(window, 'getSelection').mockReturnValue({
+      anchorNode: qlDiv,
+      focusNode: qlDiv,
       toString: () => 'Hello',
       removeAllRanges: () => {},
     } as any);

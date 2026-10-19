@@ -38,21 +38,21 @@ describe('RoleDropdown', () => {
   it('shows correct actions depending on current role', () => {
     const { unmount } = renderMenu(mkInvitation(PermissionEnum.READ));
 
-    expect(screen.queryByText(/change to read/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/change to edit/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Change to Viewer/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Change to Editor/i)).toBeInTheDocument();
 
     unmount();
 
     renderMenu(mkInvitation(PermissionEnum.EDIT));
 
-    expect(screen.getByText(/change to read/i)).toBeInTheDocument();
-    expect(screen.queryByText(/change to edit/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/Change to Viewer/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Change to Editor/i)).not.toBeInTheDocument();
   });
 
   it('fires changeInvitationRole and closes menu', () => {
     const { changeInvitationRole, closeMenu } = renderMenu(mkInvitation(PermissionEnum.READ));
 
-    fireEvent.click(screen.getByText(/change to edit/i));
+    fireEvent.click(screen.getByText(/Change to Editor/i));
 
     expect(changeInvitationRole).toHaveBeenCalledWith(77, PermissionEnum.EDIT);
     expect(closeMenu).toHaveBeenCalled();

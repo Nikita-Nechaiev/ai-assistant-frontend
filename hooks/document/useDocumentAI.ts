@@ -4,6 +4,7 @@ import { useUserStore } from '@/store/useUserStore';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 import { IAiToolUsage } from '@/models/models';
+import { validateAiInput } from '@/helpers/validateAiInput';
 
 import useAiModal from './useAiModal';
 import useTextSelectionOverlay from './useTextSelectionOverlay';
@@ -17,7 +18,7 @@ interface Params {
     targetLanguage?: string;
   }) => void;
   newAiUsage: IAiToolUsage | null;
-  setNewAiUsage?: (val: IAiToolUsage | null) => void;
+  setNewAiUsage?: (value: IAiToolUsage | null) => void;
   isFetchingAI: boolean;
 }
 
@@ -30,81 +31,76 @@ export default function useDocumentAI({
 }: Params) {
   const { user: currentUser } = useUserStore();
   const { setSnackbar } = useSnackbarStore();
-
-  const aiModal = useAiModal({ setNewAiUsage });
+  const modal = useAiModal({ setNewAiUsage });
+  const { flow, setIsOpen, reset } = modal;
+  const { setCurrentStep } = flow;
   const overlay = useTextSelectionOverlay({
-    selectedTool: aiModal.selectedTool,
-    targetLanguage: aiModal.targetLanguage,
+    selectedTool: flow.selectedTool,
+    targetLanguage: flow.targetLanguage,
     setSnackbar,
-    setModalOpen: aiModal.setIsOpen,
+    setModalOpen: setIsOpen,
   });
+  const { handleCancelTextSelection, clearSelection } = overlay;
 
   useEffect(() => {
-    if (newAiUsage && newAiUsage.user?.id === currentUser?.id) {
-      overlay.handleCancelTextSelection();
-      aiModal.setIsOpen(true);
-      aiModal.setCurrentStep(3);
+    reset();
+    setIsOpen(false);
+    clearSelection();
+  }, [documentId, reset, setIsOpen, clearSelection]);
+  useEffect(() => {
+    if (newAiUsage?.document?.id === documentId && newAiUsage.user?.id === currentUser?.id) {
+      handleCancelTextSelection();
+      setIsOpen(true);
+      setCurrentStep(3);
     }
-  }, [newAiUsage, currentUser?.id, aiModal, overlay, setNewAiUsage]);
+  }, [newAiUsage, documentId, currentUser?.id, handleCancelTextSelection, setIsOpen, setCurrentStep]);
 
-  const handleCreateUsage = useCallback(
-    (manualInput = '') => {
-      const textToSend = overlay.selectedText || manualInput;
+  const handleCreateUsage = useCallback(() => {
+    if (isFetchingAI) return;
 
-      if (!textToSend.trim()) {
-        setSnackbar('Input cannot be empty', SnackbarStatusEnum.ERROR);
+    const input = validateAiInput(flow.selectedTool, overlay.selectedText || flow.inputValue, flow.targetLanguage);
 
-        return;
-      }
+    if (!input.ok) {
+      setSnackbar(input.message, SnackbarStatusEnum.ERROR);
 
-      if (aiModal.selectedTool?.requiresTargetLanguage && !aiModal.targetLanguage) {
-        setSnackbar('Please specify a target language', SnackbarStatusEnum.ERROR);
+      return;
+    }
 
-        return;
-      }
-
-      if (!aiModal.selectedTool) return;
-
-      createDocumentAiUsage?.({
-        toolName: aiModal.selectedTool.endpoint,
-        text: textToSend,
-        documentId,
-        targetLanguage: aiModal.targetLanguage,
-      });
-    },
-    [
-      overlay.selectedText,
-      aiModal.selectedTool,
-      aiModal.targetLanguage,
+    createDocumentAiUsage?.({
+      toolName: input.value.tool.endpoint,
+      text: input.value.text,
       documentId,
-      createDocumentAiUsage,
-      setSnackbar,
-    ],
-  );
+      targetLanguage: input.value.targetLanguage,
+    });
+  }, [
+    isFetchingAI,
+    flow.selectedTool,
+    flow.inputValue,
+    flow.targetLanguage,
+    overlay.selectedText,
+    documentId,
+    createDocumentAiUsage,
+    setSnackbar,
+  ]);
 
   return {
     overlay: {
       isActive: overlay.isTextSelectionActive,
       qlRect: overlay.qlRect,
       selectedText: overlay.selectedText,
-      handleCancel: overlay.handleCancelTextSelection,
+      handleCancel: handleCancelTextSelection,
     },
     ai: {
-      isOpen: aiModal.isAiModalOpen,
-      open: aiModal.open,
-      close: aiModal.close,
-      currentStep: aiModal.currentStep,
-      setCurrentStep: aiModal.setCurrentStep,
-      nextStep: aiModal.nextStep,
-      reset: aiModal.reset,
-      selectedTool: aiModal.selectedTool,
-      selectTool: aiModal.selectTool,
-      targetLanguage: aiModal.targetLanguage,
-      setTargetLanguage: aiModal.setTargetLanguage,
+      flow,
+      isOpen: modal.isAiModalOpen,
+      open: modal.open,
+      close: modal.close,
+      reset,
+      currentStep: flow.currentStep,
       handleActivateSelection: overlay.handleActivateTextSelection,
       handleCreateUsage,
       isLoading: isFetchingAI,
-      result: newAiUsage ? newAiUsage.result : 'Error. No result to display',
+      result: newAiUsage?.result ?? 'Error. No result to display',
     },
   };
 }

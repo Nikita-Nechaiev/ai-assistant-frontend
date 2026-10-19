@@ -2,8 +2,7 @@
 
 import React, { ReactNode, useCallback, useState } from 'react';
 
-import LargeLoader from '@/ui/LargeLoader';
-import Snackbar from '@/ui/Snackbar';
+import LargeLoader from '@/components/common/LargeLoader';
 import { useUserStore } from '@/store/useUserStore';
 import { NotificationStatusEnum } from '@/models/enums';
 import { useCollaborationSocket } from '@/hooks/sockets/useCollaborationSocket';
@@ -16,9 +15,10 @@ import NotificationsDrawer from '../Dashboard/NotificationsDrawer';
 
 interface MainLayoutProps {
   children: ReactNode;
+  title?: string;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = ({ children, title = 'Workspace' }: MainLayoutProps) => {
   const { user } = useUserStore();
   const { socket } = useCollaborationSocket({});
 
@@ -46,15 +46,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   if (!user?.id) return <LargeLoader />;
 
   return (
-    <div className='flex h-screen overflow-clip'>
+    <div className='saas-shell flex h-dvh overflow-hidden bg-muted text-foreground'>
       <Sidebar />
 
-      <div className='ml-64 flex-1 flex flex-col'>
-        <Header invitations={invitations} handleToggleDrawwer={toggleDrawer} />
+      <div className='ml-[232px] flex min-w-0 flex-1 flex-col'>
+        <Header title={title} invitations={invitations} handleToggleDrawwer={toggleDrawer} />
 
         <MainContent>{children}</MainContent>
-
-        <Snackbar />
       </div>
 
       <NotificationsDrawer

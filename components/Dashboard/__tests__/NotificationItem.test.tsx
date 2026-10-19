@@ -47,13 +47,11 @@ describe('NotificationItem', () => {
       <NotificationItem invitation={baseInvitation} onAccept={onAccept} onMarkAsRead={onRead} onDelete={onDelete} />,
     );
 
-    expect(screen.getByText('New Invitation')).toBeInTheDocument();
+    expect(screen.getByText('Editor access')).toBeInTheDocument();
     expect(screen.getByText(baseInvitation.inviterEmail)).toBeInTheDocument();
     expect(screen.getByText(baseInvitation.session.name)).toBeInTheDocument();
 
-    const rootItem = screen.getAllByRole('listitem')[0];
-
-    expect(rootItem.querySelector('div.bg-red-500')).toBeInTheDocument();
+    expect(screen.getByLabelText('Unread')).toBeInTheDocument();
   });
 
   it('marks as read when list item clicked', () => {
@@ -61,9 +59,7 @@ describe('NotificationItem', () => {
       <NotificationItem invitation={baseInvitation} onAccept={onAccept} onMarkAsRead={onRead} onDelete={onDelete} />,
     );
 
-    const rootItem = screen.getAllByRole('listitem')[0];
-
-    fireEvent.click(rootItem);
+    fireEvent.click(screen.getByRole('button', { name: 'Mark as read' }));
     expect(onRead).toHaveBeenCalledWith(baseInvitation.id);
   });
 
@@ -72,7 +68,7 @@ describe('NotificationItem', () => {
       <NotificationItem invitation={baseInvitation} onAccept={onAccept} onMarkAsRead={onRead} onDelete={onDelete} />,
     );
 
-    fireEvent.click(screen.getByTitle('Delete'));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete invitation' }));
     expect(onDelete).toHaveBeenCalledWith(baseInvitation.id);
     expect(onRead).not.toHaveBeenCalled();
   });

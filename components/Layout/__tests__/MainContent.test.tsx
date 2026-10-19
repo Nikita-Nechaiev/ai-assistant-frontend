@@ -16,6 +16,6 @@ describe('MainContent', () => {
 
     expect(screen.getByText('inside-content')).toBeInTheDocument();
 
-    expect(main).toHaveClass('flex-1', 'pl-[40px]', 'pt-[100px]', 'overflow-auto', 'bg-white');
+    expect(main).toHaveClass('flex-1', 'px-9', 'py-8', 'overflow-auto', 'bg-muted');
   });
 });

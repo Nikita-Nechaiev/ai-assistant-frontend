@@ -1,25 +1,32 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { FiArrowLeft, FiGrid, FiSearch } from 'react-icons/fi';
 
-import AppLogo from '@/components/common/AppLogo';
+import AppState from '@/components/common/AppState';
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   const router = useRouter();
 
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen bg-mainLight text-mainDark text-center'>
-      <AppLogo isLink={false} />
-
-      <h1 className='text-4xl font-bold'>Page Not Found (404)</h1>
-      <p className='text-lg text-mainGray mt-2'>The page you are looking for doesn't exist.</p>
-
-      <button
-        className='mt-6 text-lg text-blue-600 underline hover:text-blue-800 transition'
-        onClick={() => router.back()}
-      >
+    <AppState
+      eyebrow='Error 404'
+      title='This page is out of reach.'
+      description='The link may have changed, or the page may no longer exist. Head back to your workspace to keep going.'
+      icon={<FiSearch size={28} aria-hidden='true' />}
+    >
+      <Button variant='outline' onClick={() => router.back()} className='h-10 text-sm'>
+        <FiArrowLeft aria-hidden='true' />
         Go back
-      </button>
-    </div>
+      </Button>
+      <Button asChild className='h-10 text-sm shadow-blue'>
+        <Link href='/dashboard'>
+          <FiGrid aria-hidden='true' />
+          Open dashboard
+        </Link>
+      </Button>
+    </AppState>
   );
 }

@@ -1,11 +1,13 @@
-import React from 'react';
+'use client';
 
-import { FaEllipsisV } from 'react-icons/fa';
+import React, { useState } from 'react';
+
+import { FiMoreHorizontal, FiFileText } from 'react-icons/fi';
 import Link from 'next/link';
 
+import { Button } from '@/components/ui/button';
 import { IDocument } from '@/models/models';
 import { sliceRichContent } from '@/helpers/sliceRichContent';
-import TruncatedText from '@/ui/TruncateText';
 
 import DocumentPreview from './DocumentPreview';
 import PopupMenu from './PopupMenu';
@@ -17,55 +19,58 @@ interface DocumentItemProps {
 }
 
 const DocumentItem: React.FC<DocumentItemProps> = ({ document, sessionId, onEditTitle }) => {
-  const [isShowPopup, setShowPopup] = React.useState<number | null>(null);
-
-  const handleEllipsisClick = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    setShowPopup(document.id);
-  };
-
-  const closePopup = () => {
-    setShowPopup(null);
-  };
+  const [isShowPopup, setShowPopup] = useState(false);
+  const created = new Date(document.createdAt);
 
   return (
-    <div className='relative h-[268.8px] w-[201.6px] bg-gray-100 rounded-sm shadow-md cursor-pointer flex flex-col justify-between'>
+    <article className='group relative rounded-xl border border-border bg-white shadow-card transition-shadow hover:shadow-md'>
       <Link
         href={`/session/${sessionId}/document/${document.id}`}
-        className='block object-cover grow shrink border-b border-gray-200'
+        aria-label={`Open ${document.title}`}
+        className='block overflow-hidden rounded-t-xl border-b border-border bg-muted/70 px-7 pt-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
       >
         <DocumentPreview richContent={sliceRichContent(document.richContent)} />
       </Link>
-
-      <div className='flex justify-between items-center px-3 py-2 rounded-b-md bg-white'>
-        <div className='flex flex-col'>
-          <TruncatedText text={document.title} maxLength={17} className='text-gray-700 font-medium' />
-          <span className='text-gray-500 text-sm'>
-            {new Date(document.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </span>
+      <div className='flex items-center justify-between gap-2 px-4 py-4'>
+        <div className='min-w-0'>
+          <Link
+            href={`/session/${sessionId}/document/${document.id}`}
+            className='flex min-w-0 items-center gap-2 text-base font-medium transition-colors hover:text-primary'
+          >
+            <FiFileText size={14} className='shrink-0 text-primary/80' aria-hidden='true' />
+            <span title={document.title} className='truncate'>
+              {document.title}
+            </span>
+          </Link>
+          <p className='mt-1.5 pl-[22px] text-[13px] text-muted-foreground'>
+            Created{' '}
+            {Number.isNaN(created.getTime())
+              ? 'recently'
+              : new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(created)}
+          </p>
         </div>
-        <button
-          className='rounded-full duration-300 text-gray-500 hover:text-gray-700 hover:bg-gray-200 p-2 cursor-pointer'
-          onClick={(e) => handleEllipsisClick(e)}
+        <Button
+          variant='ghost'
+          size='icon'
+          aria-label={`Actions for ${document.title}`}
+          aria-expanded={isShowPopup}
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => setShowPopup((open) => !open)}
+          className='h-8 w-8 shrink-0 text-muted-foreground'
         >
-          <FaEllipsisV className='w-5 h-5' />
-        </button>
+          <FiMoreHorizontal aria-hidden='true' />
+        </Button>
       </div>
-
-      {isShowPopup === document.id && (
+      {isShowPopup && (
         <PopupMenu
           documentTitle={document.title}
           richContent={document.richContent}
           onEditTitle={onEditTitle}
           documentId={document.id}
-          onClose={closePopup}
+          onClose={() => setShowPopup(false)}
         />
       )}
-    </div>
+    </article>
   );
 };
 

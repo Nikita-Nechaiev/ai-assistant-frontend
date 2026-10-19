@@ -58,11 +58,12 @@ function redirectToLogin(req: NextRequest) {
   return res;
 }
 
-async function fetchCurrentUser(accessToken: string) {
+async function fetchCurrentUser(accessToken: string, signal?: AbortSignal) {
   try {
     const meResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
       method: 'GET',
       cache: 'no-store',
+      signal,
       headers: {
         Cookie: `accessToken=${accessToken}`,
       },
@@ -70,14 +71,59 @@ async function fetchCurrentUser(accessToken: string) {
 
     if (!meResponse.ok) return null;
 
-    return meResponse.json();
+    return await meResponse.json();
   } catch {
     return null;
   }
 }
 
+async function nextWithOptionalUser(req: NextRequest) {
+  const accessToken = req.cookies.get('accessToken')?.value;
+
+  if (accessToken) {
+    const user = await fetchCurrentUser(accessToken, AbortSignal.timeout(2500));
+
+    if (user) return nextWithUser(req, user);
+  }
+
+  const refreshToken = req.cookies.get('refreshToken')?.value;
+
+  if (refreshToken) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`, {
+        method: 'POST',
+        cache: 'no-store',
+        signal: AbortSignal.timeout(2500),
+        headers: { Cookie: `refreshToken=${refreshToken}` },
+      });
+
+      if (response.ok) {
+        const { accessToken: newAccessToken, user } = (await response.json()) as RefreshPayload;
+
+        if (newAccessToken && user) {
+          const res = nextWithUser(req, user);
+
+          setAuthCookie(res, 'accessToken', newAccessToken);
+
+          return res;
+        }
+      }
+    } catch {
+      // The public landing page remains available when the auth service is unavailable.
+    }
+  }
+
+  const requestHeaders = new Headers(req.headers);
+
+  requestHeaders.delete('x-user');
+
+  return NextResponse.next({ request: { headers: requestHeaders } });
+}
+
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
+
+  if (url.pathname === '/' || url.pathname === '/welcome') return nextWithOptionalUser(req);
 
   if (
     url.pathname === '/login' ||
@@ -152,6 +198,8 @@ export const config = {
     '/ai-assistance/:path*',
     '/faq',
     // public routes we also want to check
+    '/',
+    '/welcome',
     '/login',
     '/registration',
     '/forgot-password',

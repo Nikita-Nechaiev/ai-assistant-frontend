@@ -6,11 +6,6 @@ import TextSelectionOverlay from '../TextSelectionOverlay';
 
 const rect = new DOMRect(100, 100, 300, 50);
 
-const findMask = () =>
-  Array.from(document.body.querySelectorAll('div')).find(
-    (el) => (el as HTMLElement).style.backgroundColor === 'rgba(0, 0, 0, 0.6)',
-  ) as HTMLElement;
-
 describe('TextSelectionOverlay', () => {
   const onCancel = jest.fn();
   const onSubmit = jest.fn();
@@ -33,16 +28,15 @@ describe('TextSelectionOverlay', () => {
       />,
     );
 
-  it('fades-in after mount', () => {
+  it('covers the viewport with a rounded hole and supports Escape', () => {
     mount();
 
-    const mask = findMask();
+    const mask = document.querySelector('path[fill-rule="evenodd"]');
 
-    expect(mask).toBeTruthy();
-    expect(mask.style.opacity).toBe('0');
-
-    act(() => jest.advanceTimersByTime(20));
-    expect(mask.style.opacity).toBe('1');
+    expect(mask).toHaveAttribute('pointer-events', 'visiblePainted');
+    expect(mask?.getAttribute('d')).toContain('Q');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('Cancel button triggers onCancel', () => {
