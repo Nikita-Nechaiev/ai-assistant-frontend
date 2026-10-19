@@ -4,6 +4,6 @@
   "semi": true,
   "printWidth": 120,
   "tabWidth": 2,
-  "arrowParents": "always",
+  "arrowParens": "always",
   "jsxSingleQuote": true
 }

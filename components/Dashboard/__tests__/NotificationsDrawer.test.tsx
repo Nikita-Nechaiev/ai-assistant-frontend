@@ -7,7 +7,7 @@ import { IInvitation } from '@/models/models';
 
 import NotificationsDrawer from '../NotificationsDrawer';
 
-jest.mock('@/ui/Drawer', () => ({
+jest.mock('@/components/common/Drawer', () => ({
   __esModule: true,
   default: ({ isOpen, children, handleClose }: any) =>
     isOpen ? (
@@ -65,7 +65,7 @@ describe('NotificationsDrawer', () => {
     );
 
     expect(screen.getByText('Notifications')).toBeInTheDocument();
-    expect(screen.getByText('No new notifications')).toBeInTheDocument();
+    expect(screen.getByText("You're all caught up.")).toBeInTheDocument();
   });
 
   it('renders NotificationItem for each invitation', () => {

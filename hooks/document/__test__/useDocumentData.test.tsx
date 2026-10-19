@@ -1,8 +1,10 @@
 import React from 'react';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act } from '@testing-library/react';
 
 import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
+import { useUserStore } from '@/store/useUserStore';
 import { SnackbarStatusEnum } from '@/models/enums';
 
 import useDocumentData from '../useDocumentData';
@@ -35,12 +37,6 @@ class MockSocket {
   }
 }
 
-const lockSpy = jest.fn();
-
-jest.mock('@/helpers/scrollLock', () => ({
-  lockBodyScroll: (...a: any[]) => lockSpy(...a),
-}));
-
 const setSnackbar = jest.fn();
 
 jest.mock('@/store/useSnackbarStore', () => () => ({ setSnackbar }));
@@ -50,7 +46,9 @@ const ver = (id: number, dId: number) => ({ id, document: { id: dId } }) as any;
 const usage = (dId: number) => ({ id: 99, document: { id: dId }, result: 'ok', user: { id: 1 } }) as any;
 
 const withCtx = (socket: MockSocket, children: React.ReactNode) => (
-  <SessionContext.Provider value={{ socket: socket as any, sessionId: 123 }}>{children}</SessionContext.Provider>
+  <QueryClientProvider client={new QueryClient()}>
+    <SessionContext.Provider value={{ socket: socket as any, sessionId: 123 }}>{children}</SessionContext.Provider>
+  </QueryClientProvider>
 );
 
 describe('useDocumentData', () => {
@@ -60,6 +58,7 @@ describe('useDocumentData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     socket = new MockSocket();
+    useUserStore.setState({ user: { id: 1 } as any });
   });
 
   it('emits initial get* events on mount', () => {
@@ -69,7 +68,6 @@ describe('useDocumentData', () => {
 
     expect(socket.emit).toHaveBeenCalledWith('getDocument', { documentId });
     expect(socket.emit).toHaveBeenCalledWith('getVersions', { documentId });
-    expect(socket.emit).toHaveBeenCalledWith('getDocumentAiUsage', { documentId });
   });
 
   it('sets currentDocument on documentData / documentUpdated / lastEditedDocument', () => {
@@ -97,22 +95,21 @@ describe('useDocumentData', () => {
 
     act(() => socket.trigger('versionCreated', ver(5, documentId)));
     expect(result.current.versions.map((v) => v.id)).toEqual([5, 1]);
+    act(() => socket.trigger('versionsData', []));
+    act(() => socket.trigger('versionsData', [ver(2, 999)]));
+    expect(result.current.versions.map((v) => v.id)).toEqual([5, 1]);
   });
 
-  it('handles AI usage list + creation event (positive and negative branches)', () => {
+  it('accepts AI results only for the current document and user', () => {
     const { result } = renderHook(() => useDocumentData(documentId), {
       wrapper: ({ children }) => withCtx(socket, children),
     });
 
-    act(() => socket.trigger('documentAiUsage', [usage(documentId), usage(999)]));
-    expect(result.current.aiUsageList.length).toBe(1);
-
     act(() => socket.trigger('documentAiUsageCreated', usage(999)));
-    expect(result.current.aiUsageList.length).toBe(1);
+    expect(result.current.newAiUsage).toBeNull();
 
     act(() => socket.trigger('documentAiUsageCreated', usage(documentId)));
-    expect(lockSpy).toHaveBeenCalled();
-    expect(result.current.aiUsageList.length).toBe(2);
+
     expect(result.current.newAiUsage?.id).toBe(99);
     expect(result.current.isFetchingAI).toBe(false);
   });

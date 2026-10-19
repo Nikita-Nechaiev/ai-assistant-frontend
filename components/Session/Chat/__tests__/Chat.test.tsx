@@ -4,12 +4,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import Chat from '../Chat';
 
-jest.mock('@/ui/Drawer', () => ({
+jest.mock('@/components/common/Drawer', () => ({
   __esModule: true,
   default: ({ children }: any) => <div data-testid='drawer'>{children}</div>,
 }));
 
-jest.mock('@/ui/InputField', () => ({
+jest.mock('@/components/common/InputField', () => ({
   __esModule: true,
   default: (props: any) => <input data-testid='chat-input' {...props} value={props.value} />,
 }));
@@ -69,7 +69,7 @@ describe('Chat drawer', () => {
   it('calls sendMessage and clears input on “Send” button', () => {
     render(<Chat isOpen socket={fakeSocket} handleClose={jest.fn()} />);
 
-    const input = screen.getByTestId<HTMLInputElement>('chat-input');
+    const input = screen.getByRole<HTMLInputElement>('textbox');
 
     fireEvent.change(input, { target: { value: 'New message' } });
     expect(input.value).toBe('New message');
@@ -83,10 +83,10 @@ describe('Chat drawer', () => {
   it('sends message on Enter key press', () => {
     render(<Chat isOpen socket={fakeSocket} handleClose={jest.fn()} />);
 
-    const input = screen.getByTestId<HTMLInputElement>('chat-input');
+    const input = screen.getByRole<HTMLInputElement>('textbox');
 
     fireEvent.change(input, { target: { value: 'Enter msg' } });
-    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.submit(input.closest('form')!);
 
     expect(sendMessageMock).toHaveBeenCalledWith('Enter msg');
   });

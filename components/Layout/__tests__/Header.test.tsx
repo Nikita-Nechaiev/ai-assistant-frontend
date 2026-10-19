@@ -7,6 +7,8 @@ import { NotificationStatusEnum } from '@/models/enums';
 
 import Header from '../Header';
 
+jest.mock('next/navigation', () => ({ usePathname: () => '/dashboard' }));
+
 jest.mock('@/store/useUserStore', () => ({
   useUserStore: () => ({
     user: { id: 1, name: 'Alice', email: 'alice@mail.com', avatar: 'alice.png' },
@@ -80,7 +82,7 @@ describe('Header component', () => {
 
     renderHeader([], toggleMock);
 
-    const notifBtn = screen.getAllByRole('button').find((btn) => !btn.getAttribute('aria-label')) as HTMLButtonElement;
+    const notifBtn = screen.getByRole('button', { name: 'Notifications' });
 
     fireEvent.click(notifBtn);
     expect(toggleMock).toHaveBeenCalledTimes(1);

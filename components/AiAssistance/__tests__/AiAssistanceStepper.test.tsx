@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import { SnackbarStatusEnum } from '@/models/enums';
 import { AITool } from '@/models/models';
@@ -41,7 +41,7 @@ jest.mock('@/store/useSnackbarStore', () => () => ({
 }));
 
 Object.assign(navigator, {
-  clipboard: { writeText: jest.fn() },
+  clipboard: { writeText: jest.fn().mockResolvedValue(undefined) },
 });
 
 const baseProps = (): Omit<AiAsssistanceStepperProps, 'children'> => ({
@@ -50,17 +50,23 @@ const baseProps = (): Omit<AiAsssistanceStepperProps, 'children'> => ({
   onRestart: jest.fn(),
   isLoading: false,
   result: 'RESULT',
-  currentStep: 1,
-  setCurrentStep: jest.fn(),
-  handleActivateTextSelection: jest.fn(),
-  setTargetLanguage: jest.fn(),
-  targetLanguage: '',
-  selectedTool: null as AITool | null,
-  setSelectedTool: jest.fn(),
+  flow: {
+    currentStep: 1,
+    setCurrentStep: jest.fn(),
+    selectedTool: null,
+    selectTool: jest.fn(),
+    inputValue: '',
+    setInputValue: jest.fn(),
+    targetLanguage: '',
+    setTargetLanguage: jest.fn(),
+    reset: jest.fn(),
+    goBack: jest.fn(),
+  },
 });
 
-const setup = (override?: Partial<ReturnType<typeof baseProps>>) => {
-  const props = { ...baseProps(), ...override };
+const setup = (override?: Partial<ReturnType<typeof baseProps>['flow']>) => {
+  const base = baseProps();
+  const props = { ...base, flow: { ...base.flow, ...override } };
 
   return {
     ...props,
@@ -82,8 +88,7 @@ describe('AiAssistanceStepper', () => {
 
     fireEvent.click(btn);
 
-    expect(ctx.setSelectedTool).toHaveBeenCalledWith(expect.objectContaining({ name: 'MockTool' }));
-    expect(ctx.setCurrentStep).toHaveBeenCalledWith(2);
+    expect(ctx.flow.selectTool).toHaveBeenCalledWith(expect.objectContaining({ name: 'MockTool' }));
   });
 
   it('renders Step 2 and calls onSubmit', () => {
@@ -107,17 +112,19 @@ describe('AiAssistanceStepper', () => {
     ctx.render();
 
     fireEvent.click(screen.getByText('mock-back'));
-    expect(ctx.setCurrentStep).toHaveBeenCalledWith(1);
+    expect(ctx.flow.goBack).toHaveBeenCalled();
   });
 
-  it('copies result and shows snackbar on Step 3 copy', () => {
+  it('copies result and shows snackbar on Step 3 copy', async () => {
     const ctx = setup({ currentStep: 3 });
 
     ctx.render();
 
     fireEvent.click(screen.getByText('mock-copy'));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('RESULT');
-    expect(setSnackbarMock).toHaveBeenCalledWith('Result copied to clipboard', SnackbarStatusEnum.SUCCESS);
+    await waitFor(() =>
+      expect(setSnackbarMock).toHaveBeenCalledWith('Result copied to clipboard', SnackbarStatusEnum.SUCCESS),
+    );
   });
 
   it('restarts flow from Step 3', () => {
@@ -127,9 +134,6 @@ describe('AiAssistanceStepper', () => {
 
     fireEvent.click(screen.getByText('mock-restart'));
 
-    expect(ctx.setCurrentStep).toHaveBeenCalledWith(1);
-    expect(ctx.setSelectedTool).toHaveBeenCalledWith(null);
-    expect(ctx.setTargetLanguage).toHaveBeenCalledWith('');
     expect(ctx.onRestart).toHaveBeenCalled();
   });
 });

@@ -1,90 +1,51 @@
 import { test, expect } from '@playwright/test';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-
-function randomEmail() {
-  return `e2e_${Date.now()}@example.com`;
-}
-
-test.beforeAll(async ({ request }) => {
-  const res = await request.get(`${API_URL}/health`, { timeout: 5000 });
-
-  expect(res.ok()).toBeTruthy();
-});
+import { API_URL, createAccount, expectDashboard, uniqueEmail } from '../helpers';
 
 test('New user can register and reach dashboard', async ({ page }) => {
-  await page.goto('/registration');
+  const email = uniqueEmail('registration');
 
-  await expect(page.locator('#name')).toBeVisible();
-  await expect(page.locator('#email')).toBeVisible();
+  await page.goto('/registration');
   await expect(page.locator('#password')).toHaveAttribute('type', 'password');
   await expect(page.locator('#confirmPassword')).toHaveAttribute('type', 'password');
+  await page.locator('#name').fill('E2E User');
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill('Password1!');
+  await page.locator('#confirmPassword').fill('Password1!');
 
-  await page.fill('#name', 'E2E User');
+  const submit = page.getByRole('button', { name: 'Create account', exact: true });
 
-  const email = randomEmail();
+  await expect(submit).toBeEnabled();
 
-  await page.fill('#email', email);
-  await page.fill('#password', 'Password1!');
-  await page.fill('#confirmPassword', 'Password1!');
-
-  await expect(page.locator('#email')).toHaveValue(email);
-  await expect(page.locator('button[type="submit"]')).toBeEnabled();
-
-  const [res] = await Promise.all([
-    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/auth/register')),
-    page.click('button[type="submit"]'),
+  const [response] = await Promise.all([
+    page.waitForResponse((res) => res.url() === `${API_URL}/auth/register` && res.request().method() === 'POST'),
+    submit.click(),
   ]);
 
-  expect([200, 201]).toContain(res.status());
-
-  const ct = res.headers()['content-type'] || '';
-
-  if (ct.includes('application/json')) {
-    const body = await res.json().catch(() => null);
-
-    expect(body).not.toBeNull();
-  }
-
-  await page.waitForURL('**/dashboard', { timeout: 15000 });
-  await expect(page.getByRole('heading', { level: 1, name: 'Sessions' })).toBeVisible();
+  expect(response.status()).toBe(201);
+  expect((await response.json()).user).toMatchObject({ email, name: 'E2E User' });
+  await expectDashboard(page);
+  await expect(page.getByText(email, { exact: true })).toBeVisible();
 });
 
 test('Duplicate e-mail shows “already exists” error', async ({ page, request }) => {
-  const dupEmail = `dup_${Date.now()}@example.com`;
-  const seed = await request.post(`${API_URL}/auth/register`, {
-    multipart: { name: 'Dup User', email: dupEmail, password: 'Password1!' },
-  });
-
-  expect([200, 201, 409]).toContain(seed.status());
+  const account = await createAccount(request);
 
   await page.goto('/registration');
+  await page.locator('#name').fill(account.name);
+  await page.locator('#email').fill(account.email);
+  await page.locator('#password').fill(account.password);
+  await page.locator('#confirmPassword').fill(account.password);
 
-  await page.fill('#name', 'Dup User');
-  await page.fill('#email', dupEmail);
-  await page.fill('#password', 'Password1!');
-  await page.fill('#confirmPassword', 'Password1!');
-
-  await expect(page.locator('button[type="submit"]')).toBeEnabled();
-
-  const [res] = await Promise.all([
-    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('/auth/register')),
-    page.click('button[type="submit"]'),
+  const submit = page.getByRole('button', { name: 'Create account', exact: true });
+  const [response] = await Promise.all([
+    page.waitForResponse((res) => res.url() === `${API_URL}/auth/register` && res.request().method() === 'POST'),
+    submit.click(),
   ]);
 
-  expect([200, 201, 409]).toContain(res.status());
-
-  const ct = res.headers()['content-type'] || '';
-
-  if (ct.includes('application/json')) {
-    const body = await res.json().catch(() => null);
-
-    if (body && typeof body === 'object' && 'message' in body) {
-      expect(String((body as any).message).toLowerCase()).toMatch(/already|exist/);
-    }
-  }
-
-  await expect(page).toHaveURL(/\/registration/);
-  await expect(page.getByText(/user with this email already exists!/i)).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('button[type="submit"]')).toBeEnabled();
+  expect(response.status()).toBe(409);
+  expect((await response.json()).message).toBe('User with this email already exists');
+  await expect(page).toHaveURL(/\/registration$/);
+  await expect(page.getByTestId('snackbar-root')).toContainText('User with this email already exists!');
+  await expect(submit).toBeEnabled();
 });

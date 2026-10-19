@@ -34,7 +34,7 @@ jest.mock('@/helpers/documentHelpers', () => ({
   convertRichContentToDelta: (html: string, quill: unknown) => toDeltaSpy(html, quill),
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -74,7 +74,7 @@ describe('PopupMenu', () => {
 
   it('navigates on Edit click', () => {
     renderMenu();
-    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(screen.getByText('Open document'));
     expect(pushSpy).toHaveBeenCalledWith('/session/123/document/42');
   });
 
@@ -87,7 +87,7 @@ describe('PopupMenu', () => {
 
   it('deletes document', () => {
     renderMenu();
-    fireEvent.click(screen.getByText('Delete'));
+    fireEvent.click(screen.getByText('Delete document'));
     expect(deleteSpy).toHaveBeenCalledWith(42);
   });
 

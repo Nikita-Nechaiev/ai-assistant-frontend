@@ -23,8 +23,8 @@ describe('DocumentPreview', () => {
 
     const wrapper = screen.getByText('preview').parentElement!.parentElement!;
 
-    expect(wrapper).toHaveClass('h-[209px]');
+    expect(wrapper).toHaveClass('h-[170px]');
     expect(wrapper).toHaveClass('overflow-hidden');
-    expect(wrapper).toHaveClass('rounded-t-md');
+    expect(wrapper).toHaveClass('rounded-t');
   });
 });

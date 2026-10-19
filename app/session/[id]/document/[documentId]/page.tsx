@@ -1,67 +1,124 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useContext, useEffect } from 'react';
 import 'react-quill-new/dist/quill.snow.css';
 
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
+import { FiArrowLeft, FiZap } from 'react-icons/fi';
 
 import VersionDrawer from '@/components/Document/VersionDrawer';
 import DocumentHeader from '@/components/Document/DocumentHeader';
+import DocumentHelp from '@/components/Document/DocumentHelp';
 import TextSelectionOverlay from '@/components/Document/TextSelectionOverlay';
 import AiAsssistanceStepper from '@/components/AiAssistance/AiAssistanceStepper';
-import Modal from '@/ui/Modal';
-import LargeLoader from '@/ui/LargeLoader';
+import DocumentLoading from '@/components/Document/DocumentLoading';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import DocNotFound from '@/components/Document/DocNotFound';
 import useDocumentPage from '@/hooks/document/useDocumentPage';
 import { formats, modules } from '@/helpers/quilConfig';
-import { useSessionStore } from '@/store/useSessionStore';
+import { SessionContext } from '@/components/Session/SessionLayout/SessionLayout';
+import useSnackbarStore from '@/store/useSnackbarStore';
+import { SnackbarStatusEnum } from '@/models/enums';
 
-const ReactQuill = dynamic(() => import('react-quill-new'), {
-  ssr: false,
-  loading: () => <LargeLoader />,
-});
+const ReactQuill = memo(
+  dynamic(() => import('react-quill-new'), {
+    ssr: false,
+    loading: () => <DocumentLoading editorOnly />,
+  }),
+);
+
+const readOnlyModules = { toolbar: false };
 
 export default function DocumentPage() {
   const { documentId: id } = useParams<{ documentId: string }>();
 
-  const { session: userSession } = useSessionStore();
-
-  const documentId = parseInt(id, 10);
+  const documentId = /^\d+$/.test(id) ? Number(id) : NaN;
 
   const data = useDocumentPage(documentId);
+  const { setSnackbar } = useSnackbarStore();
+  const sessionContext = useContext(SessionContext);
+  const setDocumentBreadcrumb = sessionContext?.setDocumentBreadcrumb;
+  const currentDocumentId = data.currentDocument?.id;
+  const currentDocumentTitle = data.currentDocument?.title;
 
-  if (data.isLoadingPage) return <LargeLoader />;
+  useEffect(() => {
+    if (currentDocumentId !== undefined && currentDocumentTitle !== undefined) {
+      setDocumentBreadcrumb?.({ id: currentDocumentId, title: currentDocumentTitle });
+    }
+  }, [currentDocumentId, currentDocumentTitle, setDocumentBreadcrumb]);
 
-  if (!data.currentDocument) return <DocNotFound id={documentId} />;
+  if (data.isLoadingPage) return <DocumentLoading />;
+
+  if (!data.currentDocument) return <DocNotFound />;
+
+  const handlePasteInDocument = () => {
+    if (data.ai.isLoading || data.ai.currentStep !== 3 || !data.appendText(data.ai.result)) return;
+
+    data.ai.close();
+    setSnackbar('AI text added to the end of your document.', SnackbarStatusEnum.SUCCESS);
+  };
 
   return (
-    <div className='flex flex-col items-center p-10 pt-0'>
+    <div className='mx-auto max-w-[1440px] space-y-8 px-10'>
       <DocumentHeader
         onTitleSave={data.handleSaveTitle}
         documentTitle={data.currentDocument.title}
         onOpenAiModal={data.ai.open}
         onOpenVersionDrawer={data.versionDrawer.open}
         quillDelta={data.quillDelta}
+        lastUpdated={data.currentDocument.lastUpdated}
+        versionCount={data.versions.length}
       />
 
-      <div className='w-[900px] h-[80vh] bg-white p-4 border border-gray-300 rounded mb-4'>
-        <ReactQuill
-          key={data.currentDocument.id + JSON.stringify(userSession)}
-          theme='snow'
-          modules={data.isReadOnly ? { toolbar: false } : modules}
-          formats={formats}
-          value={data.previewContent || data.localContent}
-          onChange={data.handleEditorChange}
-          className='h-full whitespace-pre-wrap'
-          readOnly={data.isReadOnly}
-        />
-      </div>
+      <section className='mx-auto max-w-[960px]' aria-label='Document editor'>
+        <div className='mb-2 flex justify-start'>
+          <DocumentHelp />
+        </div>
+        {data.previewContent && (
+          <div
+            className='mb-4 flex items-center justify-between gap-5 rounded-xl border border-blue-100 bg-accent px-5 py-3'
+            role='status'
+          >
+            <div>
+              <p className='text-sm font-semibold text-primary'>You are previewing a saved version</p>
+              <p className='mt-1 text-sm text-muted-foreground'>Return to the current document to continue editing.</p>
+            </div>
+            <Button variant='outline' size='sm' onClick={data.versionDrawer.close} className='shrink-0 gap-2 text-sm'>
+              <FiArrowLeft size={13} aria-hidden='true' />
+              Back to current
+            </Button>
+          </div>
+        )}
+        <div className='rounded-xl border border-border bg-white shadow-[0_4px_24px_rgba(20,42,75,0.04)]'>
+          <ReactQuill
+            key={data.currentDocument.id}
+            theme='snow'
+            modules={data.isReadOnly ? readOnlyModules : modules}
+            formats={formats}
+            value={data.previewContent || data.localContent}
+            onChange={data.handleEditorChange}
+            className='document-editor whitespace-pre-wrap'
+            readOnly={data.isReadOnly}
+            placeholder='Start writing. Your next great idea begins here…'
+          />
+          <div className='flex items-center justify-between gap-4 rounded-b-xl border-t border-border bg-muted/40 px-6 py-3 text-[13px] text-muted-foreground'>
+            <span>
+              {data.previewContent
+                ? 'Saved version · read only'
+                : data.isReadOnly
+                  ? 'This document is shared with you for viewing.'
+                  : 'Changes save automatically as you write.'}
+            </span>
+            <span>AI Editor</span>
+          </div>
+        </div>
+      </section>
 
       <VersionDrawer
         isOpen={data.versionDrawer.isOpen}
         versions={data.versions || []}
-        previewContent={data.previewContent}
         selectedVersion={data.versionDrawer.selectedVersion}
         handleSelectVersion={data.versionDrawer.handleSelectVersion}
         handleApplyVersion={data.versionDrawer.handleApplyVersion}
@@ -80,24 +137,44 @@ export default function DocumentPage() {
       )}
 
       {data.ai.isOpen && (
-        <Modal isOpen={data.ai.isOpen} onClose={data.ai.close} width='w-[80vw]'>
-          <div className='flex justify-center items-center h-[70vh] w-full'>
-            <AiAsssistanceStepper
-              selectedTool={data.ai.selectedTool}
-              setSelectedTool={data.ai.selectTool}
-              targetLanguage={data.ai.targetLanguage}
-              setTargetLanguage={data.ai.setTargetLanguage}
-              handleActivateTextSelection={data.ai.handleActivateSelection}
-              isOnDocumentPage
-              setCurrentStep={data.ai.setCurrentStep}
-              currentStep={data.ai.currentStep}
-              onSubmit={data.ai.handleCreateUsage}
-              onRestart={data.ai.reset}
-              isLoading={data.ai.isLoading}
-              result={data.ai.result}
-            />
-          </div>
-        </Modal>
+        <Dialog
+          open={data.ai.isOpen}
+          onOpenChange={(open) => {
+            if (!open) data.ai.close();
+          }}
+        >
+          <DialogContent
+            className='flex h-[82dvh] max-w-[1180px] flex-col gap-0 overflow-hidden p-0'
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
+            <DialogHeader className='shrink-0 border-b border-border px-6 py-4 pr-14'>
+              <div className='flex items-center gap-3.5'>
+                <span className='flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-accent text-primary'>
+                  <FiZap size={19} aria-hidden='true' />
+                </span>
+                <div>
+                  <DialogTitle className='text-xl'>AI Assistance</DialogTitle>
+                  <DialogDescription className='mt-1.5 text-sm'>
+                    Refine your writing with a tool, or select a passage directly from your document.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            <div className='min-h-0 flex-1 bg-muted/50 p-5'>
+              <AiAsssistanceStepper
+                flow={data.ai.flow}
+                handleActivateTextSelection={data.ai.handleActivateSelection}
+                isOnDocumentPage
+                onSubmit={data.ai.handleCreateUsage}
+                onRestart={data.ai.reset}
+                isLoading={data.ai.isLoading}
+                result={data.ai.result}
+                onPasteInDocument={handlePasteInDocument}
+                pasteDisabled={data.isReadOnly || data.ai.isLoading}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

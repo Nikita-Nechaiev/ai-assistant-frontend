@@ -32,19 +32,6 @@ const setSnackbar = jest.fn();
 
 jest.mock('@/store/useSnackbarStore', () => () => ({ setSnackbar }));
 
-jest.mock('@/ui/Modal', () => ({
-  __esModule: true,
-  default: ({ isOpen, onClose, onSubmit, children, title }: any) =>
-    isOpen ? (
-      <div data-testid='modal'>
-        <h2>{title}</h2>
-        {children}
-        <button onClick={onSubmit}>Send Invitation</button>
-        <button onClick={onClose}>Cancel</button>
-      </div>
-    ) : null,
-}));
-
 let formState = { email: '', role: PermissionEnum.READ };
 
 jest.mock('../InvitationForm', () => ({
@@ -116,7 +103,7 @@ describe('InvitationModal', () => {
     fireEvent.change(screen.getByTestId('role'), { target: { value: PermissionEnum.EDIT } });
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Send Invitation'));
+      fireEvent.click(screen.getByText('Send invitation'));
     });
 
     expect(createInvitation).toHaveBeenCalledWith({ email: 'bob@mail.com', role: PermissionEnum.EDIT });
@@ -137,7 +124,7 @@ describe('InvitationModal', () => {
     fireEvent.change(screen.getByTestId('role'), { target: { value: PermissionEnum.EDIT } });
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Send Invitation'));
+      fireEvent.click(screen.getByText('Send invitation'));
     });
 
     expect(createInvitation).toHaveBeenCalled();

@@ -1,0 +1,186 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e39]:
+      - generic [ref=e40]: Successfully logged in!
+      - button [ref=e46] [cursor=pointer]
+    - generic [ref=e49]:
+      - complementary [ref=e50]:
+        - link "AI Editor." [ref=e52] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e60]:
+          - paragraph [ref=e61]: Workspace
+          - navigation "Main navigation" [ref=e62]:
+            - list [ref=e63]:
+              - listitem [ref=e64]:
+                - link "Dashboard" [ref=e65] [cursor=pointer]:
+                  - /url: /dashboard
+              - listitem [ref=e74]:
+                - link "AI Assistance" [ref=e75] [cursor=pointer]:
+                  - /url: /ai-assistance
+              - listitem [ref=e79]:
+                - link "FAQ" [ref=e80] [cursor=pointer]:
+                  - /url: /faq
+        - generic [ref=e85]:
+          - generic [ref=e86]:
+            - paragraph [ref=e90]: A little guidance?
+            - paragraph [ref=e91]: Get to know your workspace and everything you can do.
+            - link "Visit the help center" [ref=e92] [cursor=pointer]:
+              - /url: /faq
+          - generic [ref=e96]: Personal workspace
+          - button "Logout" [ref=e99] [cursor=pointer]
+      - generic [ref=e103]:
+        - banner [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e111]: Workspace
+            - generic [ref=e114]: Overview
+          - generic [ref=e115]:
+            - button "Profile settings" [ref=e116] [cursor=pointer]
+            - button "Notifications" [ref=e117] [cursor=pointer]
+            - generic [ref=e118]:
+              - img "E2E User 1789028844993" [ref=e121]
+              - generic [ref=e122]:
+                - paragraph [ref=e123]: E2E User 1789028844993
+                - paragraph [ref=e124]: test@example.com
+        - main [ref=e125]:
+          - generic [ref=e126]:
+            - generic [ref=e127]:
+              - generic [ref=e128]:
+                - paragraph [ref=e129]: Workspace overview
+                - heading "Welcome back, E2E." [level=1] [ref=e130]
+                - paragraph [ref=e131]: Your documents, your team, and a little AI. All in one place.
+              - time [ref=e135]: Thursday, October 15
+            - region [ref=e136]:
+              - generic [ref=e137]:
+                - paragraph [ref=e138]: Think clearly. Create together.
+                - heading "A better space to do your best work." [level=2] [ref=e140]: A better space to doyour best work.
+                - paragraph [ref=e141]: Bring your documents and collaborators together.Turn your next idea into something worth sharing.
+                - generic [ref=e142]:
+                  - button "Create a session" [ref=e143] [cursor=pointer]
+                  - link "Explore AI tools" [ref=e144] [cursor=pointer]:
+                    - /url: /ai-assistance/stepper
+            - generic [ref=e173]:
+              - generic [ref=e174]:
+                - heading "Your AI at a glance" [level=2] [ref=e175]
+                - generic [ref=e176]: All-time activity
+              - region "AI usage statistics" [ref=e177]:
+                - generic [ref=e178]:
+                  - paragraph [ref=e180]: AI requests
+                  - paragraph [ref=e184]: "0"
+                  - generic [ref=e185]:
+                    - paragraph [ref=e186]: A little help for your big ideas
+                    - link "View ai requests" [ref=e187] [cursor=pointer]:
+                      - /url: /ai-assistance
+                - generic [ref=e191]:
+                  - paragraph [ref=e193]: Words generated
+                  - paragraph [ref=e198]: "0"
+                  - generic [ref=e199]:
+                    - paragraph [ref=e200]: From a first thought to a finished draft
+                    - link "View words generated" [ref=e201] [cursor=pointer]:
+                      - /url: /ai-assistance
+                - generic [ref=e205]:
+                  - paragraph [ref=e207]: Most-used tool
+                  - paragraph [ref=e211]: Find your favorite
+                  - generic [ref=e212]:
+                    - paragraph [ref=e213]: Your next shortcut is waiting
+                    - link "View most-used tool" [ref=e214] [cursor=pointer]:
+                      - /url: /ai-assistance
+            - generic [ref=e218]:
+              - region [ref=e219]:
+                - generic [ref=e220]:
+                  - generic [ref=e221]:
+                    - heading "Your sessions" [level=2] [ref=e222]
+                    - paragraph [ref=e223]: Good ideas deserve a space of their own.
+                  - button "New session" [ref=e224] [cursor=pointer]
+                - generic [ref=e225]:
+                  - generic [ref=e226]:
+                    - textbox "Search sessions" [ref=e228]:
+                      - /placeholder: Search sessions…
+                    - generic [ref=e229]: Shared workspaces
+                  - generic [aria-hidden] [ref=e230]:
+                    - generic [ref=e231]: Session name
+                    - generic [ref=e232]: Members
+                    - generic [ref=e233]: Last activity
+                  - list [ref=e235]:
+                    - listitem [ref=e236]:
+                      - link [ref=e237] [cursor=pointer]:
+                        - /url: /session/26
+                        - generic [ref=e242]:
+                          - paragraph [ref=e243]: E2E Session-030000
+                          - paragraph [ref=e244]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e246]:
+                          - img "E2E User 1789028844993" [ref=e247]
+                        - time [ref=e249]: 08 Oct 2026
+                    - listitem [ref=e253]:
+                      - link [ref=e254] [cursor=pointer]:
+                        - /url: /session/2
+                        - generic [ref=e259]:
+                          - paragraph [ref=e260]: E2E Session-692037
+                          - paragraph [ref=e261]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e263]:
+                          - img "E2E User 1789028844993" [ref=e264]
+                        - time [ref=e266]: 08 Oct 2026
+                    - listitem [ref=e270]:
+                      - link [ref=e271] [cursor=pointer]:
+                        - /url: /session/25
+                        - generic [ref=e276]:
+                          - paragraph [ref=e277]: E2E Session-208457
+                          - paragraph [ref=e278]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e280]:
+                          - img "E2E User 1789028844993" [ref=e281]
+                        - time [ref=e283]: 06 Nov 2025
+                    - listitem [ref=e287]:
+                      - link [ref=e288] [cursor=pointer]:
+                        - /url: /session/24
+                        - generic [ref=e293]:
+                          - paragraph [ref=e294]: E2E Session-208041
+                          - paragraph [ref=e295]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e297]:
+                          - img "E2E User 1789028844993" [ref=e298]
+                        - time [ref=e300]: 06 Nov 2025
+                    - listitem [ref=e304]:
+                      - link [ref=e305] [cursor=pointer]:
+                        - /url: /session/23
+                        - generic [ref=e310]:
+                          - paragraph [ref=e311]: E2E Session-171120
+                          - paragraph [ref=e312]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e314]:
+                          - img "E2E User 1789028844993" [ref=e315]
+                        - time [ref=e317]: 06 Nov 2025
+                    - listitem [ref=e321]:
+                      - link [ref=e322] [cursor=pointer]:
+                        - /url: /session/22
+                        - generic [ref=e327]:
+                          - paragraph [ref=e328]: E2E Session-940453
+                          - paragraph [ref=e329]: 1 member
+                        - generic "E2E User 1789028844993" [ref=e331]:
+                          - img "E2E User 1789028844993" [ref=e332]
+                        - time [ref=e334]: 06 Nov 2025
+                  - generic [ref=e338]:
+                    - paragraph [ref=e339]: 6 sessions shown
+                    - button "Show More" [ref=e340] [cursor=pointer]
+              - generic [ref=e341]:
+                - generic [ref=e342]:
+                  - generic [ref=e343]: 9 AI tools
+                  - heading "Your words. A little sharper." [level=2] [ref=e348]
+                  - paragraph [ref=e349]: Less time on the first draft.More time on what matters.
+                - generic [ref=e350]:
+                  - generic [ref=e354]:
+                    - paragraph [ref=e355]: Write with confidence
+                    - paragraph [ref=e356]: Polish grammar, clarity, and tone.
+                  - generic [ref=e359]:
+                    - paragraph [ref=e360]: Find the essentials
+                    - paragraph [ref=e361]: Turn long reads into clear summaries.
+                  - generic [ref=e366]:
+                    - paragraph [ref=e367]: Go beyond one language
+                    - paragraph [ref=e368]: Translate your ideas for a wider world.
+                  - link "Explore AI tools" [ref=e369] [cursor=pointer]:
+                    - /url: /ai-assistance/stepper
+      - generic [ref=e370]:
+        - generic "Drag to resize" [ref=e371]
+        - generic [ref=e373]:
+          - generic [ref=e374]:
+            - button [ref=e375] [cursor=pointer]
+            - heading "Notifications" [level=2] [ref=e378]
+          - paragraph [ref=e380]: No new notifications
+  - alert [ref=e29]
+  - button "Open Next.js Dev Tools" [ref=e35] [cursor=pointer]

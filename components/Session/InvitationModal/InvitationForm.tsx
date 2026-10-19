@@ -1,32 +1,51 @@
-import { Controller } from 'react-hook-form';
-import { IoIosArrowDropdown } from 'react-icons/io';
+import React from 'react';
 
-import InputField from '@/ui/InputField';
+import { Controller, Control, FieldErrors } from 'react-hook-form';
+import { FiChevronDown } from 'react-icons/fi';
+
+import { Input } from '@/components/ui/input';
 import { PermissionEnum } from '@/models/enums';
 
-const InvitationForm: React.FC<{ control: any; errors: any }> = ({ control, errors }) => (
+export interface InvitationFormInputs {
+  email: string;
+  role: PermissionEnum;
+}
+
+const InvitationForm = ({
+  control,
+  errors,
+}: {
+  control: Control<InvitationFormInputs>;
+  errors: FieldErrors<InvitationFormInputs>;
+}) => (
   <div className='space-y-4'>
     <Controller
       name='email'
       control={control}
       rules={{
         required: 'Email is required.',
-        pattern: {
-          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-          message: 'Invalid email address.',
-        },
+        pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email address.' },
       }}
       render={({ field }) => (
-        <InputField
-          id='invite-email'
-          label='Collaborator Email'
-          {...field}
-          type='email'
-          placeholder='name@example.com'
-          error={errors.email?.message}
-          required
-          marginBottom={20}
-        />
+        <div>
+          <label htmlFor='invite-email' className='mb-2 block text-sm font-medium'>
+            Collaborator email
+          </label>
+          <Input
+            id='invite-email'
+            {...field}
+            type='email'
+            placeholder='name@example.com'
+            required
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? 'invite-email-error' : undefined}
+          />
+          {errors.email && (
+            <p id='invite-email-error' role='alert' className='mt-2 text-sm text-destructive'>
+              {errors.email.message}
+            </p>
+          )}
+        </div>
       )}
     />
     <Controller
@@ -34,27 +53,25 @@ const InvitationForm: React.FC<{ control: any; errors: any }> = ({ control, erro
       control={control}
       render={({ field }) => (
         <div>
-          <label htmlFor='permission-select' className='block text-sm font-medium text-gray-700 mb-1'>
-            Select Role
+          <label htmlFor='permission-select' className='mb-2 block text-sm font-medium'>
+            Access level
           </label>
           <div className='relative'>
             <select
               id='permission-select'
-              className='p-3 w-full rounded-lg bg-white border border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-all appearance-none pr-10'
               {...field}
+              className='h-10 w-full appearance-none rounded-md border border-input bg-white px-3 pr-9 text-base shadow-sm transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
             >
-              {Object.values(PermissionEnum)
-                .filter((el) => el !== PermissionEnum.ADMIN)
-                .map((permission) => (
-                  <option key={permission} value={permission}>
-                    {permission.toUpperCase()}
-                  </option>
-                ))}
+              <option value={PermissionEnum.READ}>Viewer — can read documents</option>
+              <option value={PermissionEnum.EDIT}>Editor — can create and edit</option>
             </select>
-            <div className='absolute inset-y-0 right-3 flex items-center pointer-events-none'>
-              <IoIosArrowDropdown size={25} />
-            </div>
+            <FiChevronDown
+              size={14}
+              className='pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground'
+              aria-hidden='true'
+            />
           </div>
+          <p className='mt-2 text-sm text-muted-foreground'>Choose the right level of access for your collaborator.</p>
         </div>
       )}
     />

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 
 import { SnackbarStatusEnum } from '@/models/enums';
 
@@ -12,12 +12,7 @@ jest.mock('@tanstack/react-query', () => ({
   useInfiniteQuery: (...args: any) => useInfiniteQueryMock(...args),
 }));
 
-jest.mock('@/ui/Modal', () => ({
-  __esModule: true,
-  default: ({ isOpen, children }: any) => (isOpen ? <div data-testid='modal'>{children}</div> : null),
-}));
-
-jest.mock('@/ui/InputField', () => ({
+jest.mock('@/components/common/InputField', () => ({
   __esModule: true,
   default: ({ marginBottom: _marginBottom, ...rest }: any) => (
     <label>
@@ -25,11 +20,6 @@ jest.mock('@/ui/InputField', () => ({
       <input {...rest} aria-label='search-input' />
     </label>
   ),
-}));
-
-jest.mock('@/ui/SmallLoader', () => ({
-  __esModule: true,
-  default: () => <span>loader</span>,
 }));
 
 const setSnackbarMock = jest.fn();
@@ -71,14 +61,14 @@ describe('AiUsageTable', () => {
     mockQueryState({ isLoading: true });
     render(<AiUsageTable />);
 
-    expect(screen.getByText('Loading usage data...')).toBeInTheDocument();
+    expect(screen.getByText('Loading request history…')).toBeInTheDocument();
   });
 
   it('shows “no data” placeholder', () => {
     mockQueryState({ data: { pages: [[]] } });
     render(<AiUsageTable />);
 
-    expect(screen.getByText('No usage data found.')).toBeInTheDocument();
+    expect(screen.getByText('A fresh page. Plenty of possibilities.')).toBeInTheDocument();
   });
 
   it('renders table rows and opens modal', () => {
@@ -89,27 +79,29 @@ describe('AiUsageTable', () => {
 
     expect(screen.getByText(usage.toolName)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Show results'));
+    fireEvent.click(screen.getByText('View result'));
 
-    const modal = screen.getByTestId('modal');
+    const modal = screen.getByRole('dialog');
 
     expect(modal).toBeInTheDocument();
     expect(within(modal).getByText(usage.sentText)).toBeInTheDocument();
   });
 
-  it('copies result & shows snackbar', () => {
+  it('copies result & shows snackbar', async () => {
     const usage = mkUsage('2');
 
     mockQueryState({ data: { pages: [[usage]] } });
     render(<AiUsageTable />);
 
-    fireEvent.click(screen.getByText('Show results'));
+    fireEvent.click(screen.getByText('View result'));
 
-    const modal = screen.getByTestId('modal');
+    const modal = screen.getByRole('dialog');
 
-    fireEvent.click(within(modal).getAllByRole('button')[0]);
+    fireEvent.click(within(modal).getByRole('button', { name: 'Copy original text' }));
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(usage.sentText);
-    expect(setSnackbarMock).toHaveBeenCalledWith('Text copied to clipboard!', SnackbarStatusEnum.SUCCESS);
+    await waitFor(() =>
+      expect(setSnackbarMock).toHaveBeenCalledWith('Text copied to clipboard!', SnackbarStatusEnum.SUCCESS),
+    );
   });
 
   it('"Show more" button fetches next page', () => {

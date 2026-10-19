@@ -1,48 +1,91 @@
 'use client';
+
 import React from 'react';
 
-import { FiCopy } from 'react-icons/fi';
+import { FiCheck, FiRefreshCw, FiArrowRight, FiFilePlus } from 'react-icons/fi';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+import TextResultPanel from './TextResultPanel';
 
 interface Step3SuccessProps {
   result: string | undefined;
   onCopyResult: () => void;
   onRestart: () => void;
+  onPasteInDocument?: () => void;
+  pasteDisabled?: boolean;
 }
 
-const Step3Success: React.FC<Step3SuccessProps> = ({ result, onCopyResult, onRestart }) => {
-  const isBigResult = result && result?.length > 1300;
+const Step3Success: React.FC<Step3SuccessProps> = ({
+  result,
+  onCopyResult,
+  onRestart,
+  onPasteInDocument,
+  pasteDisabled = false,
+}) => {
+  const wordCount = result?.trim() ? result.trim().split(/\s+/).length : 0;
 
   return (
-    <div className='max-w-[800px] mx-auto'>
-      <h2 className='text-2xl font-bold text-mainDark mb-6'>AI Usage Result</h2>
-
-      <div
-        className={`border border-mainDark text-mainDark p-4 pb-9 mb-4 rounded relative ${isBigResult && 'max-h-[50vh] overflow-y-scroll'}`}
-      >
-        <div className='flex text-gray-600 justify-between items-center mb-3'>
-          <span className=' text-sm '>text</span>
-          <button
-            onClick={onCopyResult}
-            disabled={!result}
-            className={`flex items-center gap-2 px-3 py-1 rounded transition-colors ${
-              result ? 'text-mainDark hover:text-mainDarkHover' : 'text-gray-400 cursor-not-allowed'
-            }`}
+    <section aria-labelledby='ai-result-heading' className='mx-auto max-w-[960px]'>
+      <div className='mb-6 flex items-start justify-between gap-6'>
+        <div>
+          <Badge
+            variant='secondary'
+            className='mb-3 gap-1.5 border border-blue-100 bg-accent px-2 py-1 text-[13px] font-medium text-primary'
           >
-            <FiCopy size={18} />
-            <span className='text-sm'>Copy</span>
-          </button>
+            {result ? <FiCheck size={11} aria-hidden='true' /> : null}
+            {result ? 'AI-generated' : 'No result available'}
+          </Badge>
+          <h2 id='ai-result-heading' className='text-[28px] font-semibold tracking-tight'>
+            {result ? 'Your result is ready.' : 'Nothing to show just yet.'}
+          </h2>
+          <p className='mt-2 text-sm leading-6 text-muted-foreground'>
+            {result
+              ? onPasteInDocument
+                ? 'Copy the result, or use Paste in document to add it to the end of your document.'
+                : 'Copy the result to use it in a document or another app.'
+              : 'Choose a tool and submit your text to get a result.'}
+          </p>
         </div>
-
-        <p>{result ? result : 'No result available.'}</p>
+        {result && (
+          <span className='mt-1 shrink-0 text-[13px] text-muted-foreground'>
+            {wordCount} {wordCount === 1 ? 'word' : 'words'} generated
+          </span>
+        )}
       </div>
-
-      <button
-        onClick={onRestart}
-        className='bg-mainDark hover:bg-mainDarkHover text-mainLight px-8 py-3 rounded transition-colors'
-      >
-        Go back to beginning
-      </button>
-    </div>
+      <TextResultPanel title='AI result' text={result} onCopy={onCopyResult} className='shadow-card' />
+      <div className='mt-5 flex flex-wrap items-center justify-between gap-6'>
+        <p className='text-[13px] leading-5 text-muted-foreground'>
+          {result
+            ? 'You can find this result in the request history on the AI Assistance page.'
+            : 'Previous results are available in the request history on the AI Assistance page.'}
+        </p>
+        <div className='flex shrink-0 flex-wrap items-center gap-2.5'>
+          <Button
+            type='button'
+            variant={onPasteInDocument ? 'outline' : 'default'}
+            onClick={onRestart}
+            className='text-sm'
+          >
+            <FiRefreshCw aria-hidden='true' />
+            Try another tool
+            <FiArrowRight aria-hidden='true' />
+          </Button>
+          {onPasteInDocument && (
+            <Button
+              type='button'
+              onClick={onPasteInDocument}
+              disabled={pasteDisabled || !result?.trim()}
+              className='text-sm'
+            >
+              <FiFilePlus aria-hidden='true' />
+              Paste in document
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 

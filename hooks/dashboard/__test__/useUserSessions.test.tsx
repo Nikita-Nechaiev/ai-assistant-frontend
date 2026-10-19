@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import { useUserStore } from '@/store/useUserStore';
 import { SessionApi } from '@/services/SessionApi';
 
 import { useUserSessions } from '../useUserSessions';
@@ -16,7 +17,10 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('useUserSessions', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useUserStore.setState({ user: { id: 1 } as any });
+  });
 
   it('fetches first page with search term and returns data', async () => {
     fetchMock.mockResolvedValueOnce([{ id: 1 }]);
@@ -24,7 +28,7 @@ describe('useUserSessions', () => {
     const { result } = renderHook(() => useUserSessions('abc'), { wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(fetchMock).toHaveBeenCalledWith(1, 'abc');
+    expect(fetchMock).toHaveBeenCalledWith(1, 'abc', expect.any(AbortSignal));
     expect(result.current.data?.pages[0][0].id).toBe(1);
   });
 
@@ -40,7 +44,7 @@ describe('useUserSessions', () => {
       await result.current.fetchNextPage();
     });
 
-    expect(fetchMock).toHaveBeenLastCalledWith(26, '');
+    expect(fetchMock).toHaveBeenLastCalledWith(2, '', expect.any(AbortSignal));
     await waitFor(() => expect(result.current.hasNextPage).toBe(false));
   });
 });

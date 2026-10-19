@@ -3,9 +3,10 @@ import { ISessionItem, ICollaborationSession } from '@/models/models';
 import axiosInstance from './axiosInstance';
 
 export class SessionApi {
-  static async fetchUserSessions(page = 1, search = '') {
+  static async fetchUserSessions(page = 1, search = '', signal?: AbortSignal) {
     const { data } = await axiosInstance.get<ISessionItem[]>('/collaboration-session/get-user-sessions', {
       params: { page, search },
+      ...(signal && { signal }),
     });
 
     return data;

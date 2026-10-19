@@ -16,10 +16,15 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@/components/common/UserAvatarCircle', () => ({
   __esModule: true,
-  default: ({ email }: { email: string }) => <span data-testid='avatar'>{email}</span>,
+  default: ({ email, userId, changeUserPermissions }: any) => (
+    <span data-testid='avatar'>
+      {email}
+      <button onClick={() => changeUserPermissions(userId, PermissionEnum.EDIT)}>Make {email} editor</button>
+    </span>
+  ),
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -50,8 +55,6 @@ jest.mock('@/hooks/sockets/useSessionHeaderSocket', () => ({
 const renderHeader = () =>
   render(<SessionHeader sessionId={777} socket={null as any} handleOpenInviteModal={jest.fn()} />);
 
-const getIconButtons = () => screen.getAllByRole('button');
-
 describe('SessionHeader', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,9 +71,7 @@ describe('SessionHeader', () => {
   it('enters edit mode, saves on Enter and emits change', () => {
     renderHeader();
 
-    const [, editBtn] = getIconButtons();
-
-    fireEvent.click(editBtn);
+    fireEvent.click(screen.getByRole('button', { name: 'Rename session' }));
 
     const input = screen.getByDisplayValue(hookMock.sessionName);
 
@@ -83,13 +84,11 @@ describe('SessionHeader', () => {
   it('opens delete confirmation and emits delete on confirm', () => {
     renderHeader();
 
-    const [, , deleteBtn] = getIconButtons();
+    fireEvent.click(screen.getByRole('button', { name: 'Delete session' }));
 
-    fireEvent.click(deleteBtn);
+    expect(screen.getByText(/permanently deleted/i)).toBeInTheDocument();
 
-    expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete session' }).at(-1)!);
 
     expect(emitDel).toHaveBeenCalled();
   });
@@ -97,17 +96,13 @@ describe('SessionHeader', () => {
   it('navigates back to dashboard when back arrow clicked', () => {
     renderHeader();
 
-    const [backBtn] = getIconButtons();
-
-    fireEvent.click(backBtn);
-
-    expect(pushMock).toHaveBeenCalledWith('/dashboard');
+    expect(screen.getByRole('link', { name: 'Back to dashboard' })).toHaveAttribute('href', '/dashboard');
   });
 
   it('changes user permissions through avatar callback', () => {
     renderHeader();
 
-    hookMock.emitChangeUserPermissions(2, PermissionEnum.EDIT);
+    fireEvent.click(screen.getByRole('button', { name: 'Make u2@mail.com editor' }));
     expect(emitPerms).toHaveBeenCalledWith(2, PermissionEnum.EDIT);
   });
 });

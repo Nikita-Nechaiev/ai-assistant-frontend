@@ -26,7 +26,13 @@ export default function useEditorState({
   const isInitialMount = useRef(true);
 
   useEffect(() => {
-    if (!currentDocument) return;
+    if (!currentDocument) {
+      setLocalContent('');
+      setQuillDelta(null);
+      isInitialMount.current = true;
+
+      return;
+    }
 
     const fixedDelta = convertRichContentToDelta(currentDocument.richContent, QuillType);
 
@@ -49,12 +55,12 @@ export default function useEditorState({
 
   const handleContentChange = useCallback(
     (next: string) => {
-      if (previewContent || !currentDocument || !changeContentAndSaveDocument) return;
+      if (!isUserCanEdit || previewContent || !currentDocument || !changeContentAndSaveDocument) return;
 
       setLocalContent(next);
       debouncedSave(next);
     },
-    [previewContent, currentDocument, changeContentAndSaveDocument, debouncedSave],
+    [isUserCanEdit, previewContent, currentDocument, changeContentAndSaveDocument, debouncedSave],
   );
 
   const handleEditorChange = useCallback(
@@ -70,10 +76,35 @@ export default function useEditorState({
 
   const isReadOnly = !isUserCanEdit || !!previewContent;
 
+  const appendText = useCallback(
+    (text: string) => {
+      if (isReadOnly || !currentDocument || !changeContentAndSaveDocument || !text.trim()) return false;
+
+      const paragraphs = text
+        .replace(/\r\n?/g, '\n')
+        .split('\n')
+        .map((line) => {
+          const paragraph = document.createElement('p');
+
+          if (line) paragraph.textContent = line;
+          else paragraph.appendChild(document.createElement('br'));
+
+          return paragraph.outerHTML;
+        });
+      const existingContent = localContent === '<p><br></p>' ? '' : localContent;
+
+      handleContentChange(existingContent + paragraphs.join(''));
+
+      return true;
+    },
+    [isReadOnly, currentDocument, changeContentAndSaveDocument, localContent, handleContentChange],
+  );
+
   return {
     localContent,
     quillDelta,
     isReadOnly,
     handleEditorChange,
+    appendText,
   };
 }

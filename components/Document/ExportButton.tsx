@@ -3,9 +3,11 @@
 import React from 'react';
 
 import { DeltaStatic } from 'react-quill-new';
+import { FiDownload } from 'react-icons/fi';
 
 import { exportToPDF } from '@/helpers/exportToPdf';
 import useSnackbarStore from '@/store/useSnackbarStore';
+import { Button } from '@/components/ui/button';
 
 interface ExportButtonProps {
   documentTitle: string;
@@ -16,12 +18,14 @@ const ExportButton: React.FC<ExportButtonProps> = ({ documentTitle, quillDelta }
   const { setSnackbar } = useSnackbarStore();
 
   return (
-    <button
+    <Button
+      variant='outline'
       onClick={() => exportToPDF(documentTitle, quillDelta, setSnackbar)}
-      className='px-4 py-2 border border-mainDark text-mainDark bg-mainLight rounded shadow hover:bg-mainLightGray transition'
+      className='h-10 gap-2 text-sm shadow-none'
     >
+      <FiDownload size={15} aria-hidden='true' />
       Export to PDF
-    </button>
+    </Button>
   );
 };
 

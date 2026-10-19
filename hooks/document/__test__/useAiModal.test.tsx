@@ -4,11 +4,11 @@ import type { AITool } from '@/models/models';
 
 import useAiModal from '../useAiModal';
 
-const lockSpy = jest.fn();
 const unlockSpy = jest.fn();
+const lockSpy = jest.fn(() => unlockSpy);
 
 jest.mock('@/helpers/scrollLock', () => ({
-  lockBodyScroll: (...args: any[]) => lockSpy(...args),
+  lockBodyScroll: () => lockSpy(),
   unlockBodyScroll: (...args: any[]) => unlockSpy(...args),
 }));
 
@@ -26,7 +26,7 @@ describe('useAiModal', () => {
     act(() => result.current.open());
 
     expect(result.current.isAiModalOpen).toBe(true);
-    expect(result.current.currentStep).toBe(1);
+    expect(result.current.flow.currentStep).toBe(1);
     expect(usageSpy).toHaveBeenCalledWith(null);
     expect(lockSpy).toHaveBeenCalled();
   });
@@ -34,15 +34,15 @@ describe('useAiModal', () => {
   it('nextStep increments currentStep', () => {
     const { result } = renderHook(() => useAiModal({}));
 
-    act(() => result.current.nextStep());
-    expect(result.current.currentStep).toBe(2);
+    act(() => result.current.flow.setCurrentStep(2));
+    expect(result.current.flow.currentStep).toBe(2);
   });
 
   it('selectTool sets selectedTool', () => {
     const { result } = renderHook(() => useAiModal({}));
 
-    act(() => result.current.selectTool(mockTool));
-    expect(result.current.selectedTool).toBe(mockTool);
+    act(() => result.current.flow.selectTool(mockTool));
+    expect(result.current.flow.selectedTool).toBe(mockTool);
   });
 
   it('reset returns to step 1 and clears usage', () => {
@@ -50,19 +50,19 @@ describe('useAiModal', () => {
     const { result } = renderHook(() => useAiModal({ setNewAiUsage: usageSpy }));
 
     act(() => {
-      result.current.nextStep();
+      result.current.flow.setCurrentStep(2);
       result.current.reset();
     });
 
-    expect(result.current.currentStep).toBe(1);
+    expect(result.current.flow.currentStep).toBe(1);
     expect(usageSpy).toHaveBeenLastCalledWith(null);
   });
 
   it('setTargetLanguage updates targetLanguage', () => {
     const { result } = renderHook(() => useAiModal({}));
 
-    act(() => result.current.setTargetLanguage('fr'));
-    expect(result.current.targetLanguage).toBe('fr');
+    act(() => result.current.flow.setTargetLanguage('fr'));
+    expect(result.current.flow.targetLanguage).toBe('fr');
   });
 
   it('close hides modal, clears usage, unlocks body scroll', () => {

@@ -18,48 +18,62 @@ const RoleDropdown: React.FC<{
       }
     };
 
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeMenu();
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [closeMenu]);
 
   return (
-    <div ref={ref} className='absolute right-0 mt-2 w-40 bg-white border rounded-lg shadow-md z-10 overflow-hidden'>
+    <div
+      ref={ref}
+      className='absolute bottom-full right-0 z-20 mb-2 w-44 overflow-hidden rounded-xl border border-border bg-white p-1 shadow-lg'
+      role='menu'
+      aria-label='Invitation actions'
+    >
       {invitation.role !== PermissionEnum.READ && (
         <button
           type='button'
-          className='block w-full px-4 py-2 text-left hover:bg-gray-100'
+          role='menuitem'
+          className='block w-full rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
           onClick={() => {
             changeInvitationRole(invitation.id, PermissionEnum.READ);
             closeMenu();
           }}
         >
-          Change to READ
+          Change to Viewer
         </button>
       )}
       {invitation.role !== PermissionEnum.EDIT && (
         <button
           type='button'
-          className='block w-full px-4 py-2 text-left hover:bg-gray-100'
+          role='menuitem'
+          className='block w-full rounded-lg px-3 py-2.5 text-left text-sm text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
           onClick={() => {
             changeInvitationRole(invitation.id, PermissionEnum.EDIT);
             closeMenu();
           }}
         >
-          Change to EDIT
+          Change to Editor
         </button>
       )}
       <button
         type='button'
-        className='block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100'
+        role='menuitem'
+        className='block w-full rounded-lg px-3 py-2.5 text-left text-sm text-destructive transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none'
         onClick={() => {
           deleteInvitation(invitation.id);
           closeMenu();
         }}
       >
-        Delete Invitation
+        Delete invitation
       </button>
     </div>
   );

@@ -1,86 +1,52 @@
-import { test, expect, APIRequestContext } from '@playwright/test';
-
-const ORIGIN = process.env.PW_BASE_URL || 'http://localhost:3000';
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-const E2E_EMAIL = process.env.E2E_EMAIL!;
-const E2E_PASSWORD = process.env.E2E_PASSWORD!;
-
-async function ensureUser(request: APIRequestContext) {
-  const login = () => request.post(`${API_URL}/auth/login`, { data: { email: E2E_EMAIL, password: E2E_PASSWORD } });
-  let resp = await login();
-
-  if (resp.status() === 401) {
-    const reg = await request.post(`${API_URL}/auth/register`, {
-      multipart: { name: 'E2E Bot', email: E2E_EMAIL, password: E2E_PASSWORD },
-    });
-
-    expect([200, 201, 409]).toContain(reg.status());
-    resp = await login();
-  }
-
-  return resp;
-}
-
-async function getFreshRefreshToken(request: APIRequestContext): Promise<string> {
-  const resp = await ensureUser(request);
-
-  expect([200, 201]).toContain(resp.status());
-
-  const setCookies = resp
-    .headersArray()
-    .filter((h) => h.name.toLowerCase() === 'set-cookie')
-    .map((h) => h.value);
-  const rtPair = setCookies.map((c) => c.split(';')[0]).find((p) => p.trim().startsWith('refreshToken='));
-
-  expect(rtPair, 'refreshToken cookie should be present on login response').toBeTruthy();
-
-  return rtPair!.split('=').slice(1).join('=');
-}
+import { BASE_URL, expectDashboard } from '../helpers';
+import { test, expect } from './fixtures';
 
 test('anonymous user is redirected to /login', async ({ page }) => {
   await page.goto('/dashboard');
   await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 });
 
-test('middleware refresh returns 200 and keeps x-user internal', async ({ request }) => {
-  const refreshToken = await getFreshRefreshToken(request);
-
-  const res = await request.get(`${ORIGIN}/dashboard`, {
-    headers: { Cookie: `refreshToken=${refreshToken}` },
+test('middleware refresh returns 200 and keeps x-user internal', async ({ request, account }) => {
+  // Explicit Cookie overrides the API context jar: the incoming request has no access token.
+  const response = await request.get(`${BASE_URL}/dashboard`, {
+    headers: { Cookie: `refreshToken=${account.refreshToken}` },
+    maxRedirects: 0,
   });
 
-  expect(res.status()).toBe(200);
-  expect(res.headers()['x-user']).toBeUndefined();
+  expect(response.status()).toBe(200);
+  expect(response.headers()['x-user']).toBeUndefined();
 
-  const cookieNames = res
+  const accessCookie = response
     .headersArray()
-    .filter((h) => h.name.toLowerCase() === 'set-cookie')
-    .map((h) => h.value.split(';')[0].split('=')[0]);
+    .find((header) => header.name.toLowerCase() === 'set-cookie' && header.value.startsWith('accessToken='));
 
-  expect(cookieNames).toEqual(expect.arrayContaining(['accessToken']));
+  expect(accessCookie?.value).toMatch(/^accessToken=.+;.*HttpOnly/i);
 });
 
-test('middleware issues tokens in browser context (end-to-end)', async ({ context, page, request }) => {
-  const refreshToken = await getFreshRefreshToken(request);
-
+test('middleware issues tokens in browser context (end-to-end)', async ({ context, page, account }) => {
   await context.addCookies([
     {
       name: 'refreshToken',
-      value: refreshToken,
-      domain: 'localhost',
-      path: '/',
+      value: account.refreshToken,
+      url: BASE_URL,
       httpOnly: true,
-      secure: false,
+      secure: new URL(BASE_URL).protocol === 'https:',
       sameSite: 'Strict',
     },
   ]);
+  expect((await context.cookies(BASE_URL)).map(({ name }) => name)).toEqual(['refreshToken']);
 
-  await page.goto(`${ORIGIN}/dashboard`);
-  await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole('heading', { name: 'Sessions', level: 1 })).toBeVisible({ timeout: 15_000 });
+  await page.goto('/dashboard');
+  await expectDashboard(page);
 
-  const cookies = await context.cookies(ORIGIN);
-  const names = cookies.map((c) => c.name);
+  const cookies = await context.cookies(BASE_URL);
 
-  expect(names).toEqual(expect.arrayContaining(['accessToken', 'refreshToken']));
+  expect(cookies.map(({ name }) => name)).toEqual(expect.arrayContaining(['accessToken', 'refreshToken']));
+  expect(cookies.find(({ name }) => name === 'accessToken')).toMatchObject({
+    httpOnly: true,
+    value: expect.any(String),
+  });
+  await page.reload();
+  await expectDashboard(page);
 });

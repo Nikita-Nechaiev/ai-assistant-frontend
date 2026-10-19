@@ -41,7 +41,7 @@ describe('InvitationList', () => {
   it('shows placeholder when list empty', () => {
     render(<InvitationList invitations={[]} deleteInvitation={jest.fn()} changeInvitationRole={jest.fn()} />);
 
-    expect(screen.getByText(/no invitations found/i)).toBeInTheDocument();
+    expect(screen.getByText(/No invitations yet/i)).toBeInTheDocument();
     expect(screen.queryByTestId('inv-item')).not.toBeInTheDocument();
   });
 

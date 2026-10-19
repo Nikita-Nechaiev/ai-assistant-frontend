@@ -2,7 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
 
-  roots: ['<rootDir>/components', '<rootDir>/ui', '<rootDir>/hooks', '<rootDir>/store', '<rootDir>/services'],
+  roots: ['<rootDir>'],
 
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
 
@@ -28,14 +28,25 @@ module.exports = {
 
   collectCoverageFrom: [
     'components/**/*.{ts,tsx}',
-    'ui/**/*.{ts,tsx}',
     'hooks/**/*.{ts,tsx}',
     'store/**/*.{ts,tsx}',
     'services/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    'helpers/**/*.{ts,tsx}',
+    'lib/**/*.{ts,tsx}',
+    'providers/**/*.{ts,tsx}',
+    'hydration/**/*.{ts,tsx}',
+    'middleware.ts',
+    '!**/*.d.ts',
+    '!**/*.{test,spec}.{ts,tsx}',
     '!**/index.ts',
     '!**/*.stories.*',
     '!**/types.ts',
   ],
+
+  coverageThreshold: { global: { statements: 81, branches: 81, functions: 81, lines: 81 } },
+
+  coverageReporters: ['text', 'json', 'json-summary', 'html', 'lcov'],
 
   coveragePathIgnorePatterns: ['[\\\\/]e2e[\\\\/]', '[\\\\/]backend[\\\\/]'],
 };

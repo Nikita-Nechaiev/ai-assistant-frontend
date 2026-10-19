@@ -1,0 +1,374 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e3]:
+    - link "Skip to content" [ref=f2e4] [cursor=pointer]:
+      - /url: "#welcome-main"
+    - banner [ref=f2e5]:
+      - generic [ref=f2e6]:
+        - link "AI Editor welcome" [ref=f2e7] [cursor=pointer]:
+          - /url: /welcome
+          - generic [ref=f2e8]: AI Editor.
+        - navigation "Page navigation" [ref=f2e15]:
+          - link "Features" [ref=f2e16] [cursor=pointer]:
+            - /url: "#features"
+          - link "Preview" [ref=f2e17] [cursor=pointer]:
+            - /url: "#preview"
+          - link "About" [ref=f2e18] [cursor=pointer]:
+            - /url: "#about"
+        - link "Open workspace" [ref=f2e20] [cursor=pointer]:
+          - /url: /dashboard
+    - main [ref=f2e21]:
+      - region [ref=f2e22]:
+        - generic [ref=f2e23]:
+          - generic [ref=f2e24]:
+            - paragraph [ref=f2e25]: AI-POWERED COLLABORATIVE WORKSPACE
+            - heading "Write better. Build ideas together." [level=1] [ref=f2e29]: Write better.Build ideastogether.
+            - paragraph [ref=f2e30]: Create documents, refine your writing with AI, and collaborate in real time — all in one workspace.
+            - generic [ref=f2e31]:
+              - link "Open workspace" [ref=f2e32] [cursor=pointer]:
+                - /url: /dashboard
+              - link "Try AI features" [ref=f2e33] [cursor=pointer]:
+                - /url: /ai-assistance
+            - list "Core capabilities" [ref=f2e34]:
+              - listitem [ref=f2e35]: Rich text editing
+              - listitem [ref=f2e38]: 9 AI tools
+              - listitem [ref=f2e41]: Real-time collaboration
+          - generic [aria-hidden] [ref=f2e45]:
+            - generic [ref=f2e47]:
+              - generic [ref=f2e48]: Your next great idea
+              - generic [ref=f2e60]:
+                - generic [ref=f2e61]: Normal text
+                - generic [ref=f2e77]: A
+              - generic [ref=f2e82]:
+                - text: A SHARED FIRST DRAFT
+                - heading [level=3] [ref=f2e83]: A better placefor ideas.
+                - paragraph [ref=f2e85]: Start with a shared thought. Give it structure, find the right words, and make something worth sharing.
+                - generic [ref=f2e86]: Good ideas become betterwhen we work together.
+                - generic [ref=f2e93]: Room to think. Space to create.
+              - generic [ref=f2e95]: A little more clarity, with every draft.
+            - generic [ref=f2e98]:
+              - generic [ref=f2e99]: A fresh way to say it
+              - paragraph [ref=f2e106]:
+                - text: Bring your ideas together.
+                - strong [ref=f2e108]: Make something better.
+              - generic [ref=f2e109]: Rephrase
+            - generic [ref=f2e121]:
+              - strong [ref=f2e122]: Better, together.
+              - generic [ref=f2e123]: One shared workspace.
+            - generic [ref=f2e124]: Every draft has a story.
+            - generic [ref=f2e129]: YOUR IDEAS. A LITTLE MORE CONNECTED.
+        - generic [ref=f2e130]:
+          - link [ref=f2e131] [cursor=pointer]:
+            - /url: "#features"
+          - generic [ref=f2e135]: Documents. Intelligence. People.
+      - region [ref=f2e136]:
+        - generic [ref=f2e137]:
+          - generic [ref=f2e138]:
+            - generic [ref=f2e139]:
+              - paragraph [ref=f2e140]: A MORE CONNECTED WAY TO WORK
+              - heading "One workspace. From first idea to final draft." [level=2] [ref=f2e141]: One workspace.From first idea to final draft.
+            - paragraph [ref=f2e142]: Less switching between tools.More space for the work that matters.
+          - generic [ref=f2e143]:
+            - article [ref=f2e144]:
+              - generic [ref=f2e146]:
+                - generic [ref=f2e147]:
+                  - generic [ref=f2e148]: Normal text
+                  - generic [ref=f2e164]: A
+                - generic [ref=f2e169]:
+                  - strong [ref=f2e170]: A thought worth keeping.
+                  - generic [ref=f2e175]: Saved as you write
+              - generic [ref=f2e178]:
+                - generic [ref=f2e179]: "01"
+                - heading "Write with clarity." [level=3] [ref=f2e184]
+                - paragraph [ref=f2e185]: Give your ideas structure with rich text editing. Keep your changes as you write, and take your work with you as a PDF.
+                - list [ref=f2e186]:
+                  - listitem [ref=f2e187]: Rich text editing
+                  - listitem [ref=f2e190]: Automatic saving
+                  - listitem [ref=f2e193]: PDF export
+            - article [ref=f2e196]:
+              - generic [ref=f2e198]:
+                - paragraph [ref=f2e202]:
+                  - text: The right words.
+                  - strong [ref=f2e203]: A new perspective.
+                - generic [ref=f2e204]:
+                  - generic [ref=f2e205]: Rephrase
+                  - generic [ref=f2e206]: Translate
+                  - generic [ref=f2e207]: Summarize
+              - generic [ref=f2e208]:
+                - generic [ref=f2e209]: "02"
+                - heading "A fresh perspective, on demand." [level=3] [ref=f2e213]
+                - paragraph [ref=f2e214]: Find the right words with nine AI tools. Refine a sentence, translate a thought, or turn a long read into a clear summary.
+                - list [ref=f2e215]:
+                  - listitem [ref=f2e216]: Grammar & tone
+                  - listitem [ref=f2e219]: Rephrase & translate
+                  - listitem [ref=f2e222]: Summarize & more
+            - article [ref=f2e225]:
+              - generic [ref=f2e227]:
+                - strong [ref=f2e235]: Ideas meet here.
+                - generic [ref=f2e236]:
+                  - generic [ref=f2e237]: Editor
+                  - generic [ref=f2e241]: Chat
+                  - generic [ref=f2e244]: History
+              - generic [ref=f2e254]:
+                - generic [ref=f2e255]: "03"
+                - heading "Work better, together." [level=3] [ref=f2e262]
+                - paragraph [ref=f2e263]: Bring people into the same workspace. Share documents, discuss the details, and revisit earlier drafts as your ideas evolve.
+                - list [ref=f2e264]:
+                  - listitem [ref=f2e265]: Shared sessions
+                  - listitem [ref=f2e268]: Roles & invitations
+                  - listitem [ref=f2e271]: Chat & history
+      - region [ref=f2e274]:
+        - generic [ref=f2e275]:
+          - generic [ref=f2e276]:
+            - paragraph [ref=f2e277]: A CLOSER LOOK
+            - heading "See your workspace in action." [level=2] [ref=f2e278]
+            - paragraph [ref=f2e279]: From the big picture to the details. A place for every part of your process.
+          - region "Application previews" [ref=f2e280]:
+            - generic [ref=f2e281]:
+              - group [aria-hidden] [ref=f2e801]:
+                - img [ref=f2e802]:
+                  - generic [aria-hidden] [ref=f2e284]:
+                    - generic [ref=f2e285]:
+                      - strong [ref=f2e291]: AI Editor.
+                      - generic [ref=f2e292]: Workspace / Dashboard
+                      - generic [ref=f2e293]: PRODUCT PREVIEW
+                    - generic [ref=f2e294]:
+                      - complementary [ref=f2e295]:
+                        - generic [ref=f2e296]: YOUR WORKSPACE
+                        - generic [ref=f2e297]: Dashboard
+                        - generic [ref=f2e303]: Documents
+                        - generic [ref=f2e307]: AI Assistance
+                        - generic [ref=f2e310]: A little more clarity. A lot more possibility.
+                      - generic [ref=f2e317]:
+                        - generic [ref=f2e318]:
+                          - generic [ref=f2e319]:
+                            - generic [ref=f2e320]: YOUR WORKSPACE, IN FOCUS
+                            - heading [level=3] [ref=f2e321]: A little space for great ideas.
+                          - generic [ref=f2e322]: New session
+                        - generic [ref=f2e325]:
+                          - text: WRITE. REFINE. COLLABORATE.
+                          - heading [level=4] [ref=f2e326]: Bring your next idea to life.
+                          - paragraph [ref=f2e327]: Your documents and your team. All together.
+                        - generic [ref=f2e332]: Your sessions
+                        - generic [ref=f2e337]:
+                          - generic [ref=f2e338]:
+                            - strong [ref=f2e344]: A space for ideas
+                            - generic [ref=f2e345]: Collaborative workspace
+                            - generic [ref=f2e346]: Open session
+                          - generic [ref=f2e353]:
+                            - strong [ref=f2e359]: The next chapter
+                            - generic [ref=f2e360]: Collaborative workspace
+                            - generic [ref=f2e361]: Open session
+                          - generic [ref=f2e368]:
+                            - strong [ref=f2e374]: Better together
+                            - generic [ref=f2e375]: Collaborative workspace
+                            - generic [ref=f2e376]: Open session
+              - group [aria-hidden] [ref=f2e807]:
+                - img [ref=f2e808]:
+                  - generic [aria-hidden] [ref=f2e385]:
+                    - generic [ref=f2e386]:
+                      - strong [ref=f2e392]: AI Editor.
+                      - generic [ref=f2e393]: Workspace / Document editor
+                      - generic [ref=f2e394]: PRODUCT PREVIEW
+                    - generic [ref=f2e395]:
+                      - complementary [ref=f2e396]:
+                        - generic [ref=f2e397]: YOUR WORKSPACE
+                        - generic [ref=f2e398]: Dashboard
+                        - generic [ref=f2e404]: Documents
+                        - generic [ref=f2e408]: AI Assistance
+                        - generic [ref=f2e411]: A little more clarity. A lot more possibility.
+                      - generic [ref=f2e419]:
+                        - generic [ref=f2e420]:
+                          - generic [ref=f2e421]:
+                            - generic [ref=f2e422]: DOCUMENT WORKSPACE
+                            - heading [level=3] [ref=f2e423]: A better place for ideas.
+                          - generic [ref=f2e424]: AI Assistance
+                        - generic [ref=f2e427]:
+                          - generic [ref=f2e428]:
+                            - generic [ref=f2e429]: Normal text
+                            - generic [ref=f2e439]: A
+                          - article [ref=f2e444]:
+                            - text: FROM FIRST THOUGHT TO FINAL DRAFT
+                            - heading [level=4] [ref=f2e445]: Good work begins with a shared idea.
+                            - paragraph [ref=f2e446]: Bring your thinking into focus. A few words, a new perspective, a conversation that moves everything forward.
+                            - paragraph [ref=f2e452]: Great ideas grow when you give them room.
+              - group [aria-hidden] [ref=f2e812]:
+                - img [ref=f2e813]:
+                  - generic [aria-hidden] [ref=f2e459]:
+                    - generic [ref=f2e460]:
+                      - strong [ref=f2e466]: AI Editor.
+                      - generic [ref=f2e467]: Workspace / AI Assistance
+                      - generic [ref=f2e468]: PRODUCT PREVIEW
+                    - generic [ref=f2e469]:
+                      - complementary [ref=f2e470]:
+                        - generic [ref=f2e471]: YOUR WORKSPACE
+                        - generic [ref=f2e472]: Dashboard
+                        - generic [ref=f2e478]: Documents
+                        - generic [ref=f2e482]: AI Assistance
+                        - generic [ref=f2e485]: A little more clarity. A lot more possibility.
+                      - generic [ref=f2e492]:
+                        - generic [ref=f2e494]:
+                          - generic [ref=f2e495]: A LITTLE HELP. A LOT OF POSSIBILITY.
+                          - heading [level=3] [ref=f2e496]: Find your next great sentence.
+                        - generic [ref=f2e499]:
+                          - generic [ref=f2e500]:
+                            - generic [ref=f2e501]: "1"
+                            - text: Choose a tool
+                          - generic [ref=f2e502]:
+                            - generic [ref=f2e503]: "2"
+                            - text: Add your text
+                          - generic [ref=f2e504]:
+                            - generic [ref=f2e505]: "3"
+                            - text: Your result
+                        - generic [ref=f2e506]:
+                          - generic [ref=f2e507]:
+                            - generic [ref=f2e508]: Your words
+                            - paragraph [ref=f2e511]: Good ideas become better when we work together.
+                            - text: A shared thought. Ready for a fresh perspective.
+                          - generic [ref=f2e516]:
+                            - generic [ref=f2e517]: A fresh perspective
+                            - paragraph [ref=f2e520]:
+                              - text: Bring your ideas together.
+                              - strong [ref=f2e521]: Make something better.
+                            - generic [ref=f2e522]: A new way to say it.
+                        - generic [ref=f2e526]:
+                          - generic [ref=f2e527]: Grammar
+                          - generic [ref=f2e528]: Rephrase
+                          - generic [ref=f2e529]: Translate
+                          - generic [ref=f2e530]: Summarize
+                          - generic [ref=f2e531]: Tone
+                          - generic [ref=f2e532]: More tools
+              - 'group "4 of 5: Move forward. Keep your earlier thinking." [ref=f2e817]':
+                - img "Document version history with a draft preview and a timeline of saved versions" [ref=f2e818]:
+                  - generic [aria-hidden] [ref=f2e535]:
+                    - generic [ref=f2e536]:
+                      - strong [ref=f2e542]: AI Editor.
+                      - generic [ref=f2e543]: Workspace / Version history
+                      - generic [ref=f2e544]: PRODUCT PREVIEW
+                    - generic [ref=f2e545]:
+                      - complementary [ref=f2e546]:
+                        - generic [ref=f2e547]: YOUR WORKSPACE
+                        - generic [ref=f2e548]: Dashboard
+                        - generic [ref=f2e554]: Documents
+                        - generic [ref=f2e558]: AI Assistance
+                        - generic [ref=f2e561]: A little more clarity. A lot more possibility.
+                      - generic [ref=f2e568]:
+                        - generic [ref=f2e569]:
+                          - generic [ref=f2e570]:
+                            - generic [ref=f2e571]:
+                              - generic [ref=f2e572]: DOCUMENT WORKSPACE
+                              - heading [level=3] [ref=f2e573]: A better place for ideas.
+                            - generic [ref=f2e574]: AI Assistance
+                          - generic [ref=f2e577]:
+                            - generic [ref=f2e578]:
+                              - generic [ref=f2e579]: Normal text
+                              - generic [ref=f2e589]: A
+                            - article [ref=f2e594]:
+                              - text: FROM FIRST THOUGHT TO FINAL DRAFT
+                              - heading [level=4] [ref=f2e595]: Good work begins with a shared idea.
+                              - paragraph [ref=f2e596]: Bring your thinking into focus. A few words, a new perspective, a conversation that moves everything forward.
+                              - paragraph [ref=f2e602]: Great ideas grow when you give them room.
+                        - complementary [ref=f2e607]:
+                          - strong [ref=f2e612]: Version history
+                          - paragraph [ref=f2e613]: Every draft is part of the story.
+                          - generic [ref=f2e616]:
+                            - strong [ref=f2e617]: A fresh perspective
+                            - generic [ref=f2e618]: Current version
+                          - generic [ref=f2e621]:
+                            - strong [ref=f2e622]: Finding the right words
+                            - generic [ref=f2e623]: Saved draft
+                          - generic [ref=f2e626]:
+                            - strong [ref=f2e627]: The first thought
+                            - generic [ref=f2e628]: Saved draft
+                          - generic [ref=f2e629]: Preview your earlier thinking
+              - group [aria-hidden] [ref=f2e819]:
+                - img [ref=f2e820]:
+                  - generic [aria-hidden] [ref=f2e635]:
+                    - generic [ref=f2e636]:
+                      - strong [ref=f2e642]: AI Editor.
+                      - generic [ref=f2e643]: Workspace / Session chat
+                      - generic [ref=f2e644]: PRODUCT PREVIEW
+                    - generic [ref=f2e645]:
+                      - complementary [ref=f2e646]:
+                        - generic [ref=f2e647]: YOUR WORKSPACE
+                        - generic [ref=f2e648]: Dashboard
+                        - generic [ref=f2e654]: Documents
+                        - generic [ref=f2e658]: AI Assistance
+                        - generic [ref=f2e661]: A little more clarity. A lot more possibility.
+                      - generic [ref=f2e668]:
+                        - generic [ref=f2e669]:
+                          - generic [ref=f2e671]:
+                            - generic [ref=f2e672]: YOUR SHARED WORKSPACE
+                            - heading [level=3] [ref=f2e673]: Good work is better together.
+                          - paragraph [ref=f2e674]: A place for your documents. A space for the conversation.
+                          - generic [ref=f2e675]:
+                            - strong [ref=f2e685]: A shared first draft
+                            - strong [ref=f2e695]: Our next big idea
+                        - complementary [ref=f2e696]:
+                          - strong [ref=f2e700]: Session chat
+                          - generic [ref=f2e701]: Keep the conversation close.
+                          - generic [ref=f2e702]:
+                            - generic [ref=f2e703]: Teammate
+                            - paragraph [ref=f2e704]: What if we start with the idea that brought us here?
+                          - generic [ref=f2e705]:
+                            - generic [ref=f2e706]: You
+                            - paragraph [ref=f2e707]: I like that. Let’s give it a little room to grow.
+                          - generic [ref=f2e708]:
+                            - generic [ref=f2e709]: Teammate
+                            - paragraph [ref=f2e710]: A good place to begin.
+                          - generic [ref=f2e711]: Share a thought…
+            - generic [ref=f2e715]:
+              - generic [ref=f2e716]:
+                - generic [ref=f2e717]: 04 / THE WORKSPACE
+                - heading "Move forward. Keep your earlier thinking." [level=3] [ref=f2e821]
+                - paragraph [ref=f2e719]: Preview saved versions and restore a previous draft whenever you need a different direction.
+              - generic [ref=f2e720]:
+                - generic "Choose a preview" [ref=f2e721]:
+                  - button "Show Dashboard preview" [ref=f2e722] [cursor=pointer]
+                  - button "Show Document editor preview" [ref=f2e723] [cursor=pointer]
+                  - button "Show AI Assistance preview" [ref=f2e724] [cursor=pointer]
+                  - button "Show Version history preview" [ref=f2e725] [cursor=pointer]
+                  - button "Show Session chat preview" [ref=f2e726] [cursor=pointer]
+                - generic [ref=f2e727]:
+                  - generic [ref=f2e728]: 4 / 5
+                  - button "Previous preview" [ref=f2e806] [cursor=pointer]
+                  - button "Next preview" [ref=f2e729] [cursor=pointer]
+      - region [ref=f2e730]:
+        - generic [ref=f2e731]:
+          - generic [ref=f2e732]:
+            - paragraph [ref=f2e733]: MAKE ROOM FOR WHAT’S NEXT
+            - heading "Your next great idea starts here." [level=2] [ref=f2e734]: Your next great ideastarts here.
+            - generic [ref=f2e735]: A blank page. A fresh perspective. A shared possibility.Bring it all together with AI Editor.
+            - link "Open workspace" [ref=f2e736] [cursor=pointer]:
+              - /url: /dashboard
+          - generic [aria-hidden] [ref=f2e737]:
+            - generic [ref=f2e738]:
+              - generic [ref=f2e745]: A fresh page.
+              - strong [ref=f2e746]: Endlesspossibilities.
+              - generic [ref=f2e751]: A little help from AI.
+            - generic [ref=f2e754]: Better, together.
+    - contentinfo [ref=f2e760]:
+      - generic [ref=f2e761]:
+        - generic [ref=f2e762]:
+          - generic [ref=f2e763]:
+            - link "AI Editor welcome" [ref=f2e764] [cursor=pointer]:
+              - /url: /welcome
+              - generic [ref=f2e765]: AI Editor.
+            - paragraph [ref=f2e772]: Your documents, your team, and the power of AI.One workspace to bring ideas to life.
+          - generic [ref=f2e773]:
+            - generic [ref=f2e774]: THE PERSON BEHIND THE PRODUCT
+            - heading "Mykyta Nechaiev Full-stack developer" [level=2] [ref=f2e775]:
+              - text: Mykyta Nechaiev
+              - generic [ref=f2e776]: Full-stack developer
+            - paragraph [ref=f2e777]: Designed and built by Mykyta Nechaiev.A personal portfolio project.
+            - generic [ref=f2e778]:
+              - link "LinkedIn" [ref=f2e779] [cursor=pointer]:
+                - /url: https://www.linkedin.com/in/mykyta-nechaiev-48b776358/
+              - link "GitHub" [ref=f2e780] [cursor=pointer]:
+                - /url: https://github.com/Nikita-Nechaiev/ai-assistant-frontend
+              - button "Resume" [disabled]
+        - generic [ref=f2e781]:
+          - generic [ref=f2e782]: Built with care. Open to explore.
+          - link "Back to top" [ref=f2e787] [cursor=pointer]:
+            - /url: "#welcome-main"
+  - alert [ref=f2e791]
+  - button "Open Next.js Dev Tools" [ref=f2e797] [cursor=pointer]

@@ -6,7 +6,7 @@ import { IDocument, IVersion } from '@/models/models';
 
 import VersionDrawer from '../VersionDrawer';
 
-jest.mock('@/ui/Drawer', () => ({
+jest.mock('@/components/common/Drawer', () => ({
   __esModule: true,
   default: ({ isOpen, handleClose, children }: any) =>
     isOpen ? (
@@ -56,7 +56,6 @@ describe('VersionDrawer', () => {
       <VersionDrawer
         isOpen
         versions={versions}
-        previewContent=''
         selectedVersion={null}
         handleSelectVersion={handleSelect}
         handleApplyVersion={handleApply}
@@ -77,7 +76,6 @@ describe('VersionDrawer', () => {
       <VersionDrawer
         isOpen
         versions={versions}
-        previewContent=''
         selectedVersion={null}
         handleSelectVersion={handleSelect}
         handleApplyVersion={handleApply}
@@ -94,7 +92,6 @@ describe('VersionDrawer', () => {
       <VersionDrawer
         isOpen
         versions={versions}
-        previewContent=''
         selectedVersion={versions[0]}
         handleSelectVersion={handleSelect}
         handleApplyVersion={handleApply}
@@ -110,7 +107,6 @@ describe('VersionDrawer', () => {
       <VersionDrawer
         isOpen
         versions={versions}
-        previewContent=''
         selectedVersion={versions[1]}
         handleSelectVersion={handleSelect}
         handleApplyVersion={handleApply}

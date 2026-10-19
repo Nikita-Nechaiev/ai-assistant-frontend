@@ -19,25 +19,12 @@ jest.mock('@/hooks/sockets/useDocumentListSocket', () => ({
   }),
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-jest.mock('@/ui/Modal', () => ({
-  __esModule: true,
-  default: ({ isOpen, title, submitText, onSubmit, onClose, children }: any) =>
-    isOpen ? (
-      <div data-testid='modal'>
-        <h2>{title}</h2>
-        {children}
-        <button onClick={onSubmit}>{submitText}</button>
-        <button onClick={onClose}>Cancel</button>
-      </div>
-    ) : null,
-}));
-
-jest.mock('@/ui/InputField', () => ({
+jest.mock('@/components/common/InputField', () => ({
   __esModule: true,
   default: ({ id, value, onChange }: any) => <input data-testid={id} value={value} onChange={onChange} />,
 }));
@@ -53,7 +40,7 @@ jest.mock('../DocumentItem', () => ({
 
 const renderList = () => render(<DocumentList sessionId={777} socket={null} />);
 
-const openCreateModal = () => fireEvent.click(screen.getByRole('button', { name: '' }));
+const openCreateModal = () => fireEvent.click(screen.getByRole('button', { name: 'New document' }));
 
 describe('DocumentList', () => {
   afterEach(() => {
@@ -65,7 +52,7 @@ describe('DocumentList', () => {
     docs = [];
     renderList();
 
-    expect(screen.getByText('No documents found')).toBeInTheDocument();
+    expect(screen.getByText('Your next idea starts here.')).toBeInTheDocument();
   });
 
   it('opens “create” modal and calls createDocument', () => {
@@ -73,12 +60,12 @@ describe('DocumentList', () => {
     renderList();
 
     openCreateModal();
-    expect(screen.getByTestId('modal')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByTestId('documentTitle'), {
+    fireEvent.change(screen.getByLabelText('Document title'), {
       target: { value: '   New Doc   ' },
     });
-    fireEvent.click(screen.getByText('Create'));
+    fireEvent.click(screen.getByRole('button', { name: 'Create document' }));
 
     expect(createDocMock).toHaveBeenCalledWith('New Doc');
   });
@@ -90,12 +77,12 @@ describe('DocumentList', () => {
 
     fireEvent.click(screen.getByTestId('doc-11'));
 
-    const input = screen.getByTestId('documentTitle');
+    const input = screen.getByLabelText('Document title');
 
     expect(input).toHaveValue('Old title');
 
     fireEvent.change(input, { target: { value: 'New title' } });
-    fireEvent.click(screen.getByText('Save'));
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
     expect(changeTitleMock).toHaveBeenCalledWith(11, 'New title');
   });

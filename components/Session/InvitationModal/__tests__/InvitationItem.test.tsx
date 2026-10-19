@@ -19,7 +19,7 @@ jest.mock('../RoleDropdown', () => ({
   },
 }));
 
-jest.mock('@/helpers/RequirePermission', () => ({
+jest.mock('@/components/common/RequirePermission', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
@@ -49,7 +49,7 @@ describe('InvitationItem', () => {
     renderItem(inv);
 
     expect(screen.getByText(inv.receiver.email)).toBeInTheDocument();
-    expect(screen.getByText(/role: edit/i)).toBeInTheDocument();
+    expect(screen.getByText(/Editor/i)).toBeInTheDocument();
   });
 
   it('toggles RoleDropdown on ellipsis click and passes correct props', async () => {

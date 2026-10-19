@@ -3,11 +3,12 @@
 import React, { useContext, useEffect, useCallback } from 'react';
 
 import { useRouter } from 'next/navigation';
+import { FiEdit2, FiExternalLink, FiCopy, FiTrash2, FiDownload } from 'react-icons/fi';
 import { Quill as QuillType } from 'react-quill-new';
 
 import { exportToPDF } from '@/helpers/exportToPdf';
 import { PermissionEnum } from '@/models/enums';
-import RequirePermission from '@/helpers/RequirePermission';
+import RequirePermission from '@/components/common/RequirePermission';
 import useSnackbarStore from '@/store/useSnackbarStore';
 import { convertRichContentToDelta } from '@/helpers/documentHelpers';
 import { usePopupMenu } from '@/hooks/sockets/usePopupMenuSocket';
@@ -44,7 +45,10 @@ const PopupMenu: React.FC<PopupMenuProps> = ({ documentId, onClose, onEditTitle,
     onClose();
   }, [duplicateDocument, documentId, onClose]);
 
-  const handleDelete = useCallback(() => deleteDocument(documentId), [deleteDocument, documentId]);
+  const handleDelete = useCallback(() => {
+    deleteDocument(documentId);
+    onClose();
+  }, [deleteDocument, documentId, onClose]);
 
   const handleExport = useCallback(() => {
     const delta = convertRichContentToDelta(richContent, QuillType);
@@ -57,33 +61,75 @@ const PopupMenu: React.FC<PopupMenuProps> = ({ documentId, onClose, onEditTitle,
       if (!(e.target as HTMLElement).closest('.popup-menu')) onClose();
     };
 
-    window.addEventListener('mousedown', outside);
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
 
-    return () => window.removeEventListener('mousedown', outside);
+    window.addEventListener('mousedown', outside);
+    window.addEventListener('keydown', escape);
+
+    return () => {
+      window.removeEventListener('mousedown', outside);
+      window.removeEventListener('keydown', escape);
+    };
   }, [onClose]);
 
   return (
-    <div className='popup-menu absolute bottom-[60px] right-0 bg-white shadow-md rounded-md p-2 w-40 z-10'>
-      <ul className='space-y-2'>
-        <RequirePermission permission={PermissionEnum.EDIT}>
-          <li onClick={handleRename} className='cursor-pointer hover:text-blue-500 transition'>
-            Rename
-          </li>
-          <li onClick={handleEdit} className='cursor-pointer hover:text-blue-500 transition'>
-            Edit
-          </li>
-          <li onClick={handleDuplicate} className='cursor-pointer hover:text-blue-500 transition'>
-            Duplicate
-          </li>
-          <li onClick={handleDelete} className='cursor-pointer hover:text-blue-500 transition'>
-            Delete
-          </li>
-        </RequirePermission>
-
-        <li onClick={handleExport} className='cursor-pointer hover:text-blue-500 transition'>
-          Export as PDF
-        </li>
-      </ul>
+    <div
+      role='menu'
+      aria-label='Document actions'
+      className='popup-menu absolute bottom-[66px] right-3 z-20 w-44 rounded-xl border border-border bg-white p-1.5 shadow-lg'
+    >
+      <RequirePermission permission={PermissionEnum.EDIT}>
+        <button
+          type='button'
+          role='menuitem'
+          onClick={handleRename}
+          className='flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
+        >
+          <FiEdit2 size={14} aria-hidden='true' />
+          Rename
+        </button>
+        <button
+          type='button'
+          role='menuitem'
+          onClick={handleEdit}
+          className='flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
+        >
+          <FiExternalLink size={14} aria-hidden='true' />
+          Open document
+        </button>
+        <button
+          type='button'
+          role='menuitem'
+          onClick={handleDuplicate}
+          className='flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
+        >
+          <FiCopy size={14} aria-hidden='true' />
+          Duplicate
+        </button>
+      </RequirePermission>
+      <button
+        type='button'
+        role='menuitem'
+        onClick={handleExport}
+        className='flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-accent hover:text-primary focus-visible:bg-accent focus-visible:outline-none'
+      >
+        <FiDownload size={14} aria-hidden='true' />
+        Export as PDF
+      </button>
+      <RequirePermission permission={PermissionEnum.EDIT}>
+        <div className='my-1 border-t border-border' />
+        <button
+          type='button'
+          role='menuitem'
+          onClick={handleDelete}
+          className='flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none'
+        >
+          <FiTrash2 size={14} aria-hidden='true' />
+          Delete document
+        </button>
+      </RequirePermission>
     </div>
   );
 };

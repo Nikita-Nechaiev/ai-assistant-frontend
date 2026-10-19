@@ -88,3 +88,62 @@ describe('useEditorState', () => {
     expect(result.current.localContent).toBe('<p>a</p>');
   });
 });
+
+it('appends escaped plaintext as paragraphs without replacing existing content', () => {
+  const currentDocument = doc('<p>Existing</p>'),
+    save = jest.fn();
+  const { result } = renderHook(() =>
+    useEditorState({ currentDocument, previewContent: '', isUserCanEdit: true, changeContentAndSaveDocument: save }),
+  );
+
+  act(() => {
+    expect(result.current.appendText('<script>bad</script>\r\n\r\nNext & final')).toBe(true);
+  });
+  expect(save).toHaveBeenCalledWith(
+    '<p>Existing</p><p>&lt;script&gt;bad&lt;/script&gt;</p><p><br></p><p>Next &amp; final</p>',
+  );
+  expect(result.current.localContent).toContain('<p>Existing</p>');
+});
+it('replaces only the empty Quill placeholder, and refuses blank text', () => {
+  const currentDocument = doc('<p><br></p>'),
+    save = jest.fn();
+  const { result } = renderHook(() =>
+    useEditorState({ currentDocument, previewContent: '', isUserCanEdit: true, changeContentAndSaveDocument: save }),
+  );
+
+  act(() => {
+    expect(result.current.appendText('   ')).toBe(false);
+    expect(result.current.appendText('New')).toBe(true);
+  });
+  expect(save).toHaveBeenCalledWith('<p>New</p>');
+});
+it.each([
+  { previewContent: 'old', isUserCanEdit: true },
+  { previewContent: '', isUserCanEdit: false },
+])('does not append to read-only documents %p', (options) => {
+  const currentDocument = doc(),
+    save = jest.fn();
+  const { result } = renderHook(() =>
+    useEditorState({ currentDocument, ...options, changeContentAndSaveDocument: save }),
+  );
+
+  act(() => expect(result.current.appendText('Text')).toBe(false));
+  expect(save).not.toHaveBeenCalled();
+});
+it('handles a missing document or unavailable save function', () => {
+  const { result, rerender } = renderHook(
+    ({ currentDocument, save }: any) =>
+      useEditorState({ currentDocument, previewContent: '', isUserCanEdit: true, changeContentAndSaveDocument: save }),
+    { initialProps: { currentDocument: null, save: undefined } },
+  );
+
+  act(() => {
+    result.current.handleEditorChange('Input', {} as any, 'user');
+    expect(result.current.appendText('Text')).toBe(false);
+  });
+  rerender({ currentDocument: doc(), save: undefined });
+  act(() => {
+    result.current.handleEditorChange('Input', {} as any, 'user');
+    expect(result.current.appendText('Text')).toBe(false);
+  });
+});

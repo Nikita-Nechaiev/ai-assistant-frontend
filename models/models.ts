@@ -88,17 +88,6 @@ export interface IVersion {
   document: IDocument;
 }
 
-export interface IAnalyticsSummary {
-  id: number;
-  totalWordCount: number;
-  totalSessions: number;
-  totalDocuments: number;
-  mostUsedAiTool: string | null;
-  activeHours: number;
-
-  user?: IUser;
-}
-
 export interface IAiToolUsage {
   id: number;
   toolName: string;
