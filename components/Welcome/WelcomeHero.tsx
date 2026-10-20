@@ -16,17 +16,18 @@ export default function WelcomeHero({ primaryHref }: { primaryHref: string }) {
             <span>
               <FiZap size={12} aria-hidden='true' />
             </span>
-            AI-POWERED COLLABORATIVE WORKSPACE
+            DEVELOPER PORTFOLIO · MYKYTA NECHAIEV
           </p>
           <h1 id='welcome-title'>
-            Write better.
+            AI Editor.
             <br />
-            <span>Build ideas</span>
+            <span>A full-stack</span>
             <br />
-            together.
+            case study.
           </h1>
           <p className={styles.heroDescription}>
-            Create documents, refine your writing with AI, and collaborate in real time — all in one workspace.
+            A developer portfolio project built with Next.js, NestJS, and PostgreSQL. Explore real-time document
+            editing, collaboration, and AI tools.
           </p>
           <div className={styles.heroActions}>
             <Button asChild className='h-12 rounded-lg px-6 text-[13px] shadow-blue'>

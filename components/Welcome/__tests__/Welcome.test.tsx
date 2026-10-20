@@ -45,6 +45,8 @@ it.each([false, true])('renders welcome navigation for authenticated=%s', (authe
     screen.getAllByRole('link', { name: authenticated ? 'Go to dashboard' : 'Create an account' })[0],
   ).toHaveAttribute('href', authenticated ? '/dashboard' : '/registration');
   expect(screen.getByRole('button', { name: 'Resume' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/AI Editor.*full-stack.*case study/);
+  expect(screen.getByText(/Next.js frontend and NestJS API/)).toBeInTheDocument();
 });
 it('renders all product scenes, including the preview image fallback', () => {
   for (const kind of ['dashboard', 'editor', 'ai', 'versions', 'chat']) {

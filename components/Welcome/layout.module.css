@@ -571,6 +571,7 @@
 }
 .author {
   min-width: 360px;
+  max-width: 520px;
 }
 .author .sectionEyebrow {
   margin-bottom: 15px;
@@ -595,7 +596,7 @@
 }
 .author > p {
   margin-top: 13px;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.8;
   color: #8796aa;
 }
