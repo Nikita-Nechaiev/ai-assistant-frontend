@@ -18,8 +18,9 @@ describe('AppLogo', () => {
 
     expect(link).toHaveAttribute('href', '/dashboard');
 
-    expect(screen.getByAltText('AI Powered Editor')).toBeInTheDocument();
-    expect(screen.getByText('AI Powered Editor')).toBeInTheDocument();
+    expect(screen.getByAltText('')).toHaveAttribute('src', '/logo.svg');
+    expect(screen.getByText('AI Editor')).toBeInTheDocument();
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
   });
 
   it('renders plain content when isLink = false', () => {
@@ -27,7 +28,8 @@ describe('AppLogo', () => {
 
     expect(screen.queryByTestId('mock-link')).toBeNull();
 
-    expect(screen.getByAltText('AI Powered Editor')).toBeInTheDocument();
-    expect(screen.getByText('AI Powered Editor')).toBeInTheDocument();
+    expect(screen.getByAltText('')).toHaveAttribute('src', '/logo.svg');
+    expect(screen.getByText('AI Editor')).toBeInTheDocument();
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
   });
 });

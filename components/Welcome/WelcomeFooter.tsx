@@ -23,13 +23,17 @@ export default function WelcomeFooter() {
             </p>
           </div>
           <div className={styles.author}>
-            <span className={styles.sectionEyebrow}>THE PERSON BEHIND THE PRODUCT</span>
+            <span className={styles.sectionEyebrow}>ABOUT THIS PORTFOLIO CASE STUDY</span>
             <h2>
               Mykyta Nechaiev<span>Full-stack developer</span>
             </h2>
             <p>
-              Designed and built by Mykyta Nechaiev.
-              <br />A personal portfolio project.
+              AI Editor is a full-stack developer portfolio project designed and built by Mykyta Nechaiev, from the
+              Next.js frontend and NestJS API to the PostgreSQL data model.
+            </p>
+            <p>
+              This case study demonstrates real-time document editing with Socket.IO, role-based collaboration, version
+              history, and AI tool integration.
             </p>
             <div className={styles.authorLinks}>
               <Button variant='outline' size='sm' asChild className='h-9 gap-2 rounded-lg text-xs shadow-none'>
