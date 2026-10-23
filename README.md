@@ -1,158 +1,141 @@
-# AI-Editor Portfolio — Frontend
+# AI Editor — Frontend
 
-This is the client-side of my portfolio project: live collaborative editing for documents with built-in AI tools. Users sign in with email/password or Google, work together in sessions, chat, manage access by roles, review version history and use AI assistance.
+A full-stack developer portfolio project by **Mykyta Nechaiev**. This Next.js client provides shared document sessions, rich-text editing, chat, invitations, version history, and AI assistance backed by a NestJS API.
 
-**Goal:** demonstrate a production-like UI connected to a real backend — with tests, clear structure, and stable behavior — not just a click-through demo.
+## Links
 
-## 1) Title & one-liner
+- [Live application](https://www.ai-editor-portfolio.com)
+- [Portfolio presentation](https://canva.link/muceodsr6ld2q5q)
+- [Backend API](https://api.ai-editor-portfolio.com)
+- [Backend repository](https://github.com/Nikita-Nechaiev/ai-assistant-backend)
+- [Frontend repository](https://github.com/Nikita-Nechaiev/ai-assistant-frontend)
 
-**AI-Editor Portfolio — Frontend**  
-Next.js + React + WebSocket. Live collaboration, roles & permissions, document versions, chat, and AI actions inside the editor.
+## Features
 
-## 2) Quick links
+- Email/password authentication, Google sign-in, and password reset.
+- Shared sessions with Admin, Editor, and Viewer access, participant presence, invitations, and chat.
+- Quill rich-text documents with automatic saving, version preview and restore, and browser-side PDF export.
+- Nine AI tools: grammar checking, tone analysis, summarization, rephrasing, translation, keyword extraction, text generation, readability analysis, and title generation.
+- A standalone AI workflow at `/ai-assistance/stepper`, plus AI assistance inside documents. Generated text can be appended to an editable document.
+- Searchable AI request history and AI usage statistics.
+- Dashboard statistics: recorded session time, accessible documents, sessions created/joined, and a 30-day document-creation and AI-request chart. Invitations are excluded from the chart.
+- Public portfolio page at `/welcome`, FAQ, and CV download from the backend.
 
-- **Live App:** https://www.ai-editor-portfolio.com
-- **Backend API:** https://ai-assistant-backend-fsdp.onrender.com
-- **WebSocket:** `wss://ai-assistant-backend-fsdp.onrender.com/ws`
-- **Backend repo:** https://github.com/Nikita-Nechaiev/ai-assistant-backend.git
-- **This repository:** https://github.com/Nikita-Nechaiev/ai-assistant-frontend.git
+## Stack and structure
 
-## 3) For Recruiters & CTO (30 seconds)
+Next.js 15 (App Router), React 19, TypeScript, TanStack Query, Axios, Zustand, Socket.IO client, `react-quill-new`, Tailwind CSS, and shadcn/ui primitives built on Radix.
 
-- **What it shows.** A ready UI with real-time collaboration, roles, versions, chat, and AI-in-editor.
-- **Stack.** Next.js (App Router), React, TypeScript, React Query + fetch/axios, Zustand for client state, Quill for rich text, Socket.io client for WS.
-- **Quality.** Unit/component (Jest + RTL) and e2e (Playwright) tests. Coverage 94.7 % statements, 80.1 % branches, 90 % functions, 97.2 % lines (enforced in CI on every PR).
-- **Performance/UX.** Lighthouse scores — Performance 95, Accessibility 79, Best Practices 100, SEO 91. Uses SSR where helpful, ISR for cacheable pages, code-splitting and prefetch.
+| Location                   | Responsibility                                                              |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `app/`                     | Routes, layouts, metadata, robots, and sitemap                              |
+| `components/`              | Feature components, shared components in `common/`, and primitives in `ui/` |
+| `hooks/`                   | Feature workflows, HTTP query state, and socket event subscriptions         |
+| `services/`                | HTTP API clients and the Axios instance                                     |
+| `store/`                   | Zustand user, session, and snackbar state                                   |
+| `helpers/`, `lib/`         | AI tool registry, query keys/invalidation, PDF export, and shared utilities |
+| `providers/`, `hydration/` | Query provider and initial user hydration                                   |
+| `e2e/`                     | Playwright browser scenarios and setup helpers                              |
 
-## 4) Why this matters
+Next.js server components provide route shells, while middleware checks authentication through the backend and passes user data for hydration. Dashboard data, AI history, and statistics load on the client through TanStack Query. The editor and session interactions use Socket.IO. Private query keys include the user ID; the previous user's queries are cancelled and removed when the account changes. Private application data does not use ISR.
 
-Beyond CRUD: co-edit in real time, role enforcement, chat, invitations, version restore, AI actions. You can see state management, error handling, optimistic UI, and quality gates.
+## Local setup
 
-## 5) Key features
+Use **Node.js 20** and npm, matching CI. Start the backend first using its [setup instructions](https://github.com/Nikita-Nechaiev/ai-assistant-backend#local-setup). The examples below use backend port **3002** and frontend port **3000**.
 
-- **AI inside the editor & on a dedicated page.** 9 actions (translate, rephrase, summarize, generate, etc.).
-- **Collaboration & roles.** Admin / editor / viewer.
-- **Rich-text editor (Quill) + export.** Formatting; export **EN-only** for now.
-- **Version history.** View and restore.
-- **Invitations & notifications.**
-- **Real-time chat.**
-
-## 6) Application walkthrough (user flows)
-
-- Sign in / sign up / password reset.
-- **Dashboard** with sessions & documents.
-- **AI Assistance** — quick AI actions without joining a session.
-- **Sessions:** create/join, roles, time tracking, chat.
-- **Document editing:** sync, versions, export.
-- **Notifications/Invitations** — accept/decline and jump into sessions.
-
-## 7) Architecture & state
-
-Feature-oriented structure; data fetching/caching via React Query; real-time events handled by WS handlers.
-
-flowchart LR
-UI[UI (React)] -- queries/mutations --> API[(HTTP API)]
-UI -- WebSocket events --> WS[WS Client]
-WS -- sync/updates --> UI
-STATE[(State Store\nZustand)] --> UI
-
-- **App structure:** routes (App Router) + feature folders.
-- **State:** Zustand for session/auth/editor context; local component state elsewhere.
-- **Data layer:** React Query + fetch/axios, request/response mappers, retry/backoff for transient errors.
-- **Real-time:** socket handlers for editor sync, presence/status, chat.
-- **Errors & notifications:** toasts with actionable messages.
-
-## 8) UI/UX decisions & trade-offs
-
-- **Why Quill + delta.** Mature ecosystem + delta format simplifies operational transforms.
-- **SSR vs ISR vs CSR.**
-  - **SSR** for auth-gated pages (dashboard, sessions list) via server components / `fetch({ cache: 'no-store' })`.
-  - **CSR** for the editor (heavy WS and user input).
-  - **ISR** not used — all dynamic and user-specific data are rendered via SSR or CSR for real-time accuracy.
-- **Design system / UI kit.** Tailwind CSS + shadcn/ui (radix-based primitives).
-- **i18n/a11y.** Base accessibility (labels, roles, focus), color-contrast checks. **i18n:** EN-only UI.
-
-## 9) Security & privacy (client)
-
-- **Token storage & refresh.** Access token in memory (Zustand); refresh via secure httpOnly cookie from backend (auto-refresh on 401 with a guarded fetch). If cookies are not enabled on backend, fallback is an explicit refresh endpoint.
-- **Protected routes.** Client guards + server checks; redirect to `/auth` when missing access.
-- **CORS/HTTPS.** Calls only to trusted API origin; WS over WSS.
-- **Security headers (CSP).** Example (set via `next.config.mjs` headers):
-
-## 10) CI/CD
-
-- **Vercel pipeline:** preview on PR → production on main.
-- **Checks:** `lint → unit → e2e → build`.
-- **PR/branch policy:** feature branches → PR with review → Vercel preview URL → squash & merge to main.
-
-## 11) Deployment & hosting
-
-- **Platform:** Vercel (Preview / Production).
-- **Domain:** `ai-editor-portfolio.com`; API — `ai-assistant-backend-fsdp.onrender.com`.
-- **Build:** Next.js (App Router, Turbopack). Optional bundle analyzer with `ANALYZE=true`.
-
-**Environment variables (Frontend):**
-
-```ini
-# .env.local
-NEXT_PUBLIC_API_URL=https://ai-assistant-backend-fsdp.onrender.com
-NEXT_PUBLIC_SOCKET_URL=wss://ai-assistant-backend-fsdp.onrender.com/ws
-NODE_ENV=production # development
-
-# .env.test (used by e2e)
-E2E_EMAIL=test@example.com
-E2E_PASSWORD=Password1!
-E2E_REFRESH=<yourTestRefreshToken>
-NEXT_PUBLIC_API_URL=http://localhost:10000
-E2E_SESSION_ID=1
-
-E2E_INVITE_TRIGGER='[data-testid="open-invite-modal"]'
-E2E_INVITE_DRAWER_TRIGGER='[data-testid="open-notifications-drawer"]'
-
-E2E_INVITEE_EMAIL=test@example.com
-E2E_INVITER_EMAIL=test1@example.com
-E2E_INVITER_PASSWORD=Password1!
+```sh
+npm ci
 ```
 
-## 12) Tests
+Create `.env.local` in this repository:
 
-- **Types:** unit/component (Jest + React Testing Library) and e2e (Playwright).
-- **Coverage:** 94.7% statements, 80.1% branches, 90.0% functions, 97.2% lines (enforced in CI).
-- **Scope (high level):**
-  - Auth screens & guards; protected navigation.
-  - Editor interactions (selection → AI action UI; optimistic updates).
-  - Sessions (create/join, role changes, time tracking, chat).
-  - Version history (view/restore); invitations and notifications.
-  - WebSocket client handlers (mocked WS server).
-  - API/query layer with mocked network (React Query + MSW).
-- **Execution:**
-  - **Unit & component tests:** 72 suites, 255 total tests — all passing in ~3.6s.
-  - **E2E tests (Playwright):** 12 tests — all passing in ~7.4s.
-  - Both suites run automatically on every PR and `main`; CI enforces coverage thresholds and stores Playwright HTML reports as build artifacts.
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:3002
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
+```
 
-## 13) Screenshots & demo
+```sh
+npm run dev
+```
 
-- 3–6 key screens: **Dashboard**, **Editor**, **Sessions**, **AI panel**.
-- Loom with timestamps: `<add URL + mm:ss anchors>`.
+Open [localhost:3000](http://localhost:3000). The backend's `FRONTEND_URL` must be `http://localhost:3000`. Use `localhost` consistently for both services so cookie authentication works as expected.
 
-## 14) Roadmap & known limitations
+`NEXT_PUBLIC_SOCKET_URL` is the **server origin**, without `/ws` or another suffix. The client sets the Socket.IO transport path separately:
 
-**Coming soon:**
+```ts
+io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+  path: '/collaboration-session-socket',
+  transports: ['websocket'],
+  withCredentials: true,
+});
+```
 
-- Multi-language export.
-- Finer request limits by role.
-- AI metrics (per-function latency, token usage) and a small monitoring panel.
-- Better conflict resolution for concurrent editing.
+`NEXT_PUBLIC_*` values are public and embedded in the client bundle at build time. Keep API keys and other secrets on the backend. Next.js sets `NODE_ENV` for its commands; it does not need to be added to `.env.local`.
 
-**Current limits:**
+## Commands
 
-- Export: EN-only.
-- Some editing bugs are caused by the deprecated techniques of the Quill editor
-- Public Swagger/OpenAPI docs are intentionally not included here.
+| Command                           | Purpose                                 |
+| --------------------------------- | --------------------------------------- |
+| `npm run dev`                     | Development server with Turbopack       |
+| `npm run build`                   | Production build with `next build`      |
+| `npm start`                       | Serve an existing production build      |
+| `npm run lint`                    | ESLint, with zero warnings allowed      |
+| `npm run typecheck`               | TypeScript check without emitting files |
+| `npm test`                        | Jest unit/component tests               |
+| `npm run test:watch`              | Jest watch mode                         |
+| `npm run test:cov -- --runInBand` | Tests and coverage report               |
+| `npm run test:e2e`                | Playwright browser tests                |
+| `npm run test:e2e:ui`             | Playwright UI mode                      |
 
-## 15) Contacts
+## Authentication and deployment
 
-- **Name:** Mykyta Nechaiev
-- **Email:** mykyta.nechaiev.dev@gmail.com
-- **Telegram:** @nechaiev_mykyta
-- **LinkedIn:** https://www.linkedin.com/in/mykyta-nechaiev-48b776358/
+The backend sets **HttpOnly access and refresh cookies**. Zustand holds user profile data, not tokens. HTTP requests include credentials. The Axios interceptor attempts cookie refresh once after a 401; a failed refresh or a second 401 clears the user state and redirects to `/login`. Middleware also checks or refreshes authentication for protected navigation. Backend authorization remains responsible for access to data and actions.
+
+For the deployed frontend, configure these variables before building:
+
+```dotenv
+NEXT_PUBLIC_API_URL=https://api.ai-editor-portfolio.com
+NEXT_PUBLIC_SOCKET_URL=https://api.ai-editor-portfolio.com
+```
+
+The current production cookie configuration uses `Secure` cookies scoped to `.ai-editor-portfolio.com`, so authenticated production testing requires HTTPS and matching domains. For ordinary local development and browser tests, run the services in development mode.
+
+`next.config.ts` also rewrites `/api/:path*` to the production API. The API clients above use `NEXT_PUBLIC_API_URL` directly; changing that variable does not change the rewrite destination. There is currently no custom CSP or bundle-analyzer configuration in this file.
+
+## Tests and CI
+
+Unit/component tests use **Jest and React Testing Library**, with external HTTP clients and sockets mocked where appropriate. They cover authentication, query/cache behavior, document loading, AI workflows, profile updates, dialogs, and resource cleanup. `jest.config.js` enforces **81% minimum coverage for statements, branches, functions, and lines**. Generate current measurements with `npm run test:cov`; reports are written to `coverage/`.
+
+The browser suite contains **12 Chromium scenarios** using real HTTP and Socket.IO requests. It registers its own accounts and creates its own sessions, documents, and invitations. Pre-seeded accounts and `E2E_*` credentials are not required.
+
+Start a backend connected to a **disposable test database**, then start Next.js with the API/socket settings pointing to that backend. Create `.env.test.local` for Playwright:
+
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:3002
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3002
+PW_BASE_URL=http://localhost:3000
+```
+
+```sh
+npx playwright install chromium
+npm run test:e2e -- --workers=2
+```
+
+Playwright reads `.env.test.local` without overriding existing environment variables, reuses a running frontend, or starts one if needed. Setting Playwright variables alone does not reconfigure an already-running Next.js server. See [the browser test guide](e2e/README.md) for details.
+
+[Frontend CI](.github/workflows/frontend-ci.yml) runs on pushes and PRs to `main`, and merge-group events:
+
+- **Quality job:** installs dependencies, runs lint, TypeScript, Jest coverage, and a production build; uploads coverage.
+- **E2E job:** checks out a pinned backend revision, starts PostgreSQL and MailHog, builds/starts the backend and starts Next.js in development mode, then runs Playwright; uploads the HTML report and server logs.
+
+The jobs run independently. Hosting deployment is configured separately from this workflow.
+
+## Current limitations
+
+- The UI is English-only. PDF export uses the current browser-side font setup and is intended for English text; full Unicode export is not implemented.
+- Document updates are saved and broadcast through Socket.IO; there is no dedicated CRDT/operational-transformation conflict resolution layer.
+
+## Contact
+
+- **Mykyta Nechaiev**
+- Email: [mykyta.nechaiev.dev@gmail.com](mailto:mykyta.nechaiev.dev@gmail.com)
+- [LinkedIn](https://www.linkedin.com/in/mykyta-nechaiev-48b776358/)
